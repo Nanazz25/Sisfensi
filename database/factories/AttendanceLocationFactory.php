@@ -17,6 +17,8 @@ class AttendanceLocationFactory extends Factory
     public function definition(): array
     {
         return [
+            'attendance_id' => \App\Models\Attendance::factory(),
+            'school_location_id' => \App\Models\SchoolLocation::factory(),
             'latitude' => -6.200000,
             'longitude' => 106.816666,
             'radius' => 10,

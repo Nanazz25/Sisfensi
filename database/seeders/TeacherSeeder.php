@@ -28,7 +28,12 @@ class TeacherSeeder extends Seeder
 
             Teacher::create([
                 'user_id' => $user->id,
+                'nama_lengkap' => $user->name,
                 'nip' => '19800101' . str_pad($i, 3, '0', STR_PAD_LEFT), // Example NIP
+                'nik' => '320101010101' . str_pad($i, 4, '0', STR_PAD_LEFT),
+                'jenis_kelamin' => $i % 2 == 0 ? 'P' : 'L',
+                'tempat_lahir' => 'Bandung',
+                'tanggal_lahir' => '1980-01-0' . $i,
             ]);
         }
     }

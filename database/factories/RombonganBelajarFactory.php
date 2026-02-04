@@ -18,6 +18,9 @@ class RombonganBelajarFactory extends Factory
     {
         return [
             'nama_rombel' => $this->faker->randomElement(['X', 'XI', 'XII']) . ' ' . $this->faker->randomElement(['RPL', 'TKJ', 'MM']) . ' ' . $this->faker->randomDigitNotNull(),
+            'jurusan' => $this->faker->randomElement(['Rekayasa Perangkat Lunak', 'Teknik Komputer Jaringan', 'Multimedia']),
+            'tahun_ajar_id' => \App\Models\TahunAjar::factory(),
+            'wali_kelas_id' => \App\Models\Teacher::factory(),
         ];
     }
 }

@@ -17,6 +17,9 @@ class ScheduleFactory extends Factory
     public function definition(): array
     {
         return [
+            'rombongan_belajar_id' => \App\Models\RombonganBelajar::factory(),
+            'subject_id' => \App\Models\Subject::factory(),
+            'teacher_id' => \App\Models\Teacher::factory(),
             'hari' => $this->faker->randomElement(['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu']),
             'jam_mulai' => '07:00:00',
             'jam_selesai' => '08:30:00',

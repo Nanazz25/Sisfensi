@@ -12,6 +12,14 @@ class TahunAjar extends Model
     protected $table = 'tahun_ajar';
     protected $guarded = ['id'];
 
+    protected $fillable = [
+        'nama',
+        'semester',
+        'tanggal_mulai',
+        'tanggal_selesai',
+        'is_active',
+    ];
+
     public function rombonganBelajar()
     {
         return $this->hasMany(RombonganBelajar::class);

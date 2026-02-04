@@ -9,7 +9,11 @@ class Subject extends Model
 {
     use HasFactory;
 
+    protected $table = 'subjects';
     protected $guarded = ['id'];
+    protected $fillable = [
+        'nama_mapel',
+    ];
 
     public function schedules()
     {

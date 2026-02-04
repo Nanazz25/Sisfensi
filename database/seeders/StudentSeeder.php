@@ -28,7 +28,13 @@ class StudentSeeder extends Seeder
 
             PesertaDidik::create([
                 'user_id' => $user->id,
-                'nis' => '2023' . str_pad($i, 4, '0', STR_PAD_LEFT),
+                'nama_lengkap' => $user->name,
+                'no_induk' => '2023' . str_pad($i, 4, '0', STR_PAD_LEFT),
+                'nisn' => '005' . str_pad($i, 7, '0', STR_PAD_LEFT),
+                'nik' => '320101010101' . str_pad($i, 4, '0', STR_PAD_LEFT),
+                'jenis_kelamin' => $i % 2 == 0 ? 'P' : 'L',
+                'tempat_lahir' => 'Jakarta',
+                'tanggal_lahir' => '2008-05-1' . ($i % 10),
                 'foto_wajah' => 'students/default.png',
                 'face_embedding' => json_encode(array_fill(0, 128, 0.1)),
             ]);

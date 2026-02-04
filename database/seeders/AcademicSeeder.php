@@ -19,6 +19,9 @@ class AcademicSeeder extends Seeder
         // 1. Buat Tahun Akademik
         $tahunAjar = TahunAjar::create([
             'nama' => '2023/2024',
+            'semester' => 'Ganjil',
+            'tanggal_mulai' => '2023-07-17',
+            'tanggal_selesai' => '2023-12-22',
             'is_active' => true,
         ]);
 

@@ -17,7 +17,7 @@ class SubjectFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'nama_mapel' => $this->faker->unique()->word(),
         ];
     }
 }

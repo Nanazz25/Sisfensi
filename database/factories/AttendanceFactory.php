@@ -17,6 +17,8 @@ class AttendanceFactory extends Factory
     public function definition(): array
     {
         return [
+            'anggota_rombel_id' => \App\Models\AnggotaRombel::factory(),
+            'schedule_id' => \App\Models\Schedule::factory(),
             'tanggal' => now()->toDateString(),
             'waktu_absen' => now(),
             'jenis_absensi' => 'masuk',

@@ -13,8 +13,19 @@ return new class extends Migration {
         Schema::create('rombongan_belajar', function (Blueprint $table) {
             $table->id();
             $table->string('nama_rombel');
-            $table->foreignId('tahun_ajar_id')->constrained('tahun_ajar')->onDelete('cascade');
-            $table->foreignId('wali_kelas_id')->constrained('teachers')->onDelete('cascade');
+            $table->foreignId('jurusan_id')
+                ->constrained('jurusan')
+                ->cascadeOnDelete();
+
+            $table->foreignId('tahun_ajar_id')
+                ->constrained('tahun_ajar')
+                ->cascadeOnDelete();
+
+            $table->foreignId('wali_kelas_id')
+                ->nullable()
+                ->constrained('teachers')
+                ->nullOnDelete();
+
             $table->timestamps();
         });
     }

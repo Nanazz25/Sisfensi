@@ -12,9 +12,16 @@ return new class extends Migration {
     {
         Schema::create('anggota_rombel', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('rombongan_belajar_id')->constrained('rombongan_belajar')->onDelete('cascade');
-            $table->foreignId('peserta_didik_id')->constrained('peserta_didik')->onDelete('cascade');
-            $table->timestamp('created_at')->useCurrent();
+
+            $table->foreignId('rombongan_belajar_id')
+                ->constrained('rombongan_belajar')
+                ->cascadeOnDelete();
+
+            $table->foreignId('peserta_didik_id')
+                ->constrained('peserta_didik')
+                ->cascadeOnDelete();
+
+            $table->timestamps();
         });
     }
 

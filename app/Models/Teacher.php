@@ -11,6 +11,17 @@ class Teacher extends Model
 
     protected $guarded = ['id'];
 
+    protected $fillable = [
+        'user_id',
+        'nama_lengkap',
+        'nip',
+        'nuptk',
+        'nik',
+        'jenis_kelamin',
+        'tempat_lahir',
+        'tanggal_lahir',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

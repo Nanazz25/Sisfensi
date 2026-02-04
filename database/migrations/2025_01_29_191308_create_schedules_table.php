@@ -12,9 +12,19 @@ return new class extends Migration {
     {
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('rombongan_belajar_id')->constrained('rombongan_belajar')->onDelete('cascade');
-            $table->foreignId('subject_id')->constrained('subjects')->onDelete('cascade');
-            $table->foreignId('teacher_id')->constrained('teachers')->onDelete('cascade');
+
+            $table->foreignId('rombongan_belajar_id')
+                ->constrained('rombongan_belajar')
+                ->cascadeOnDelete();
+
+            $table->foreignId('subject_id')
+                ->constrained('subjects')
+                ->cascadeOnDelete();
+
+            $table->foreignId('teacher_id')
+                ->constrained('teachers')
+                ->cascadeOnDelete();
+
             $table->enum('hari', ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu']);
             $table->time('jam_mulai');
             $table->time('jam_selesai');

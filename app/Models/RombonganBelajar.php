@@ -12,6 +12,11 @@ class RombonganBelajar extends Model
     protected $table = 'rombongan_belajar';
     protected $guarded = ['id'];
 
+    public function jurusan()
+    {
+        return $this->belongsTo(Jurusan::class);
+    }
+
     public function tahunAjar()
     {
         return $this->belongsTo(TahunAjar::class);

@@ -17,6 +17,8 @@ class AnggotaRombelFactory extends Factory
     public function definition(): array
     {
         return [
+            'rombongan_belajar_id' => \App\Models\RombonganBelajar::factory(),
+            'peserta_didik_id' => \App\Models\PesertaDidik::factory(),
             'created_at' => now(),
         ];
     }

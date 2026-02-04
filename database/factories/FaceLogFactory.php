@@ -17,6 +17,7 @@ class FaceLogFactory extends Factory
     public function definition(): array
     {
         return [
+            'peserta_didik_id' => \App\Models\PesertaDidik::factory(),
             'confidence' => 0.95,
             'result' => 'match',
             'image_path' => 'logs/image.jpg',

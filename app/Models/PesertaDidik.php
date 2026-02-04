@@ -12,6 +12,19 @@ class PesertaDidik extends Model
     protected $table = 'peserta_didik';
     protected $guarded = ['id'];
 
+    protected $fillable = [
+        'user_id',
+        'nama_lengkap',
+        'no_induk',
+        'nisn',
+        'nik',
+        'jenis_kelamin',
+        'tempat_lahir',
+        'tanggal_lahir',
+        'foto_wajah',
+        'face_embedding'
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
