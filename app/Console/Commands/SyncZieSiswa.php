@@ -79,11 +79,14 @@ class SyncZieSiswa extends Command
 
             if ($pesertaDidik) {
                 // Update User terkait
-                $pesertaDidik->user->update([
+                /** @var \App\Models\User $userRelation */
+                $userRelation = $pesertaDidik->user;
+                $userRelation->update([
                     'name' => $siswa['nama'],
                 ]);
 
                 // Update Data Peserta Didik
+                /** @var PesertaDidik $pesertaDidik */
                 $pesertaDidik->update([
                     'nama_lengkap' => $siswa['nama'],
                     'no_induk' => $noInduk,

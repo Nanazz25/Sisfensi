@@ -94,6 +94,7 @@ class SyncZieAnggotaRombel extends Command
             ];
 
             if ($pesertaDidik) {
+                /** @var PesertaDidik $pesertaDidik */
                 $pesertaDidik->update($studentData);
                 $siswa = $pesertaDidik;
             } else {
