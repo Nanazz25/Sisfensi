@@ -13,11 +13,11 @@ return new class extends Migration {
         Schema::create('attendance', function (Blueprint $table) {
             $table->id();
             $table->foreignId('anggota_rombel_id')->constrained('anggota_rombel')->onDelete('cascade');
-            $table->foreignId('schedule_id')->constrained('schedules')->onDelete('cascade');
+            $table->foreignId('schedule_id')->nullable()->constrained('schedules')->onDelete('cascade');
             $table->date('tanggal');
             $table->dateTime('waktu_absen');
             $table->enum('jenis_absensi', ['masuk', 'pelajaran', 'pulang']);
-            $table->enum('status', ['hadir', 'izin', 'sakit', 'alpha']);
+            $table->enum('status', ['hadir', 'izin', 'sakit', 'alpha', 'terlambat', 'pending']);
             $table->enum('metode', ['wajah', 'manual']);
             $table->timestamps();
         });

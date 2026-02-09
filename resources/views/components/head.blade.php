@@ -15,6 +15,8 @@
     <!-- MAIN Project CSS file -->
     <link rel="stylesheet" href="{{ asset('assets/css/main.css') }}">
 
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <!-- After App Styles -->
     {{ $afterAppStyles }}
 </head>

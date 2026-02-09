@@ -10,11 +10,24 @@
                 <div class="body text-center">
 
                     @if($pesertaDidik->foto_wajah)
-                        <img src="{{ asset('storage/' . $pesertaDidik->foto_wajah) }}" class="img-fluid rounded mb-3"
-                            style="max-height:300px; object-fit:cover;">
+                        <img src="{{ route('peserta-didik.photo', $pesertaDidik->id) }}" class="shadow mb-3" style="
+                            max-width: 200px;
+                            width: 100%;
+                            height: auto;
+                            border-radius: 12px;
+                            display: block;
+                            margin: 0 auto;
+                         ">
+
                     @else
-                        <img src="{{ asset('assets/images/no-image.png') }}" class="img-fluid rounded mb-3"
-                            style="max-height:300px;">
+                        <img src="{{ asset('assets/images/user.png') }}" class="shadow mb-3" style="
+                            max-width: 200px;
+                            width: 100%;
+                            height: auto;
+                            border-radius: 12px;
+                            display: block;
+                            margin: 0 auto;
+                        ">
                     @endif
 
                     <span class="badge badge-info">
@@ -83,13 +96,19 @@
                     </table>
 
                     <div class="mt-3">
-                        <a href="{{ route('peserta-didik.index') }}" class="btn btn-secondary">
+                        <a href="{{ url()->previous() }}" class="btn btn-secondary">
                             <i class="fa fa-arrow-left"></i> Kembali
                         </a>
 
                         <a href="{{ route('peserta-didik.edit', $pesertaDidik->id) }}" class="btn btn-warning">
                             <i class="fa fa-edit"></i> Edit
                         </a>
+
+                        @if(!$pesertaDidik->face_embedding && (auth()->user()->role === 'admin' || auth()->id() === $pesertaDidik->user_id))
+                            <a href="{{ route('face.enroll') }}" class="btn btn-primary">
+                                <i class="fa fa-camera"></i> Registrasi Wajah
+                            </a>
+                        @endif
                     </div>
 
                 </div>

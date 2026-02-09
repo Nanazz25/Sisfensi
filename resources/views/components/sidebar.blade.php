@@ -6,90 +6,98 @@
                 alt="User Profile Picture">
             <div class="dropdown">
                 <span>Welcome,</span>
-                <a href="javascript:void(0);" class="dropdown-toggle user-name" data-toggle="dropdown"><strong>Pamela
-                        Petrus</strong></a>
+                <a href="javascript:void(0);" class="dropdown-toggle user-name" data-toggle="dropdown">
+                    <strong>
+                        {{ implode(' ', array_slice(explode(' ', Auth::user()->name), 0, 2)) }}
+                    </strong>
+                </a>
                 <ul class="dropdown-menu dropdown-menu-right account">
-                    <li><a href="page-profile2.html"><i class="icon-user"></i>My Profile</a></li>
+                    <li><a href="{{ route('users.edit', Auth::user()->id) }}"><i class="icon-user"></i>My Profile</a>
+                    </li>
                     <li><a href="app-inbox.html"><i class="icon-envelope-open"></i>Messages</a></li>
                     <li><a href="javascript:void(0);"><i class="icon-settings"></i>Settings</a></li>
                     <li class="divider"></li>
-                    <li><a href="page-login.html"><i class="icon-power"></i>Logout</a></li>
+                    <li>
+                        <a href="#" data-toggle="modal" data-target="#logoutModal">
+                            <i class="icon-power"></i> Logout
+                        </a>
+                    </li>
                 </ul>
             </div>
             <hr>
-            <ul class="row list-unstyled">
-                <li class="col-4">
-                    <small>Sales</small>
-                    <h6>561</h6>
-                </li>
-                <li class="col-4">
-                    <small>Order</small>
-                    <h6>920</h6>
-                </li>
-                <li class="col-4">
-                    <small>Revenue</small>
-                    <h6>$23B</h6>
-                </li>
-            </ul>
         </div>
         <!-- Nav tabs -->
-        <ul class="nav nav-tabs">
-            <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#menu">Menu</a></li>
-            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#Chat"><i class="icon-book-open"></i></a>
+        <ul class="nav nav-tabs d-flex justify-content-between" style="padding: 0 15px;">
+            <li class="nav-item">
+                <a class="nav-link active" data-toggle="tab" href="#menu">
+                    <i class="icon-list"></i>
+                    Menu
+                </a>
             </li>
-            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#setting"><i class="icon-settings"></i></a>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#setting">
+                    <i class="icon-settings"></i>
+                    Setting
+                </a>
             </li>
-            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#question"><i
-                        class="icon-question"></i></a></li>
         </ul>
+
 
         <!-- Tab panes -->
         <div class="tab-content padding-0">
             <div class="tab-pane active" id="menu">
                 <nav id="left-sidebar-nav" class="sidebar-nav">
-                    <ul id="main-menu" class="metismenu li_animation_delay">
+                    <ul id="main-menu" class="metismenu">
 
                         <li class="{{ request()->routeIs('dashboard.*') ? 'active' : '' }}">
-            <a href=" {{ route('dashboard.index') }}"> <i class="fa fa-dashboard"></i>
-                            <span>Dashboard</span>
+                            <a href="{{ route('dashboard.index') }}">
+                                <i class="fa fa-dashboard"></i>
+                                <span>Dashboard</span>
                             </a>
                         </li>
 
-                        {{-- Users: akun login --}}
+                        {{-- Users --}}
                         <li class="{{ request()->routeIs('users.*') ? 'active' : '' }}">
                             <a href="#Users" class="has-arrow">
                                 <i class="fa fa-users"></i>
-                                <span>Users</span>
+                                <span>Manajemen User</span>
                             </a>
-                            <ul>
+                            <ul class="collapse {{ request()->routeIs('users.*') ? 'in' : '' }}">
                                 <li class="{{ request()->routeIs('users.admin') ? 'active' : '' }}">
-                                    <a href="{{ route('users.admin') }}">Admin</a>
+                                    <a href="{{ route('users.admin') }}">
+                                        <i class="fa fa-user-secret"></i> <span>Admin</span>
+                                    </a>
                                 </li>
                                 <li class="{{ request()->routeIs('users.guru') ? 'active' : '' }}">
-                                    <a href="{{ route('users.guru') }}">Guru</a>
+                                    <a href="{{ route('users.guru') }}">
+                                        <i class="fa fa-graduation-cap"></i> <span>Guru</span>
+                                    </a>
                                 </li>
                                 <li class="{{ request()->routeIs('users.siswa') ? 'active' : '' }}">
-                                    <a href="{{ route('users.siswa') }}">Siswa</a>
+                                    <a href="{{ route('users.siswa') }}">
+                                        <i class="fa fa-user"></i> <span>Siswa</span>
+                                    </a>
                                 </li>
                             </ul>
                         </li>
 
-                        {{-- Data Master: profil lengkap --}}
+                        {{-- Data Master --}}
                         <li
                             class="{{ request()->routeIs('teachers.*') || request()->routeIs('peserta-didik.*') ? 'active' : '' }}">
                             <a href="#DataMaster" class="has-arrow">
                                 <i class="fa fa-database"></i>
                                 <span>Data Master</span>
                             </a>
-                            <ul>
+                            <ul
+                                class="collapse {{ request()->routeIs('teachers.*') || request()->routeIs('peserta-didik.*') ? 'in' : '' }}">
                                 <li class="{{ request()->routeIs('teachers.*') ? 'active' : '' }}">
                                     <a href="{{ route('teachers.index') }}">
-                                        <i class="fa fa-black-tie"></i> Guru
+                                        <i class="fa fa-black-tie"></i> <span>Guru</span>
                                     </a>
                                 </li>
                                 <li class="{{ request()->routeIs('peserta-didik.*') ? 'active' : '' }}">
                                     <a href="{{ route('peserta-didik.index') }}">
-                                        <i class="fa fa-child"></i> Peserta Didik
+                                        <i class="fa fa-child"></i> <span>Peserta Didik</span>
                                     </a>
                                 </li>
                             </ul>
@@ -99,48 +107,78 @@
                         <li
                             class="{{ request()->routeIs('tahun-ajar.*') || request()->routeIs('jurusan.*') || request()->routeIs('rombongan-belajar.*') || request()->routeIs('subjects.*') || request()->routeIs('schedules.*') ? 'active' : '' }}">
                             <a href="#Akademik" class="has-arrow">
-                <i class=" fa fa-graduation-cap"></i>
+                                <i class="fa fa-mortar-board"></i>
                                 <span>Akademik</span>
                             </a>
-                            <ul>
+                            <ul
+                                class="collapse {{ request()->routeIs('tahun-ajar.*') || request()->routeIs('jurusan.*') || request()->routeIs('rombongan-belajar.*') || request()->routeIs('subjects.*') || request()->routeIs('schedules.*') ? 'in' : '' }}">
                                 <li class="{{ request()->routeIs('tahun-ajar.*') ? 'active' : '' }}">
                                     <a href="{{ route('tahun-ajar.index') }}">
-                                        <i class="fa fa-calendar"></i> Tahun Ajar
+                                        <i class="fa fa-calendar"></i> <span>Tahun Ajar</span>
                                     </a>
                                 </li>
                                 <li class="{{ request()->routeIs('jurusan.*') ? 'active' : '' }}">
                                     <a href="{{ route('jurusan.index') }}">
-                                        <i class="fa fa-book"></i> Jurusan
+                                        <i class="fa fa-folder"></i> <span>Jurusan</span>
                                     </a>
                                 </li>
                                 <li class="{{ request()->routeIs('rombongan-belajar.*') ? 'active' : '' }}">
                                     <a href="{{ route('rombongan-belajar.index') }}">
-                                        <i class="fa fa-sitemap"></i> Rombongan Belajar
+                                        <i class="fa fa-sitemap"></i> <span>Rombongan Belajar</span>
                                     </a>
                                 </li>
                                 <li class="{{ request()->routeIs('subjects.*') ? 'active' : '' }}">
                                     <a href="{{ route('subjects.index') }}">
-                                        <i class="fa fa-book"></i> Mata Pelajaran
+                                        <i class="fa fa-book"></i> <span>Mata Pelajaran</span>
                                     </a>
                                 </li>
                                 <li class="{{ request()->routeIs('schedules.*') ? 'active' : '' }}">
                                     <a href="{{ route('schedules.index') }}">
-                                        <i class="fa fa-clock-o"></i> Jadwal
+                                        <i class="fa fa-clock-o"></i> <span>Jadwal</span>
                                     </a>
                                 </li>
                             </ul>
                         </li>
 
                         {{-- Sekolah --}}
-                        <li class="{{ request()->routeIs('school-locations.*') ? 'active' : '' }}">
+                        <li
+                            class="{{ request()->routeIs('school-locations.*') || request()->routeIs('school-settings.*') ? 'active' : '' }}">
                             <a href="#Sekolah" class="has-arrow">
                                 <i class="fa fa-building"></i>
                                 <span>Sekolah</span>
                             </a>
-                            <ul>
+                            <ul
+                                class="collapse {{ request()->routeIs('school-locations.*') || request()->routeIs('school-settings.*') ? 'in' : '' }}">
                                 <li class="{{ request()->routeIs('school-locations.*') ? 'active' : '' }}">
                                     <a href="{{ route('school-locations.index') }}">
-                                        <i class="fa fa-map-marker"></i> Lokasi Sekolah
+                                        <i class="fa fa-map-marker"></i> <span>Lokasi Sekolah</span>
+                                    </a>
+                                </li>
+                                <li class="{{ request()->routeIs('school-settings.*') ? 'active' : '' }}">
+                                    <a href="{{ route('school-settings.index') }}">
+                                        <i class="fa fa-cog"></i> <span>Sistem Sekolah</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        {{-- Presensi & Biometrik --}}
+                        <li
+                            class="{{ request()->is('face-recognition*') || request()->is('attendance*') ? 'active' : '' }}">
+                            <a href="#Presensi" class="has-arrow">
+                                <i class="fa fa-camera"></i>
+                                <span>Presensi & Biometrik</span>
+                            </a>
+                            <ul
+                                class="collapse {{ request()->is('face-recognition*') || request()->is('attendance*') ? 'in' : '' }}">
+                                <li class="{{ request()->routeIs('face.enroll') ? 'active' : '' }}">
+                                    <a href="{{ route('face.enroll') }}">
+                                        <i class="fa fa-id-card"></i> <span>Registrasi Wajah</span>
+                                    </a>
+                                </li>
+                                <li class="{{ request()->routeIs('attendance.scanner') ? 'active' : '' }}">
+                                    <a href="{{ route('attendance.scanner') }}">
+                                        <i class="fa fa-video-camera"></i> <span>Mulai Presensi</span>
                                     </a>
                                 </li>
                             </ul>
@@ -158,58 +196,6 @@
                         <input type="text" class="form-control" placeholder="Search...">
                     </div>
                 </form>
-                <!-- <ul class="right_chat list-unstyled li_animation_delay">
-                    <li>
-                        <a href="javascript:void(0);" class="media">
-                            <img class="media-object" src="{{ asset('assets/images/xs/avatar1.jpg') }}" alt="">
-                            <div class="media-body">
-                                <span class="name d-flex justify-content-between">Chris Fox <i
-                                        class="fa fa-heart-o font-12"></i></span>
-                                <span class="message">chrisfox@gmail.com</span>
-                            </div>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="javascript:void(0);" class="media">
-                            <img class="media-object" src="{{ asset('assets/images/xs/avatar2.jpg') }}" alt="">
-                            <div class="media-body">
-                                <span class="name d-flex justify-content-between">Joge Lucky <i
-                                        class="fa fa-heart-o font-12"></i></span>
-                                <span class="message">Jogelucky@gmail.com</span>
-                            </div>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="javascript:void(0);" class="media">
-                            <img class="media-object" src="{{ asset('assets/images/xs/avatar3.jpg') }}" alt="">
-                            <div class="media-body">
-                                <span class="name d-flex justify-content-between">Isabella <i
-                                        class="fa fa-heart-o font-12"></i></span>
-                                <span class="message">Isabella@gmail.com</span>
-                            </div>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="javascript:void(0);" class="media">
-                            <img class="media-object" src="{{ asset('assets/images/xs/avatar4.jpg') }}" alt="">
-                            <div class="media-body">
-                                <span class="name d-flex justify-content-between">Folisise Chosielie <i
-                                        class="fa fa-heart font-12"></i></span>
-                                <span class="message">FolisiseChosielie@gmail.com</span>
-                            </div>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="javascript:void(0);" class="media">
-                            <img class="media-object" src="{{ asset('assets/images/xs/avatar5.jpg') }}" alt="">
-                            <div class="media-body">
-                                <span class="name d-flex justify-content-between">Alexander <i
-                                        class="fa fa-heart-o font-12"></i></span>
-                                <span class="message">Alexander@gmail.com</span>
-                            </div>
-                        </a>
-                    </li>
-                </ul> -->
             </div>
             <div class="tab-pane" id="setting">
                 <h6>Choose Skin</h6>
@@ -324,22 +310,6 @@
                         <input type="text" class="form-control" placeholder="Search...">
                     </div>
                 </form>
-                <!-- <ul class="list-unstyled question">
-                    <li class="menu-heading">HOW-TO</li>
-                    <li><a href="javascript:void(0);">How to Create Campaign</a></li>
-                    <li><a href="javascript:void(0);">Boost Your Sales</a></li>
-                    <li><a href="javascript:void(0);">Website Analytics</a></li>
-                    <li class="menu-heading">ACCOUNT</li>
-                    <li><a href="javascript:void(0);">Cearet New Account</a></li>
-                    <li><a href="javascript:void(0);">Change Password?</a></li>
-                    <li><a href="javascript:void(0);">Privacy &amp; Policy</a></li>
-                    <li class="menu-heading">BILLING</li>
-                    <li><a href="javascript:void(0);">Payment info</a></li>
-                    <li><a href="javascript:void(0);">Auto-Renewal</a></li>
-                    <li class="menu-button mt-3">
-                        <a href="../docs/index.html" class="btn btn-primary btn-block">Documentation</a>
-                    </li>
-                </ul> -->
             </div>
         </div>
     </div>

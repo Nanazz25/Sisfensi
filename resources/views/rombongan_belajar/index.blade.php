@@ -50,6 +50,10 @@
                 </div>
 
                 <input type="hidden" name="sort" id="sortInput" value="{{ request('sort', 'desc') }}">
+
+                <a href="{{ route('laporan.absensi.kelas') }}" class="btn btn-primary mx-3">
+                    <i class="fa fa-print"></i> Laporan Absensi
+                </a>
             </form>
 
             <div class="table-responsive">

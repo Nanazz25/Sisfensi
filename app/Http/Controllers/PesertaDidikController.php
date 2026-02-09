@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\PesertaDidik;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PesertaDidikController extends Controller
 {
@@ -31,6 +34,23 @@ class PesertaDidikController extends Controller
         $pesertaDidik->load('user');
 
         return view('peserta-didik.show', compact('pesertaDidik'));
+    }
+
+    public function showPhoto(PesertaDidik $pesertaDidik)
+    {
+        if (!$pesertaDidik->foto_wajah || !Storage::exists($pesertaDidik->foto_wajah)) {
+            abort(404);
+        }
+
+        $encrypted = Storage::get($pesertaDidik->foto_wajah);
+
+        try {
+            $decrypted = Crypt::decrypt($encrypted);
+
+            return response($decrypted)->header('Content-Type', 'image/jpeg');
+        } catch (\Exception $e) {
+            abort(500, 'Gagal mendekripsi foto');
+        }
     }
 
     public function create()

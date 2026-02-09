@@ -46,7 +46,14 @@ class AcademicSeeder extends Seeder
             'radius_maks' => 50, // 50 meters
         ]);
 
-        // 4. Buat Rombel (Kelas)
+
+        // 4. Buat Jurusan
+        $jurusan = \App\Models\Jurusan::create([
+            'kode_jurusan' => 'RPL',
+            'nama_jurusan' => 'Rekayasa Perangkat Lunak'
+        ]);
+
+        // 5. Buat Rombel (Kelas)
         // Tetapkan guru secara acak sebagai Wali Kelas
         $teachers = Teacher::all();
 
@@ -59,6 +66,7 @@ class AcademicSeeder extends Seeder
 
                 RombonganBelajar::create([
                     'nama_rombel' => $className,
+                    'jurusan_id' => $jurusan->id, // Add this line
                     'tahun_ajar_id' => $tahunAjar->id,
                     'wali_kelas_id' => $teacher->id,
                 ]);

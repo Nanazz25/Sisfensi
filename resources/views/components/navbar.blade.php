@@ -15,7 +15,8 @@
             <div id="navbar-menu">
                 <ul class="nav navbar-nav">
                     <li>
-                        <a href="page-login.html" class="icon-menu"><i class="fa fa-power-off"></i></a>
+                        <a href="#" data-toggle="modal" data-target="#logoutModal" class="icon-menu"><i
+                                class="fa fa-power-off"></i></a>
                     </li>
                 </ul>
             </div>

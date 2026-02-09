@@ -14,8 +14,12 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('peserta_didik_id')->constrained('peserta_didik')->onDelete('cascade');
             $table->float('confidence');
-            $table->enum('result', ['match', 'no_match']);
-            $table->text('image_path');
+            $table->enum('result', [
+                'unrecognized',
+                'low_confidence',
+                'spoof',
+            ]);
+            $table->string('image_path')->nullable();
             $table->timestamp('created_at')->useCurrent();
         });
     }
