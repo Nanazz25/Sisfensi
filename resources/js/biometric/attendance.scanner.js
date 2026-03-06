@@ -3,6 +3,7 @@ const canvas = document.getElementById("canvas");
 const statusText = document.getElementById("statusText");
 const statusDot = document.getElementById("statusDot");
 const successOverlay = document.getElementById("successOverlay");
+const permissionOverlay = document.getElementById("permissionOverlay");
 const btnAbsen = document.getElementById("btnAbsen");
 
 const { verifyUrl, csrfToken, dashboardUrl, type } = window.attendanceConfig;
@@ -15,8 +16,13 @@ let isModelsLoaded = false,
     lastDetection = null;
 
 function getLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.watchPosition(
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            toastr.error("Browser tidak mendukung GPS.");
+            return reject(new Error("No Geolocation Support"));
+        }
+
+        navigator.geolocation.getCurrentPosition(
             (p) => {
                 userCoords = {
                     lat: p.coords.latitude,
@@ -28,14 +34,40 @@ function getLocation() {
                     userCoords.lat.toFixed(6) +
                     ", " +
                     userCoords.lng.toFixed(6);
+                checkPermissionsDone();
+                resolve(p);
             },
             (e) => {
                 document.getElementById("gpsStatus").innerHTML =
                     '<span class="badge badge-danger px-2 py-1">OFF</span>';
-                toastr.error("Akses GPS diperlukan untuk presensi!");
+                if (e.code === 1) permissionOverlay.classList.add("show");
+                toastr.error("Akses GPS ditolak / bermasalah.");
+                reject(e);
             },
+            { enableHighAccuracy: true, timeout: 5000 },
+        );
+
+        navigator.geolocation.watchPosition(
+            (p) => {
+                userCoords = {
+                    lat: p.coords.latitude,
+                    lng: p.coords.longitude,
+                };
+                document.getElementById("coordsDebug").innerText =
+                    userCoords.lat.toFixed(6) +
+                    ", " +
+                    userCoords.lng.toFixed(6);
+            },
+            null,
             { enableHighAccuracy: true },
         );
+    });
+}
+
+function checkPermissionsDone() {
+    // Hide overlay only if BOTH camera and location are ready
+    if (video.srcObject && userCoords) {
+        permissionOverlay.classList.remove("show");
     }
 }
 
@@ -58,13 +90,64 @@ async function init() {
         video.srcObject = stream;
         video.onloadedmetadata = () => {
             video.play();
+            checkPermissionsDone();
             startDetection();
         };
     } catch (e) {
-        toastr.error("Kamera tidak terdeteksi atau akses ditolak");
+        // Tampilkan overlay jika akses ditolak (NotAllowedError/PermissionDeniedError)
+        if (
+            e.name === "NotAllowedError" ||
+            e.name === "PermissionDeniedError"
+        ) {
+            permissionOverlay.classList.add("show");
+        }
+        console.error("Camera Error:", e);
+        toastr.error("Kamera akses ditolak atau tidak terdeteksi");
         updateStatus("Cam Error", "error");
     }
 }
+
+// Global Re-init
+window.requestPermissions = async function (event) {
+    if (location.protocol !== "https:" && location.hostname !== "localhost") {
+        toastr.error("Kamera & GPS butuh koneksi HTTPS!");
+        return;
+    }
+
+    console.log("Requesting permissions via user interaction...");
+    const btn = event?.currentTarget || event?.target;
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>MEMINTA...';
+    }
+
+    try {
+        // 1. Manually trigger Camera first (Must be in user callback)
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "user", width: 1280, height: 720 },
+        });
+        video.srcObject = stream;
+        await video.play();
+
+        // 2. Manually trigger GPS
+        await getLocation();
+
+        // 3. Continue with AI models
+        if (!isModelsLoaded) await init();
+
+        checkPermissionsDone();
+    } catch (e) {
+        console.error("Manual Request Error:", e);
+        if (e.name === "NotAllowedError" || e.code === 1) {
+            toastr.warning("Hapus blokir di setelan browser (Ikon Gembok)");
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = "IZINKAN SEKARANG";
+        }
+    }
+};
 
 function updateStatus(text, type) {
     statusText.innerText = text;
@@ -115,43 +198,81 @@ function drawStylizedBox(ctx, box) {
 }
 
 function startDetection() {
-    const displaySize = {
-        width: video.clientWidth,
-        height: video.clientHeight,
-    };
-    faceapi.matchDimensions(canvas, displaySize);
-
-    setInterval(async () => {
-        if (!isModelsLoaded || isProcessing) return;
-
-        const det = await faceapi
-            .detectSingleFace(
-                video,
-                new faceapi.TinyFaceDetectorOptions({
-                    inputSize: 224,
-                    scoreThreshold: 0.5,
-                }),
-            )
-            .withFaceLandmarks()
-            .withFaceDescriptor();
-
-        const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        if (det) {
-            const resized = faceapi.resizeResults(det, displaySize);
-            drawStylizedBox(ctx, resized.detection.box);
-
-            updateStatus("Scan Ready", "active");
-            isFaceDetected = true;
-            lastDetection = det;
-            if (userCoords) btnAbsen.disabled = false;
-        } else {
-            updateStatus("Searching...", "default");
-            isFaceDetected = false;
-            btnAbsen.disabled = true;
+    // Gunakan recursive loop untuk mencegah 'stacking' proses deteksi
+    // yang membuat browser berat/laggy.
+    const runDetection = async () => {
+        if (!isModelsLoaded || isProcessing) {
+            setTimeout(runDetection, 200);
+            return;
         }
-    }, 150);
+
+        // Cek apakah video sedang playing
+        if (video.paused || video.ended || !video.srcObject) {
+            setTimeout(runDetection, 200);
+            return;
+        }
+
+        try {
+            // Dynamic resize: Always match current visible video dimensions
+            const displaySize = {
+                width: video.clientWidth,
+                height: video.clientHeight,
+            };
+
+            // Optimization: Hanya match dimension jika size valid
+            if (displaySize.width > 0 && displaySize.height > 0) {
+                // Cek canvas match dimensions manual untuk menghindari re-allocation berat
+                if (
+                    canvas.width !== displaySize.width ||
+                    canvas.height !== displaySize.height
+                ) {
+                    faceapi.matchDimensions(canvas, displaySize);
+                }
+            }
+
+            // Detection options: Input size kecil lebih cepat (160 atau 224)
+            // withFaceLandmarks necessary for aligning face for descriptor
+            const det = await faceapi
+                .detectSingleFace(
+                    video,
+                    new faceapi.TinyFaceDetectorOptions({
+                        inputSize: 160, // Lowered from 224 for better speed
+                        scoreThreshold: 0.5,
+                    }),
+                )
+                .withFaceLandmarks()
+                .withFaceDescriptor();
+
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (det && displaySize.width > 0) {
+                const resized = faceapi.resizeResults(det, displaySize);
+                drawStylizedBox(ctx, resized.detection.box);
+
+                if (!isFaceDetected) {
+                    updateStatus("Scan Ready", "active");
+                    isFaceDetected = true;
+                }
+                lastDetection = det;
+                if (userCoords) btnAbsen.disabled = false;
+            } else {
+                if (isFaceDetected) {
+                    updateStatus("Searching...", "default");
+                    isFaceDetected = false;
+                    btnAbsen.disabled = true;
+                }
+            }
+        } catch (err) {
+            console.error("Detection Error:", err);
+        }
+
+        // Jalankan frame berikutnya dengan delay
+        // Delay 100ms memberikan waktu "nafas" untuk UI thread agar animasi smooth
+        setTimeout(runDetection, 100);
+    };
+
+    runDetection();
 }
 
 btnAbsen.onclick = async () => {
@@ -187,11 +308,16 @@ btnAbsen.onclick = async () => {
         const data = await res.json();
         if (data.status === "success") {
             document.getElementById("successName").innerText = data.nama;
-            document.getElementById("successTime").innerText = "Diterima Pukul " + data.waktu;
-            
+            document.getElementById("successTime").innerText =
+                "Diterima Pukul " + data.waktu;
+
             if (data.is_late) {
-                 document.getElementById("successName").innerHTML += " <span class='text-warning'>(TERLAMBAT)</span>";
-                 document.getElementById("successTime").innerHTML += "<br><small class='text-danger'>" + data.late_info + "</small>";
+                document.getElementById("successName").innerHTML +=
+                    " <span class='text-warning'>(TERLAMBAT)</span>";
+                document.getElementById("successTime").innerHTML +=
+                    "<br><small class='text-danger'>" +
+                    data.late_info +
+                    "</small>";
             }
 
             successOverlay.style.display = "flex";

@@ -13,6 +13,22 @@
             <video id="video" autoplay muted></video>
             <canvas id="canvas"></canvas>
 
+            <div class="permission-overlay" id="permissionOverlay">
+                <div class="permission-card shadow-lg">
+                    <div class="permission-icon mb-3">
+                        <i class="fa fa-lock text-warning"></i>
+                    </div>
+                    <h4 class="font-weight-bold mb-2 text-dark">Akses Diperlukan</h4>
+                    <p class="text-secondary small mb-4 px-3">
+                        Aplikasi butuh izin <b>Kamera</b> & <b>Lokasi (GPS)</b> untuk proses presensi biometrik.
+                    </p>
+                    <button class="btn btn-primary btn-block py-2 font-weight-bold shadow-sm"
+                        onclick="requestPermissions(event)">
+                        IZINKAN SEKARANG
+                    </button>
+                </div>
+            </div>
+
             <div class="success-overlay" id="successOverlay">
                 <i class="fa fa-check-circle"></i>
                 <h1 id="successName" class="font-weight-bold">BERHASIL</h1>
@@ -33,6 +49,17 @@
                     <div id="statusDot" class="dot"></div>
                     <span id="statusText">System Ready</span>
                 </div>
+            </div>
+
+            {{-- Mode Indicator Badge (Top Right) --}}
+            <div class="mode-indicator-badge {{ $type }}" id="modeIndicator">
+                @if($type == 'masuk')
+                    📍 Masuk
+                @elseif($type == 'mapel')
+                    📚 Mapel
+                @else
+                    🏠 Pulang
+                @endif
             </div>
         </div>
 
@@ -72,6 +99,42 @@
                 </div>
             </div>
 
+            {{-- Type Selector Toggle (Mobile Only) --}}
+            <button class="type-selector-toggle" id="typeSelectorToggle" onclick="toggleTypeSelector()">
+                <span>
+                    <i class="fa 
+                                    @if($type == 'masuk') fa-sign-in
+                                    @elseif($type == 'mapel') fa-book
+                                    @else fa-sign-out
+                                    @endif
+                                "></i>
+                    @if($type == 'masuk') Presensi Masuk
+                    @elseif($type == 'mapel') Presensi Mapel
+                    @else Presensi Pulang
+                    @endif
+                </span>
+                <i class="fa fa-chevron-down"></i>
+            </button>
+
+            {{-- Type Selector Dropdown (Mobile Only) --}}
+            <div class="type-selector-dropdown" id="typeSelectorDropdown">
+                <div class="type-selector-dropdown-item {{ $type == 'masuk' ? 'active' : '' }}"
+                    onclick="setTypeFromDropdown('masuk')">
+                    <i class="fa fa-sign-in"></i>
+                    <span>Presensi Masuk</span>
+                </div>
+                <div class="type-selector-dropdown-item {{ $type == 'mapel' ? 'active' : '' }}"
+                    onclick="setTypeFromDropdown('mapel')">
+                    <i class="fa fa-book"></i>
+                    <span>Presensi Mapel</span>
+                </div>
+                <div class="type-selector-dropdown-item {{ $type == 'pulang' ? 'active' : '' }}"
+                    onclick="setTypeFromDropdown('pulang')">
+                    <i class="fa fa-sign-out"></i>
+                    <span>Presensi Pulang</span>
+                </div>
+            </div>
+
             <div class="mt-auto">
                 <button id="btnAbsen" class="btn btn-primary btn-absen-large shadow-lg pulse-button" disabled>
                     <i class="fa fa-camera mr-2"></i> KONFIRMASI HADIR
@@ -94,6 +157,30 @@
             dashboardUrl: "{{ route('dashboard.index') }}",
             type: "{{ $type }}"
         };
+
+        // Type Selector Toggle (Bottom Panel)
+        function toggleTypeSelector() {
+            const dropdown = document.getElementById('typeSelectorDropdown');
+            const toggle = document.getElementById('typeSelectorToggle');
+            dropdown.classList.toggle('active');
+            toggle.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (event) {
+            const toggle = document.getElementById('typeSelectorToggle');
+            const dropdown = document.getElementById('typeSelectorDropdown');
+
+            if (toggle && dropdown && !toggle.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.classList.remove('active');
+                toggle.classList.remove('active');
+            }
+        });
+
+        // Set type from bottom dropdown
+        function setTypeFromDropdown(type) {
+            window.location.href = `{{ route('attendance.scanner') }}?type=${type}`;
+        }
     </script>
 
     @vite('resources/js/biometric/attendance.scanner.js')

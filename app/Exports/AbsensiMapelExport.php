@@ -17,7 +17,7 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use Maatwebsite\Excel\Concerns\WithCustomStartCell;
 
-class AbsensiKelasExport implements
+class AbsensiMapelExport implements
     FromCollection,
     WithHeadings,
     WithStyles,
@@ -41,31 +41,32 @@ class AbsensiKelasExport implements
 
     public function collection()
     {
-        $rombel = RombonganBelajar::with('anggotaRombel.pesertaDidik.user')
-            ->findOrFail($this->rombel_id);
+        $rombel = RombonganBelajar::findOrFail($this->rombel_id);
 
-        $rows = [];
+        $data = Attendance::with(['anggotaRombel.pesertaDidik.user', 'schedule.subject'])
+            ->whereHas('anggotaRombel', function ($q) use ($rombel) {
+                $q->where('rombongan_belajar_id', $rombel->id);
+            })
+            ->where('jenis_absensi', 'pelajaran')
+            ->whereBetween('tanggal', [$this->start, $this->end])
+            ->orderBy('tanggal', 'desc')
+            ->get();
 
-        foreach ($rombel->anggotaRombel as $anggota) {
-            $attendance = Attendance::where('anggota_rombel_id', $anggota->id)
-                ->whereBetween('tanggal', [$this->start, $this->end])
-                ->get();
-
-            $rows[] = [
-                $anggota->pesertaDidik->user->name,
-                $attendance->where('jenis_absensi', 'masuk')->whereIn('status', ['hadir', 'terlambat'])->count(),
-                $attendance->where('status', 'izin')->count(),
-                $attendance->where('status', 'sakit')->count(),
-                $attendance->where('status', 'alpha')->count(),
+        return $data->map(function ($item, $index) {
+            return [
+                $index + 1,
+                $item->anggotaRombel->pesertaDidik->user->name,
+                $item->schedule->subject->nama_mapel ?? '-',
+                $item->tanggal->format('d/m/Y'),
+                $item->waktu_absen->format('H:i:s'),
+                strtoupper($item->status),
             ];
-        }
-
-        return new Collection($rows);
+        });
     }
 
     public function headings(): array
     {
-        return ['Nama', 'Hadir', 'Izin', 'Sakit', 'Alpha'];
+        return ['No', 'Nama Siswa', 'Mata Pelajaran', 'Tanggal', 'Waktu', 'Status'];
     }
 
     public function styles(Worksheet $sheet)
@@ -81,11 +82,12 @@ class AbsensiKelasExport implements
     public function columnWidths(): array
     {
         return [
-            'A' => 35,
-            'B' => 12,
-            'C' => 12,
-            'D' => 12,
-            'E' => 12,
+            'A' => 5,
+            'B' => 35,
+            'C' => 25,
+            'D' => 15,
+            'E' => 15,
+            'F' => 15,
         ];
     }
 
@@ -96,15 +98,13 @@ class AbsensiKelasExport implements
                 $sheet = $event->sheet->getDelegate();
                 $highestRow = $sheet->getHighestRow();
 
-                // JUDUL
-                $sheet->mergeCells('A1:E1');
-                $sheet->setCellValue('A1', 'LAPORAN ABSENSI HARIAN KELAS');
+                $sheet->mergeCells('A1:F1');
+                $sheet->setCellValue('A1', 'LAPORAN ABSENSI MATA PELAJARAN');
                 $sheet->getStyle('A1')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 14],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
                 ]);
 
-                // INFO KELAS
                 $rombel = RombonganBelajar::find($this->rombel_id);
                 $sheet->setCellValue('A3', 'Kelas');
                 $sheet->setCellValue('B3', ': ' . ($rombel->nama_rombel ?? '-'));
@@ -112,10 +112,7 @@ class AbsensiKelasExport implements
                 $sheet->setCellValue('B4', ': ' . \Carbon\Carbon::parse($this->start)->translatedFormat('d F Y') . ' s/d ' . \Carbon\Carbon::parse($this->end)->translatedFormat('d F Y'));
                 $sheet->getStyle('A3:A4')->getFont()->setBold(true);
 
-                $sheet->freezePane('A7');
-
-                // HEADER
-                $sheet->getStyle('A6:E6')->applyFromArray([
+                $sheet->getStyle('A6:F6')->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
                     'fill' => [
@@ -124,9 +121,9 @@ class AbsensiKelasExport implements
                     ],
                 ]);
 
-                // BORDERS
-                $sheet->getStyle("A6:E{$highestRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-                $sheet->getStyle("B7:E{$highestRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("A6:F{$highestRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+                $sheet->getStyle("A7:A{$highestRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("D7:F{$highestRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             },
         ];
     }

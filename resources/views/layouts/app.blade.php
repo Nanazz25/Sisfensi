@@ -31,9 +31,12 @@
                         <div class="col-lg-6 col-md-6 col-sm-12">
                             <h2>@yield('title')</h2>
                             <ul class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="index.html"><i class="fa fa-dashboard"></i></a>
-                                </li>
-                                <li class="breadcrumb-item">@yield('title')</li>
+                                <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}"><i
+                                            class="fa fa-dashboard"></i></a></li>
+                                @if(request()->segment(1) && request()->segment(1) !== 'dashboard')
+                                    <li class="breadcrumb-item">{{ ucwords(str_replace('-', ' ', request()->segment(1))) }}
+                                    </li>
+                                @endif
                                 <li class="breadcrumb-item active">@yield('title')</li>
                             </ul>
                         </div>
@@ -110,6 +113,86 @@
                             if (formElem) formElem.action = action;
                         });
                     });
+
+                    // Global Confirm Modal Handler (POST)
+                    document.querySelectorAll('.btn-confirm').forEach(btn => {
+                        btn.addEventListener('click', function () {
+                            const title = this.dataset.title || 'Konfirmasi';
+                            const message = this.dataset.message || 'Apakah Anda yakin?';
+                            const name = this.dataset.name || '';
+                            const action = this.dataset.action;
+                            const btnClass = this.dataset.btnClass || 'btn-primary';
+                            const btnText = this.dataset.btnText || 'Yakin';
+                            const iconClass = this.dataset.confirmIcon || 'fa-check';
+
+                            document.getElementById('confirmModalTitle').innerText = title;
+                            document.getElementById('confirmModalMessage').innerText = message;
+                            document.getElementById('confirmModalItemName').innerText = name;
+                            document.getElementById('confirmForm').action = action;
+
+                            const submitBtn = document.getElementById('confirmModalSubmitBtn');
+                            submitBtn.className = 'btn ' + btnClass;
+                            document.getElementById('confirmModalSubmitText').innerText = btnText;
+                            document.getElementById('confirmModalIcon').className = 'fa mr-1 ' + iconClass;
+                        });
+                    });
+
+                    // SIDEBAR BUG FIX: Custom Close Handler
+                    // Masalah: Theme script konflik dengan logic close manual.
+                    // Solusi: Gunakan class custom pada tombol close agar tidak disentuh theme script.
+
+                    const handleSidebarClose = (e) => {
+                        if (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
+
+                        // 1. Hapus class active dari body
+                        document.body.classList.remove('offcanvas-active');
+
+                        // 2. Hide overlay
+                        const overlays = document.querySelectorAll('.overlay');
+                        overlays.forEach(overlay => {
+                            overlay.style.display = 'none';
+                        });
+                    };
+
+                    // Gunakan class custom yang kita buat di sidebar component
+                    const sidebarCloseBtn = document.querySelector('.btn-custom-close-sidebar');
+                    if (sidebarCloseBtn) {
+                        sidebarCloseBtn.addEventListener('click', handleSidebarClose);
+                    }
+
+                    // Handle klik pada overlay
+                    document.addEventListener('click', function (e) {
+                        if (e.target.classList.contains('overlay')) {
+                            handleSidebarClose(e);
+                        }
+                    });
+
+                    // Monitor tombol burger navbar
+                    const navbarToggleBtn = document.querySelector('.navbar .btn-toggle-offcanvas');
+                    if (navbarToggleBtn) {
+                        navbarToggleBtn.addEventListener('click', function () {
+                            // Reset overlay visibility saat buka
+                            setTimeout(() => {
+                                if (document.body.classList.contains('offcanvas-active')) {
+                                    const overlays = document.querySelectorAll('.overlay');
+                                    overlays.forEach(overlay => {
+                                        overlay.style.removeProperty('display');
+                                        overlay.style.display = 'block';
+                                    });
+                                }
+                            }, 100);
+                        });
+                    }
+
+                    // EXTRA SAFTY: Ensure sidebar is closed on mobile load
+                    if (window.innerWidth < 992) {
+                        document.body.classList.remove('offcanvas-active');
+                    }
+
+
                 });
             </script>
             @yield('afterAppScripts')

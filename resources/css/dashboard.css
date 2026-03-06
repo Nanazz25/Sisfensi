@@ -1,0 +1,128 @@
+/* STATS GRID (Desktop Default - Horizontal) */
+.stats-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.stats-grid > div {
+    flex: 1;
+    padding: 15px 10px;
+    border-right: 1px solid #f1f5f9;
+}
+
+.stats-grid > div:last-child {
+    border-right: none;
+}
+
+/* WELCOME CARD FIX */
+.welcome-card {
+    border-radius: 12px !important;
+}
+
+/* MOBILE SPECIFIC (DASHBOARD ONLY STYLES) */
+@media (max-width: 767px) {
+    /* Balance Padding for Content to avoid "Cut off" look */
+    .container-fluid {
+        padding-left: 18px !important;
+        padding-right: 18px !important;
+    }
+
+    /* Left Aligned Header & Breadcrumbs */
+    .block-header {
+        text-align: left !important;
+        margin-bottom: 15px !important;
+        padding-left: 2px !important;
+    }
+
+    .breadcrumb {
+        justify-content: flex-start !important;
+        background: transparent !important;
+        padding: 0 !important;
+    }
+
+    /* Welcome Card */
+    .welcome-card .body {
+        flex-direction: column !important;
+        text-align: center !important;
+        padding: 2.25rem 1rem !important;
+        align-items: center !important;
+    }
+
+    .welcome-card .icon-box {
+        margin: 0 0 1.25rem 0 !important;
+    }
+
+    /* Summary Cards: Fill width balanced */
+    .row.clearfix {
+        margin-left: -5px !important;
+        margin-right: -5px !important;
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .col-sm-6.col-md-6,
+    .col-lg-3,
+    .col-md-12 {
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+        margin-bottom: 15px;
+    }
+
+    .top_widget .body {
+        flex-direction: row !important;
+        text-align: left !important;
+        padding: 1.1rem !important;
+    }
+
+    .top_widget .icon {
+        margin: 0 15px 0 0 !important;
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px;
+    }
+
+    /* Stats Grid Mobile (2 Columns) */
+    .stats-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+        padding: 0 !important;
+        margin-bottom: 10px;
+    }
+
+    .stats-grid > div {
+        text-align: center !important;
+        border: 1px solid #f1f5f9;
+        border-radius: 12px;
+        padding: 15px 5px !important;
+    }
+
+    /* Table Fix */
+    .table-responsive {
+        border-radius: 10px;
+        margin-bottom: 15px;
+    }
+}
+
+@media (min-width: 480px) and (max-width: 767px) {
+    .col-sm-6.col-md-6 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .welcome-card h4 {
+        font-size: 1.25rem !important;
+    }
+
+    .stats-grid .font-30 {
+        font-size: 1.4rem !important;
+    }
+}

@@ -4,6 +4,14 @@
 
 @section('afterAppStyles')
     @vite('resources/css/biometric.css')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        .select2-container--default .select2-selection--single {
+            height: 45px;
+            padding: 8px;
+            border: 1px solid #ced4da;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -21,7 +29,23 @@
         </div>
 
         <div class="info-section">
-            <div class="status-card shadow-sm">
+            <div class="status-card shadow-sm mb-3">
+                <h6 class="mb-3 text-uppercase font-weight-bold text-primary"
+                    style="font-size: 0.75rem; letter-spacing: 1px;">
+                    <i class="fa fa-user-circle mr-2"></i>Target Siswa
+                </h6>
+                <div class="form-group mb-0">
+                    <select id="studentSelect" class="form-control select2">
+                        <option value="">-- Pilih Siswa --</option>
+                        @foreach ($students as $student)
+                            <option value="{{ $student->id }}">{{ strtoupper($student->user->name) }} ({{ $student->nisn }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div class="status-card shadow-sm mb-3">
                 <h6 class="mb-4 text-uppercase font-weight-bold text-primary"
                     style="font-size: 0.75rem; letter-spacing: 1px;">
                     <i class="fa fa-info-circle mr-2"></i>Panduan Registrasi
@@ -52,7 +76,7 @@
                 </div>
             </div>
 
-            <div class="status-card shadow-sm mt-auto">
+            <div class="status-card shadow-sm mt-auto mb-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="text-muted small font-weight-bold text-uppercase">Tingkat Akurasi:</span>
                     <span id="accuracyBadge" class="badge badge-light">0%</span>
@@ -67,7 +91,7 @@
                     <i class="fa fa-user-plus mr-2"></i> DAFTARKAN WAJAH
                 </button>
                 <div class="text-center mt-3">
-                    <small class="text-muted font-italic"><i class="fa fa-lock mr-1"></i>Data biometrik Anda
+                    <small class="text-muted font-italic"><i class="fa fa-lock mr-1"></i>Data biometrik
                         dienkripsi</small>
                 </div>
             </div>
@@ -77,9 +101,17 @@
 
 @section('afterAppScripts')
     <script src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+        $(document).ready(function () {
+            $('.select2').select2({
+                placeholder: "-- Pilih Siswa --",
+                allowClear: true
+            });
+        });
+
         window.enrollEndpoint = "{{ route('face.enroll.post') }}";
-        window.redirectUrl = "{{ route('dashboard.index') }}";
+        window.redirectUrl = "{{ route('face.enroll') }}"; // Redirect kembali ke sini biar bisa regis siswa lain
         window.csrfToken = "{{ csrf_token() }}";
     </script>
     @vite('resources/js/biometric/enroll.js')

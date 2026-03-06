@@ -1,19 +1,19 @@
 @extends('layouts.app')
 
-@section('title', 'Laporan Absensi Harian')
+@section('title', 'Laporan Absensi Mata Pelajaran')
 
 @section('content')
     <div class="card">
         <div class="header d-flex justify-content-between align-items-center">
-            <h2>Laporan Absensi Harian</h2>
+            <h2>Laporan Absensi Mata Pelajaran</h2>
             @if($rombel)
                 <div class="mb-3">
-                    <a target="_blank" href="{{ route('laporan.absensi.kelas.pdf', request()->query()) }}"
+                    <a target="_blank" href="{{ route('laporan.absensi.mapel.pdf', request()->query()) }}"
                         class="btn btn-danger">
                         <i class="fa fa-file-pdf-o"></i> Export PDF
                     </a>
 
-                    <a href="{{ route('laporan.absensi.kelas.excel', request()->query()) }}" class="btn btn-success">
+                    <a href="{{ route('laporan.absensi.mapel.excel', request()->query()) }}" class="btn btn-success">
                         <i class="fa fa-file-excel-o"></i> Export Excel
                     </a>
                 </div>
@@ -54,24 +54,28 @@
             @if($rombel)
                 <h5>Kelas: <b>{{ $rombel->nama_rombel }}</b></h5>
 
-                <table class="table table-bordered mt-3">
+                <table class="table table-bordered mt-3 js-basic-example dataTable">
                     <thead>
                         <tr>
+                            <th>Tanggal</th>
+                            <th>Waktu</th>
                             <th>Nama Siswa</th>
-                            <th>Hadir</th>
-                            <th>Izin</th>
-                            <th>Sakit</th>
-                            <th>Alpha</th>
+                            <th>Mata Pelajaran</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($data as $row)
                             <tr>
-                                <td>{{ $row['nama'] }}</td>
-                                <td class="text-success font-weight-bold text-center">{{ $row['hadir'] }}</td>
-                                <td class="text-secondary text-center">{{ $row['izin'] }}</td>
-                                <td class="text-info text-center">{{ $row['sakit'] }}</td>
-                                <td class="text-danger text-center">{{ $row['alpha'] }}</td>
+                                <td>{{ $row->tanggal->format('d/m/Y') }}</td>
+                                <td>{{ $row->waktu_absen->format('H:i') }}</td>
+                                <td>{{ $row->anggotaRombel->pesertaDidik->user->name }}</td>
+                                <td>{{ $row->schedule->subject->nama_mapel ?? '-' }}</td>
+                                <td>
+                                    <span class="badge badge-{{ $row->status == 'hadir' ? 'success' : 'warning' }}">
+                                        {{ strtoupper($row->status) }}
+                                    </span>
+                                </td>
                             </tr>
                         @empty
                             <tr>

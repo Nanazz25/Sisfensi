@@ -6,6 +6,7 @@ const statusDot = document.getElementById("statusDot");
 const enrollBtn = document.getElementById("enrollBtn");
 const accuracyBadge = document.getElementById("accuracyBadge");
 const accuracyBar = document.getElementById("accuracyBar");
+const studentSelect = document.getElementById("studentSelect");
 
 // ================== STATE ==================
 let isModelsLoaded = false;
@@ -139,6 +140,13 @@ function startDetection() {
 enrollBtn.addEventListener("click", async () => {
     if (!lastDetection || isProcessing) return;
 
+    const studentId = studentSelect.value;
+    if (!studentId) {
+        toastr.warning("Silakan pilih siswa terlebih dahulu!");
+        studentSelect.focus();
+        return;
+    }
+
     isProcessing = true;
     enrollBtn.disabled = true;
     enrollBtn.innerHTML =
@@ -170,7 +178,7 @@ enrollBtn.addEventListener("click", async () => {
         0,
         0,
         outputSize,
-        outputSize // output (1:1)
+        outputSize, // output (1:1)
     );
 
     try {
@@ -184,16 +192,17 @@ enrollBtn.addEventListener("click", async () => {
             body: JSON.stringify({
                 image: shot.toDataURL("image/jpeg", 0.8),
                 face_embedding: Array.from(lastDetection.descriptor),
+                peserta_didik_id: studentId,
             }),
         });
 
         const data = await response.json();
 
         if (data.status === "ok") {
-            toastr.success("Wajah berhasil didaftarkan!");
+            toastr.success(data.message);
             setTimeout(() => {
                 window.location.href = window.redirectUrl;
-            }, 1500);
+            }, 1000);
         } else {
             throw new Error(data.message || "Gagal mendaftarkan wajah");
         }

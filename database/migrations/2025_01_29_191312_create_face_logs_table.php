@@ -12,8 +12,8 @@ return new class extends Migration {
     {
         Schema::create('face_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('peserta_didik_id')->constrained('peserta_didik')->onDelete('cascade');
-            $table->float('confidence');
+            $table->foreignId('peserta_didik_id')->nullable()->constrained('peserta_didik')->onDelete('cascade');
+            $table->float('confidence')->nullable();
             $table->enum('result', [
                 'unrecognized',
                 'low_confidence',

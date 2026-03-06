@@ -50,7 +50,7 @@ class SyncZieSiswa extends Command
 
             $email = $siswa['email'] ?? null;
             if (!$email) {
-                $email = Str::slug($siswa['nama']) . '.' . $noInduk . '@siswa.local';
+                $email = Str::slug($siswa['nama']) . '.' . $noInduk . '@siswa.id';
             }
 
             $jk = strtoupper(trim($siswa['jenis_kelamin'] ?? ''));

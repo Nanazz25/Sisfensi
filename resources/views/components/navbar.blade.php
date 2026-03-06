@@ -13,7 +13,7 @@
             </form>
 
             <div id="navbar-menu">
-                <ul class="nav navbar-nav">
+                <ul class="nav navbar-nav d-none d-sm-block">
                     <li>
                         <a href="#" data-toggle="modal" data-target="#logoutModal" class="icon-menu"><i
                                 class="fa fa-power-off"></i></a>

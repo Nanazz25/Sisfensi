@@ -44,6 +44,22 @@ class ScheduleController extends Controller
             'jam_selesai' => 'required|after:jam_mulai',
         ]);
 
+        $conflict = Schedule::where('rombongan_belajar_id', $request->rombongan_belajar_id)
+            ->where('hari', $request->hari)
+            ->where(function ($query) use ($request) {
+                $query->whereBetween('jam_mulai', [$request->jam_mulai, $request->jam_selesai])
+                    ->orWhereBetween('jam_selesai', [$request->jam_mulai, $request->jam_selesai])
+                    ->orWhere(function ($q) use ($request) {
+                        $q->where('jam_mulai', '<=', $request->jam_mulai)
+                            ->where('jam_selesai', '>=', $request->jam_selesai);
+                    });
+            })
+            ->exists();
+
+        if ($conflict) {
+            return back()->withInput()->withErrors(['jam_mulai' => 'Jadwal bentrok dengan jam pelajaran lain di kelas yang sama!']);
+        }
+
         Schedule::create($request->all());
 
         return redirect()
@@ -71,6 +87,23 @@ class ScheduleController extends Controller
             'jam_mulai' => 'required',
             'jam_selesai' => 'required|after:jam_mulai',
         ]);
+
+        $conflict = Schedule::where('rombongan_belajar_id', $request->rombongan_belajar_id)
+            ->where('hari', $request->hari)
+            ->where('id', '!=', $schedule->id)
+            ->where(function ($query) use ($request) {
+                $query->whereBetween('jam_mulai', [$request->jam_mulai, $request->jam_selesai])
+                    ->orWhereBetween('jam_selesai', [$request->jam_mulai, $request->jam_selesai])
+                    ->orWhere(function ($q) use ($request) {
+                        $q->where('jam_mulai', '<=', $request->jam_mulai)
+                            ->where('jam_selesai', '>=', $request->jam_selesai);
+                    });
+            })
+            ->exists();
+
+        if ($conflict) {
+            return back()->withInput()->withErrors(['jam_mulai' => 'Jadwal bentrok dengan jam pelajaran lain di kelas yang sama!']);
+        }
 
         $schedule->update($request->all());
 

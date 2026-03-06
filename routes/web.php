@@ -17,83 +17,98 @@ use App\Http\Controllers\FaceRecognitionController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\SchoolSettingController;
+use App\Http\Controllers\AttendancePermissionController;
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
 Route::middleware('auth')->group(function () {
-    // School Settings
-    Route::get('/school-settings', [SchoolSettingController::class, 'index'])->name('school-settings.index');
-    Route::post('/school-settings', [SchoolSettingController::class, 'update'])->name('school-settings.update');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
+    // Dashboard & Profile
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/dashboard/attendance-detail/{schedule}', [DashboardController::class, 'getAttendanceDetail'])->name('dashboard.attendance-detail');
 
-    Route::prefix('users')->group(function () {
-        Route::get('/admin', [UserController::class, 'admin'])->name('users.admin');
-        Route::get('/guru', [UserController::class, 'guru'])->name('users.guru');
-        Route::get('/siswa', [UserController::class, 'siswa'])->name('users.siswa');
+    // Attendance Permissions (Sakit/Izin)
+    Route::resource('attendance-permissions', AttendancePermissionController::class);
+    Route::post('attendance-permissions/{permission}/status/{status}', [AttendancePermissionController::class, 'updateStatus'])
+        ->name('attendance-permissions.update-status');
 
-        Route::get('/create', [UserController::class, 'create'])->name('users.create');
-        Route::get('/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+    // --- KHUSUS ADMIN ---
+    Route::middleware('role:admin')->group(function () {
+        // Manual Attendance Adjustment
+        Route::get('/attendance/manual', [AttendanceController::class, 'manualView'])->name('attendance.manual');
+        Route::post('/attendance/manual-adjust', [AttendanceController::class, 'manualAdjust'])->name('attendance.manual-adjust');
+        // School Settings
+        Route::get('/school-settings', [SchoolSettingController::class, 'index'])->name('school-settings.index');
+        Route::post('/school-settings', [SchoolSettingController::class, 'update'])->name('school-settings.update');
+        Route::post('/school-settings/reset-face-logs', [SchoolSettingController::class, 'resetFaceLogs'])->name('school-settings.reset-face-logs');
+        Route::post('/school-settings/sync-yesterday-alpha', [SchoolSettingController::class, 'syncYesterdayAlpha'])->name('school-settings.sync-yesterday-alpha');
 
-        Route::post('/', [UserController::class, 'store'])->name('users.store');
-        Route::put('/{user}', [UserController::class, 'update'])->name('users.update');
-        Route::delete('/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        // User Management
+        Route::prefix('users')->group(function () {
+            Route::get('/admin', [UserController::class, 'admin'])->name('users.admin');
+            Route::get('/guru', [UserController::class, 'guru'])->name('users.guru');
+            Route::get('/siswa', [UserController::class, 'siswa'])->name('users.siswa');
+            Route::get('/create', [UserController::class, 'create'])->name('users.create');
+            Route::get('/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+            Route::post('/', [UserController::class, 'store'])->name('users.store');
+            Route::put('/{user}', [UserController::class, 'update'])->name('users.update');
+            Route::delete('/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        });
+
+        // Master Data
+        Route::resource('jurusan', JurusanController::class);
+        Route::resource('tahun-ajar', TahunAjarController::class)->except('show');
+        Route::resource('rombongan-belajar', RombonganBelajarController::class)->except(['index', 'show']);
+        Route::resource('teachers', TeacherController::class)->except('show');
+        Route::resource('peserta-didik', PesertaDidikController::class)->except('show');
+        Route::resource('subjects', SubjectController::class);
+        Route::resource('schedules', ScheduleController::class);
+        Route::resource('school-locations', SchoolLocationController::class);
+
+        // Anggota Rombel
+        Route::post('rombongan-belajar/{rombel}/anggota', [AnggotaRombelController::class, 'store'])->name('rombels.anggota.store');
+        Route::delete('rombongan-belajar/{rombel}/anggota/{anggotaRombel}', [AnggotaRombelController::class, 'destroy'])->name('rombels.anggota.destroy');
+        Route::get('/ajax/siswa-by-rombel/{rombel}', [AnggotaRombelController::class, 'getSiswaByRombel'])->name('ajax.siswa.by.rombel');
     });
 
-    Route::resource('jurusan', JurusanController::class);
-    Route::resource('tahun-ajar', TahunAjarController::class)->except('show');
-    Route::resource('rombongan-belajar', RombonganBelajarController::class);
-    Route::resource('teachers', TeacherController::class)->except('show');
-    Route::resource('peserta-didik', PesertaDidikController::class);
-    Route::get('peserta-didik/{pesertaDidik}/photo', [PesertaDidikController::class, 'showPhoto'])->name('peserta-didik.photo');
-    Route::resource('subjects', SubjectController::class);
-    Route::resource('schedules', ScheduleController::class);
-    Route::resource('school-locations', SchoolLocationController::class);
+    // --- ADMIN & GURU ---
+    Route::middleware('role:admin,guru')->group(function () {
+        // Akademik - Rombel Index
+        Route::get('/rombongan-belajar', [RombonganBelajarController::class, 'index'])->name('rombongan-belajar.index');
 
-    Route::post(
-        'rombongan-belajar/{rombel}/anggota',
-        [AnggotaRombelController::class, 'store']
-    )->name('rombels.anggota.store');
+        // Peserta Didik Detail & Photo (Accessible by Admin & Walas)
+        Route::get('peserta-didik/{peserta_didik}', [PesertaDidikController::class, 'show'])->name('peserta-didik.show');
+        Route::get('peserta-didik/{pesertaDidik}/photo', [PesertaDidikController::class, 'showPhoto'])->name('peserta-didik.photo');
 
-    Route::delete(
-        'rombongan-belajar/{rombel}/anggota/{anggotaRombel}',
-        [AnggotaRombelController::class, 'destroy']
-    )->name('rombels.anggota.destroy');
+        // Face Recognition
+        Route::prefix('face-recognition')->group(function () {
+            Route::get('/enroll', [FaceRecognitionController::class, 'indexEnroll'])->name('face.enroll');
+            Route::post('/enroll', [FaceRecognitionController::class, 'enroll'])->name('face.enroll.post');
+        });
 
-    Route::get(
-        '/ajax/siswa-by-rombel/{rombel}',
-        [AnggotaRombelController::class, 'getSiswaByRombel']
-    )->name('ajax.siswa.by.rombel');
-
-    // Face Recognition (Registration)
-    Route::prefix('face-recognition')->group(function () {
-        Route::get('/enroll', [FaceRecognitionController::class, 'indexEnroll'])->name('face.enroll');
-        Route::post('/enroll', [FaceRecognitionController::class, 'enroll'])->name('face.enroll.post');
+        // Laporan (Admin & Guru Only)
+        Route::prefix('laporan')->group(function () {
+            Route::get('/absensi-kelas', [AttendanceReportController::class, 'perKelas'])->name('laporan.absensi.kelas');
+            Route::get('/absensi-kelas/pdf', [AttendanceReportController::class, 'exportPdf'])->name('laporan.absensi.kelas.pdf');
+            Route::get('/absensi-kelas/excel', [AttendanceReportController::class, 'exportExcel'])->name('laporan.absensi.kelas.excel');
+            Route::get('/absensi-mapel', [AttendanceReportController::class, 'perMapel'])->name('laporan.absensi.mapel');
+            Route::get('/absensi-mapel/pdf', [AttendanceReportController::class, 'exportMapelPdf'])->name('laporan.absensi.mapel.pdf');
+            Route::get('/absensi-mapel/excel', [AttendanceReportController::class, 'exportMapelExcel'])->name('laporan.absensi.mapel.excel');
+        });
     });
 
-    // Attendance
-    Route::prefix('attendance')->group(function () {
-        Route::get('/scanner/{type?}', [AttendanceController::class, 'scanner'])->name('attendance.scanner');
-        Route::post('/verify', [AttendanceController::class, 'verify'])->name('attendance.verify');
-    });
+    // --- SEMUA ROLE (Scan Presence & Info Kelas) ---
+    Route::middleware('role:admin,guru,siswa')->group(function () {
+        Route::prefix('attendance')->group(function () {
+            Route::get('/scanner/{type?}', [AttendanceController::class, 'scanner'])->name('attendance.scanner');
+            Route::post('/verify', [AttendanceController::class, 'verify'])->name('attendance.verify');
+        });
 
-    Route::prefix('laporan')->group(function () {
-        Route::get(
-            '/absensi-kelas',
-            [AttendanceReportController::class, 'perKelas']
-        )->name('laporan.absensi.kelas');
-
-        Route::get(
-            '/absensi-kelas/pdf',
-            [AttendanceReportController::class, 'exportPdf']
-        )->name('laporan.absensi.kelas.pdf');
-
-        Route::get(
-            '/absensi-kelas/excel',
-            [AttendanceReportController::class, 'exportExcel']
-        )->name('laporan.absensi.kelas.excel');
+        // Show Rombel (Students can see their own class)
+        Route::get('/rombongan-belajar/{rombongan_belajar}', [RombonganBelajarController::class, 'show'])
+            ->name('rombongan-belajar.show');
     });
 });

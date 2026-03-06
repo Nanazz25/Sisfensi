@@ -5,55 +5,62 @@
     <style>
         body {
             font-family: sans-serif;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 10px;
         }
 
         th,
         td {
             border: 1px solid #000;
-            padding: 6px;
+            padding: 5px;
+            text-align: center;
         }
 
         th {
             background: #eee;
         }
+
+        .text-left {
+            text-align: left;
+        }
     </style>
 </head>
 
 <body>
-
-    <h3 align="center">Laporan Absensi Kelas</h3>
+    <h3 align="center">LAPORAN ABSENSI HARIAN KELAS</h3>
     <p>
         Kelas: {{ $rombel->nama_rombel }} <br>
-        Periode: {{ $start }} s/d {{ $end }}
+        Periode: {{ \Carbon\Carbon::parse($start)->format('d/m/Y') }} s/d
+        {{ \Carbon\Carbon::parse($end)->format('d/m/Y') }}
     </p>
 
     <table>
         <thead>
             <tr>
-                <th>Nama</th>
+                <th class="text-left">Nama</th>
                 <th>Hadir</th>
                 <th>Izin</th>
+                <th>Sakit</th>
                 <th>Alpha</th>
             </tr>
         </thead>
         <tbody>
             @foreach($data as $row)
                 <tr>
-                    <td>{{ $row['nama'] }}</td>
+                    <td class="text-left">{{ $row['nama'] }}</td>
                     <td>{{ $row['hadir'] }}</td>
                     <td>{{ $row['izin'] }}</td>
+                    <td>{{ $row['sakit'] }}</td>
                     <td>{{ $row['alpha'] }}</td>
                 </tr>
             @endforeach
         </tbody>
     </table>
-
 </body>
 
 </html>

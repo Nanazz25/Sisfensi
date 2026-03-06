@@ -1,0 +1,41 @@
+/* Profile Page Responsive Fixes */
+@media (max-width: 768px) {
+    .profile-header-row {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .profile-image-container {
+        margin-bottom: 15px;
+    }
+
+    .profile-image-container .profile-image {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .profile-name-section .d-md-flex {
+        flex-direction: column;
+        align-items: center !important;
+    }
+
+    .role-badges {
+        margin-top: 15px;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .info-sidebar {
+        border-right: none !important;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+    }
+
+    .info-content .row > div {
+        margin-bottom: 15px;
+    }
+}

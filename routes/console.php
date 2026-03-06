@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('facelog:purge')->dailyAt('02:00')->withoutOverlapping();
+Schedule::command('attendance:automate')->everyThirtyMinutes()->withoutOverlapping();

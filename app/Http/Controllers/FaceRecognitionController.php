@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
 use App\Models\PesertaDidik;
+use App\Models\User;
 
 class FaceRecognitionController extends Controller
 {
@@ -15,7 +16,9 @@ class FaceRecognitionController extends Controller
      */
     public function indexEnroll()
     {
-        return view('face.enroll');
+        // Admin/Guru mendaftarkan siswa
+        $students = PesertaDidik::with('user')->get()->sortBy('user.name');
+        return view('face.enroll', compact('students'));
     }
 
     /**
@@ -25,8 +28,11 @@ class FaceRecognitionController extends Controller
     {
         $request->validate([
             'image' => 'required|string',
-            'face_embedding' => 'required|array'
+            'face_embedding' => 'required|array',
+            'peserta_didik_id' => 'required|exists:peserta_didik,id'
         ]);
+
+        $peserta = PesertaDidik::findOrFail($request->peserta_didik_id);
 
         $base64 = $request->image;
         $image = preg_replace('/^data:image\/\w+;base64,/', '', $base64);
@@ -38,19 +44,16 @@ class FaceRecognitionController extends Controller
             ->encode('jpg', 60);
 
         // Enkripsi file demi privasi data biometrik
+        // Gunakan ID user siswa untuk penamaan file agar unik
         $encrypted = Crypt::encrypt((string) $img);
-        $filename = 'faces/' . auth()->id() . '_' . time() . '.enc';
+        $filename = 'faces/' . $peserta->user_id . '_' . time() . '.enc';
+
+        // Hapus foto lama jika ada
+        if ($peserta->foto_wajah && Storage::exists($peserta->foto_wajah)) {
+            Storage::delete($peserta->foto_wajah);
+        }
 
         Storage::put($filename, $encrypted);
-
-        $peserta = PesertaDidik::where('user_id', auth()->id())->first();
-
-        if (!$peserta) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Profil peserta didik tidak ditemukan'
-            ], 404);
-        }
 
         $peserta->update([
             'foto_wajah' => $filename,
@@ -59,7 +62,7 @@ class FaceRecognitionController extends Controller
 
         return response()->json([
             'status' => 'ok',
-            'message' => 'Data wajah berhasil didaftarkan'
+            'message' => 'Data wajah ' . $peserta->user->name . ' berhasil didaftarkan'
         ]);
     }
 }

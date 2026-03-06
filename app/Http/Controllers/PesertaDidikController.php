@@ -31,6 +31,20 @@ class PesertaDidikController extends Controller
 
     public function show(PesertaDidik $pesertaDidik)
     {
+        $user = auth()->user();
+
+        // Security Check for Guru
+        if ($user->role === 'guru') {
+            $isWalasForThisStudent = $pesertaDidik->anggotaRombel()
+                ->whereHas('rombonganBelajar', function ($q) use ($user) {
+                    $q->where('wali_kelas_id', $user->teacher->id ?? 0);
+                })->exists();
+
+            if (!$isWalasForThisStudent) {
+                abort(403, 'Anda hanya dapat melihat detail siswa di kelas perwalian Anda sendiri.');
+            }
+        }
+
         $pesertaDidik->load('user');
 
         return view('peserta-didik.show', compact('pesertaDidik'));

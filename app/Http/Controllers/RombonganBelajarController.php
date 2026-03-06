@@ -46,11 +46,56 @@ class RombonganBelajarController extends Controller
         ));
     }
 
-    public function show(RombonganBelajar $rombonganBelajar)
+    public function show(Request $request, RombonganBelajar $rombonganBelajar)
     {
+        $user = auth()->user();
+
+        // Security Check for Students
+        if ($user->role === 'siswa') {
+            $siswa = $user->pesertaDidik;
+            $isMember = $rombonganBelajar->anggotaRombel()->where('peserta_didik_id', $siswa->id)->exists();
+            if (!$isMember) {
+                abort(403, 'Anda bukan anggota kelas ini.');
+            }
+        }
+
+        // Security Check for Guru (Bisa lihat semua rombel, tapi nanti list murid difilter di view)
+        $isWalas = true;
+        if ($user->role === 'guru') {
+            $isWalas = $rombonganBelajar->wali_kelas_id === ($user->teacher->id ?? 0);
+        }
+
+        $period = $request->get('period', 'today');
+        $startDate = match ($period) {
+            'week' => now()->startOfWeek(),
+            'month' => now()->startOfMonth(),
+            default => now()->startOfDay(),
+        };
+        $endDate = now()->endOfDay();
+
         $anggota = $rombonganBelajar->anggotaRombel()
             ->with('pesertaDidik.user')
             ->get();
+
+        $anggotaIds = $anggota->pluck('id');
+
+        // Stats Presensi
+        $attendance = \App\Models\Attendance::whereIn('anggota_rombel_id', $anggotaIds)
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->get();
+
+        $stats = [
+            'hadir' => $attendance->where('status', 'hadir')->count(),
+            'terlambat' => $attendance->where('status', 'terlambat')->count(),
+            'izin_sakit' => $attendance->whereIn('status', ['izin', 'sakit'])->count(),
+            'alpha' => $attendance->where('status', 'alpha')->count(),
+        ];
+
+        // Hitung persentase kehadiran (Sederhana: Hadir / Total Anggota)
+        $totalAnggota = $anggota->count();
+        $presentCount = $stats['hadir'] + $stats['terlambat'];
+        $percentage = $totalAnggota > 0 ? round(($presentCount / ($totalAnggota * ($period === 'today' ? 1 : $startDate->diffInDays($endDate) + 1))) * 100, 1) : 0;
+        // Sebenarnya persentase bisa lebih kompleks, tapi kita ikuti permintaan user "berapa % siswa hadir"
 
         $tahunAjarId = $rombonganBelajar->tahun_ajar_id;
 
@@ -65,6 +110,10 @@ class RombonganBelajarController extends Controller
             'rombel' => $rombonganBelajar,
             'anggota' => $anggota,
             'siswaAvailable' => $siswaAvailable,
+            'stats' => $stats,
+            'percentage' => $percentage,
+            'period' => $period,
+            'isWalas' => $isWalas
         ]);
     }
 
