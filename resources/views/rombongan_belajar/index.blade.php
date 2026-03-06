@@ -12,15 +12,21 @@
         </div>
 
         <div class="body">
-            <form method="GET" id="filterForm" class="row mb-3 align-items-center g-2">
-
+            <form method="GET" action="{{ route('rombongan-belajar.index') }}" id="filterForm"
+                class="ajax-form compact-form row mb-3 align-items-center">
                 <div class="col-md-4">
-                    <input type="text" name="q" value="{{ request('q') }}" class="form-control"
-                        placeholder="Cari nama rombel">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-right-0"><i
+                                    class="fa fa-search text-muted"></i></span>
+                        </div>
+                        <input type="text" name="q" value="{{ request('q') }}" class="form-control border-left-0"
+                            placeholder="Cari nama rombel...">
+                    </div>
                 </div>
 
-                <div class="col-md-4">
-                    <select name="tahun_ajar_id" class="form-control" onchange="this.form.submit()">
+                <div class="col-md-3">
+                    <select name="tahun_ajar_id" class="form-control">
                         <option value="">-- Tahun Ajar Aktif --</option>
                         @foreach($tahunAjars as $ta)
                             <option value="{{ $ta->id }}" {{ request('tahun_ajar_id', optional($tahunAjarAktif)->id) == $ta->id ? 'selected' : '' }}>
@@ -30,30 +36,27 @@
                     </select>
                 </div>
 
-                <div class="dropdown">
-                    <a href="javascript:void(0);" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
-                        <i class="fa fa-filter"></i> Urutkan
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li>
-                            <a class="dropdown-item sort-option" data-value="desc" href="javascript:void(0);">
-                                Terbaru
-                            </a>
-                        </li>
-                        <li class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item sort-option" data-value="asc" href="javascript:void(0);">
-                                Terlama
-                            </a>
-                        </li>
-                    </ul>
+                <div class="col-auto">
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
+                            <i class="fa fa-sort-amount-desc mr-1"></i> Urutkan
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item sort-option" data-value="desc"
+                                    href="javascript:void(0);">Terbaru</a></li>
+                            <li><a class="dropdown-item sort-option" data-value="asc" href="javascript:void(0);">Terlama</a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
                 <input type="hidden" name="sort" id="sortInput" value="{{ request('sort', 'desc') }}">
 
-                <a href="{{ route('laporan.absensi.kelas') }}" class="btn btn-primary mx-3">
-                    <i class="fa fa-print"></i> Laporan Absensi
-                </a>
+                <div class="col-auto ml-auto">
+                    <a href="{{ route('laporan.absensi.kelas') }}" class="btn btn-info shadow-sm text-white">
+                        <i class="fa fa-print"></i> Laporan
+                    </a>
+                </div>
             </form>
 
             <div class="table-responsive">
@@ -110,8 +113,9 @@
     <script>
         document.querySelectorAll('.sort-option').forEach(item => {
             item.addEventListener('click', function () {
+                const form = document.getElementById('filterForm');
                 document.getElementById('sortInput').value = this.dataset.value;
-                document.getElementById('filterForm').submit();
+                form.dispatchEvent(new Event('submit', { cancelable: true }));
             });
         });
     </script>

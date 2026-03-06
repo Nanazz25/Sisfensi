@@ -106,6 +106,13 @@ class RombonganBelajarController extends Controller
             }
         )->with('user:id,name')->get();
 
+        $schedules = $rombonganBelajar->schedules()
+            ->with(['subject', 'teacher.user'])
+            ->orderByRaw("FIELD(hari, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu')")
+            ->orderBy('jam_mulai')
+            ->get()
+            ->groupBy('hari');
+
         return view('rombongan_belajar.show', [
             'rombel' => $rombonganBelajar,
             'anggota' => $anggota,
@@ -113,7 +120,8 @@ class RombonganBelajarController extends Controller
             'stats' => $stats,
             'percentage' => $percentage,
             'period' => $period,
-            'isWalas' => $isWalas
+            'isWalas' => $isWalas,
+            'schedules' => $schedules
         ]);
     }
 

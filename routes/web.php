@@ -97,6 +97,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/absensi-mapel', [AttendanceReportController::class, 'perMapel'])->name('laporan.absensi.mapel');
             Route::get('/absensi-mapel/pdf', [AttendanceReportController::class, 'exportMapelPdf'])->name('laporan.absensi.mapel.pdf');
             Route::get('/absensi-mapel/excel', [AttendanceReportController::class, 'exportMapelExcel'])->name('laporan.absensi.mapel.excel');
+            Route::get('/absensi-mapel/detail', [AttendanceReportController::class, 'getDetailMapel'])->name('laporan.absensi.mapel.detail');
         });
     });
 

@@ -10,18 +10,53 @@ use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $schedules = Schedule::with([
-            'rombonganBelajar',
-            'subject',
-            'teacher.user'
-        ])
-            ->orderBy('hari')
-            ->orderBy('jam_mulai')
-            ->get();
+        $query = RombonganBelajar::with(['tahunAjar', 'waliKelas.user', 'jurusan']);
 
-        return view('schedules.index', compact('schedules'));
+        // Filter Search
+        if ($request->filled('search')) {
+            $query->where('nama_rombel', 'like', '%' . $request->search . '%');
+        }
+
+        // Filter Jurusan
+        if ($request->filled('jurusan_id')) {
+            $query->where('jurusan_id', $request->jurusan_id);
+        }
+
+        // Filter Tahun Ajar
+        if ($request->filled('tahun_ajar_id')) {
+            $query->where('tahun_ajar_id', $request->tahun_ajar_id);
+        }
+
+        $rombels = $query->get()
+            ->groupBy(function ($item) {
+                return $item->tahunAjar->nama ?? 'Lainnya';
+            });
+
+        $jurusans = \App\Models\Jurusan::all();
+        $tahunAjars = \App\Models\TahunAjar::all();
+
+        return view('schedules.index', compact('rombels', 'jurusans', 'tahunAjars'));
+    }
+
+    public function show($id)
+    {
+        $rombel = RombonganBelajar::with(['tahunAjar', 'waliKelas.user'])->findOrFail($id);
+
+        // Get active school days from settings
+        $schoolDaysStr = \App\Models\SchoolSetting::where('key', 'hari_sekolah')->first()->value ?? 'senin,selasa,rabu,kamis,jumat';
+        $schoolDays = explode(',', $schoolDaysStr);
+
+        $schedules = Schedule::with(['subject', 'teacher.user'])
+            ->where('rombongan_belajar_id', $id)
+            ->whereIn('hari', $schoolDays)
+            ->orderByRaw("FIELD(hari, 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu')")
+            ->orderBy('jam_mulai')
+            ->get()
+            ->groupBy('hari');
+
+        return view('schedules.show', compact('rombel', 'schedules', 'schoolDays'));
     }
 
     public function create()

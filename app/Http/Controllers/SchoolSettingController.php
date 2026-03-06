@@ -23,8 +23,19 @@ class SchoolSettingController extends Controller
     {
         $data = $request->except('_token');
 
+        // Handle checkboxes (e.g. hari_sekolah) that might be unchecked entirely
+        if ($request->isMethod('post') && !$request->has('hari_sekolah')) {
+            // Only update if it's not present but should be (assuming it's on the page)
+            // For simplicity in this app, we check if it's present in DB and not in request
+            if (SchoolSetting::where('key', 'hari_sekolah')->exists()) {
+                $data['hari_sekolah'] = '';
+            }
+        }
+
         foreach ($data as $key => $value) {
-            SchoolSetting::where('key', $key)->update(['value' => $value]);
+            // Join array if it's from checkboxes (example: hari_sekolah)
+            $saveValue = is_array($value) ? implode(',', $value) : $value;
+            SchoolSetting::where('key', $key)->update(['value' => $saveValue]);
         }
         return back()->with('success', 'Pengaturan sekolah berhasil diperbarui.');
     }

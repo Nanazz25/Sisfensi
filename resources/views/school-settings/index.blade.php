@@ -87,9 +87,41 @@
 
                         <hr>
 
+                        <h5 class="mb-3">Hari Sekolah Operasional</h5>
+                        @php
+                            $activeDays = explode(',', $settings->where('key', 'hari_sekolah')->first()->value ?? '');
+                            $days = [
+                                'senin' => 'Senin',
+                                'selasa' => 'Selasa',
+                                'rabu' => 'Rabu',
+                                'kamis' => 'Kamis',
+                                'jumat' => 'Jumat',
+                                'sabtu' => 'Sabtu',
+                                'minggu' => 'Minggu',
+                            ];
+                        @endphp
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="d-flex flex-wrap">
+                                    @foreach($days as $key => $label)
+                                        <div class="fancy-checkbox mr-4 mb-2">
+                                            <label>
+                                                <input type="checkbox" name="hari_sekolah[]" value="{{ $key }}"
+                                                    {{ in_array($key, $activeDays) ? 'checked' : '' }}>
+                                                <span>{{ $label }}</span>
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <small class="text-muted d-block mt-1">Ceklis hari-hari di mana jadwal sekolah aktif.</small>
+                            </div>
+                        </div>
+
+                        <hr>
+
                         <h5 class="mb-3">Face Recognition</h5>
                         <div class="row">
-                            @foreach($settings->filter(fn($s) => !str_contains($s->key, 'jam')) as $setting)
+                            @foreach($settings->filter(fn($s) => !str_contains($s->key, 'jam') && $s->key !== 'hari_sekolah') as $setting)
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label class="font-weight-bold">

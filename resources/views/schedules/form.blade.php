@@ -19,7 +19,10 @@
                     <select name="rombongan_belajar_id" class="form-control" required>
                         <option value="">-- pilih --</option>
                         @foreach($rombels as $r)
-                            <option value="{{ $r->id }}" {{ old('rombongan_belajar_id', $schedule->rombongan_belajar_id ?? '') == $r->id ? 'selected' : '' }}>
+                            @php
+                                $selected = old('rombongan_belajar_id', $schedule->rombongan_belajar_id ?? request('rombel_id')) == $r->id;
+                            @endphp
+                            <option value="{{ $r->id }}" {{ $selected ? 'selected' : '' }}>
                                 {{ $r->nama_rombel }}
                             </option>
                         @endforeach

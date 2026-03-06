@@ -12,11 +12,11 @@
                         atau error sistem.</small>
                 </div>
                 <div class="body">
-                    <form action="{{ route('attendance.manual') }}" method="GET">
+                    <form action="{{ route('attendance.manual') }}" method="GET" class="ajax-form compact-form">
                         <div class="row">
                             <div class="col-lg-4 col-md-4 col-sm-12">
-                                <div class="form-group mb-lg-0 mb-3">
-                                    <label class="font-weight-bold">Pilih Kelas</label>
+                                <div class="form-group mb-lg-0">
+                                    <label class="small font-weight-bold text-muted">Pilih Kelas</label>
                                     <select name="rombel_id" class="form-control select2" required>
                                         <option value="">-- Semua Kelas --</option>
                                         @foreach($rombels as $rombel)
@@ -28,18 +28,15 @@
                                 </div>
                             </div>
                             <div class="col-lg-4 col-md-4 col-sm-12">
-                                <div class="form-group mb-lg-0 mb-3">
-                                    <label class="font-weight-bold">Pilih Tanggal</label>
+                                <div class="form-group mb-lg-0">
+                                    <label class="small font-weight-bold text-muted">Pilih Tanggal</label>
                                     <input type="date" name="date" class="form-control" value="{{ $date }}">
                                 </div>
                             </div>
-                            <div class="col-lg-4 col-md-4 col-sm-12">
-                                <div class="form-group mb-0">
-                                    <label class="d-none d-md-block">&nbsp;</label>
-                                    <button type="submit" class="btn btn-primary btn-block py-2">
-                                        <i class="fa fa-search mr-1"></i> Cari Data Presensi
-                                    </button>
-                                </div>
+                            <div class="col-lg-4 col-md-4 col-sm-12 align-self-end">
+                                <button type="submit" class="btn btn-primary btn-block shadow-sm">
+                                    <i class="fa fa-search mr-1"></i> Cari Data
+                                </button>
                             </div>
                         </div>
                     </form>

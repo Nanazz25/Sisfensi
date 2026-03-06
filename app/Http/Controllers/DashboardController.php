@@ -23,12 +23,16 @@ class DashboardController extends Controller
         $hariIndo = $this->translateHari(strtolower(Carbon::now()->englishDayOfWeek));
         $period = $request->period ?? 'week';
 
+        $schoolDaysStr = \App\Models\SchoolSetting::where('key', 'hari_sekolah')->first()->value ?? 'senin,selasa,rabu,kamis,jumat';
+        $schoolDays = explode(',', $schoolDaysStr);
+        $isSchoolDay = in_array($hariIndo, $schoolDays);
         $data = [
             'schedules' => [],
             'stats' => [],
             'recent' => [],
             'walas_data' => null,
-            'period' => $period
+            'period' => $period,
+            'is_school_day' => $isSchoolDay
         ];
 
         if ($user->role === 'admin') {
@@ -70,7 +74,7 @@ class DashboardController extends Controller
 
         } elseif ($user->role === 'guru') {
             $teacher = $user->teacher;
-            if ($teacher) {
+            if ($teacher && $isSchoolDay) {
                 // Personal Schedule with Attendance Counts
                 $data['schedules'] = Schedule::with(['subject', 'rombonganBelajar'])
                     ->withCount([
@@ -95,7 +99,9 @@ class DashboardController extends Controller
                         ];
                         return $schedule;
                     });
+            }
 
+            if ($teacher) {
                 // Walas Data
                 $rombel = RombonganBelajar::where('wali_kelas_id', $teacher->id)->first();
                 if ($rombel) {
@@ -117,7 +123,7 @@ class DashboardController extends Controller
         } elseif ($user->role === 'siswa') {
             $peserta = $user->pesertaDidik;
 
-            if ($peserta) {
+            if ($peserta && $isSchoolDay) {
                 $anggotaRombel = $peserta->anggotaRombel()->latest('id')->first();
 
                 if ($anggotaRombel) {

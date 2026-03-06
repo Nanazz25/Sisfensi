@@ -22,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrap();
+        \Carbon\Carbon::setLocale('id');
 
         if (str_contains(config('app.url'), 'ngrok-free.dev')) {
             URL::forceScheme('https');

@@ -9,12 +9,45 @@
                 <div class="header d-flex justify-content-between align-items-center">
                     <h2>Daftar Pengajuan Izin / Sakit</h2>
                     @if(auth()->user()->role === 'siswa')
-                        <a href="{{ route('attendance-permissions.create') }}" class="btn btn-primary">
-                            <i class="fa fa-plus"></i> Ajukan Izin
+                        <a href="{{ route('attendance-permissions.create') }}" class="btn btn-primary shadow-sm">
+                            <i class="fa fa-plus mr-1"></i> Ajukan Izin
                         </a>
                     @endif
                 </div>
                 <div class="body">
+                    <form action="{{ route('attendance-permissions.index') }}" method="GET"
+                        class="ajax-form compact-form mb-4">
+                        <div class="row">
+                            <div class="col-md-5 col-sm-12">
+                                <div class="form-group mb-md-0">
+                                    <label class="small font-weight-bold text-muted">Instant Search</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-white border-right-0"><i
+                                                    class="fa fa-search text-muted"></i></span>
+                                        </div>
+                                        <input type="text" name="search" class="form-control border-left-0"
+                                            placeholder="Cari nama siswa..." value="{{ request('search') }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-sm-12">
+                                <div class="form-group mb-md-0">
+                                    <label class="small font-weight-bold text-muted">Filter Status</label>
+                                    <select name="status" class="form-control">
+                                        <option value="">-- Semua Status --</option>
+                                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending
+                                        </option>
+                                        <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>
+                                            Approved</option>
+                                        <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>
+                                            Rejected</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
                     <div class="table-responsive">
                         <table class="table table-hover table-custom spacing5">
                             <thead>

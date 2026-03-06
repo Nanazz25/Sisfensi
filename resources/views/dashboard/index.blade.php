@@ -195,63 +195,71 @@
                         <h2>Jadwal Mengajar Hari Ini</h2>
                     </div>
                     <div class="body">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Waktu</th>
-                                        <th>Mapel</th>
-                                        <th>Kelas</th>
-                                        <th width="150">Presensi</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($schedules as $schedule)
-                                        @php
-                                            $now = \Carbon\Carbon::now()->toTimeString();
-                                            $isCurrent = ($now >= $schedule->jam_mulai && $now <= $schedule->jam_selesai);
-                                            $stats = $schedule->attendance_stats;
-                                            $percent = $stats['total'] > 0 ? round(($stats['hadir'] / $stats['total']) * 100) : 0;
-                                        @endphp
-                                        <tr class="{{ $isCurrent ? 'bg-light-cyan' : '' }}">
-                                            <td>{{ substr($schedule->jam_mulai, 0, 5) }} -
-                                                {{ substr($schedule->jam_selesai, 0, 5) }}
-                                            </td>
-                                            <td><strong>{{ $schedule->subject->nama_mapel }}</strong></td>
-                                            <td>{{ $schedule->rombonganBelajar->nama_rombel }}</td>
-                                            <td>
-                                                <a href="javascript:void(0);" class="view-attendance-detail d-block"
-                                                    data-id="{{ $schedule->id }}" title="Klik untuk lihat detail">
-                                                    <div class="d-flex justify-content-between mb-1 text-dark">
-                                                        <small
-                                                            class="font-weight-bold">{{ $stats['hadir'] }}/{{ $stats['total'] }}</small>
-                                                        <small class="text-muted">{{ $percent }}%</small>
-                                                    </div>
-                                                    <div class="progress progress-xxs mb-0">
-                                                        <div class="progress-bar bg-info" role="progressbar"
-                                                            style="width: {{ $percent }}%;"></div>
-                                                    </div>
-                                                </a>
-                                            </td>
-                                            <td>
-                                                @if($isCurrent)
-                                                    <span class="badge badge-success">Sedang Mengajar</span>
-                                                @elseif($now < $schedule->jam_mulai)
-                                                    <span class="badge badge-warning">Akan Datang</span>
-                                                @else
-                                                    <span class="badge badge-secondary">Selesai</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @empty
+                        @if(!$is_school_day)
+                            <div class="alert alert-info border-0 shadow-xs mb-0 py-4 text-center">
+                                <i class="fa fa-calendar-times-o fa-3x mb-3 d-block opacity-50"></i>
+                                <h5 class="mb-1 font-weight-bold">Hari Libur Sekolah</h5>
+                                <p class="mb-0 text-muted">Tidak ada jadwal mengajar yang dijadwalkan untuk hari ini.</p>
+                            </div>
+                        @else
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
                                         <tr>
-                                            <td colspan="4" class="text-center text-muted">Tidak ada jadwal mengajar hari ini.</td>
+                                            <th>Waktu</th>
+                                            <th>Mapel</th>
+                                            <th>Kelas</th>
+                                            <th width="150">Presensi</th>
+                                            <th>Status</th>
                                         </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($schedules as $schedule)
+                                            @php
+                                                $now = \Carbon\Carbon::now()->toTimeString();
+                                                $isCurrent = ($now >= $schedule->jam_mulai && $now <= $schedule->jam_selesai);
+                                                $stats = $schedule->attendance_stats;
+                                                $percent = $stats['total'] > 0 ? round(($stats['hadir'] / $stats['total']) * 100) : 0;
+                                            @endphp
+                                            <tr class="{{ $isCurrent ? 'bg-light-cyan' : '' }}">
+                                                <td>{{ substr($schedule->jam_mulai, 0, 5) }} -
+                                                    {{ substr($schedule->jam_selesai, 0, 5) }}
+                                                </td>
+                                                <td><strong>{{ $schedule->subject->nama_mapel }}</strong></td>
+                                                <td>{{ $schedule->rombonganBelajar->nama_rombel }}</td>
+                                                <td>
+                                                    <a href="javascript:void(0);" class="view-attendance-detail d-block"
+                                                        data-id="{{ $schedule->id }}" title="Klik untuk lihat detail">
+                                                        <div class="d-flex justify-content-between mb-1 text-dark">
+                                                            <small
+                                                                class="font-weight-bold">{{ $stats['hadir'] }}/{{ $stats['total'] }}</small>
+                                                            <small class="text-muted">{{ $percent }}%</small>
+                                                        </div>
+                                                        <div class="progress progress-xxs mb-0">
+                                                            <div class="progress-bar bg-info" role="progressbar"
+                                                                style="width: {{ $percent }}%;"></div>
+                                                        </div>
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    @if($isCurrent)
+                                                        <span class="badge badge-success">Sedang Mengajar</span>
+                                                    @elseif($now < $schedule->jam_mulai)
+                                                        <span class="badge badge-warning">Akan Datang</span>
+                                                    @else
+                                                        <span class="badge badge-secondary">Selesai</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted">Tidak ada jadwal mengajar hari ini.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -330,48 +338,56 @@
                         <h2>Jadwal Pelajaran Hari Ini</h2>
                     </div>
                     <div class="body">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Waktu</th>
-                                        <th>Mata Pelajaran</th>
-                                        <th>Guru</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($schedules as $schedule)
-                                        @php
-                                            $now = \Carbon\Carbon::now()->toTimeString();
-                                            $isCurrent = ($now >= $schedule->jam_mulai && $now <= $schedule->jam_selesai);
-                                        @endphp
-                                        <tr class="{{ $isCurrent ? 'bg-light-cyan' : '' }}">
-                                            <td>
-                                                <span class="badge badge-info">{{ substr($schedule->jam_mulai, 0, 5) }} -
-                                                    {{ substr($schedule->jam_selesai, 0, 5) }}</span>
-                                            </td>
-                                            <td><strong>{{ $schedule->subject->nama_mapel }}</strong></td>
-                                            <td>{{ $schedule->teacher->user->name }}</td>
-                                            <td>
-                                                @if($isCurrent)
-                                                    <span class="badge badge-success">Sedang Berlangsung</span>
-                                                @elseif($now < $schedule->jam_mulai)
-                                                    <span class="badge badge-warning">Akan Datang</span>
-                                                @else
-                                                    <span class="badge badge-secondary">Selesai</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @empty
+                        @if(!$is_school_day)
+                            <div class="alert alert-warning border-0 shadow-xs mb-0 py-4 text-center">
+                                <i class="fa fa-coffee fa-3x mb-3 d-block opacity-50"></i>
+                                <h5 class="mb-1 font-weight-bold">Hari Libur / Non-Sekolah</h5>
+                                <p class="mb-0 text-muted">Nikmati waktu istirahatmu! Tidak ada jadwal pelajaran hari ini.</p>
+                            </div>
+                        @else
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
                                         <tr>
-                                            <td colspan="4" class="text-center text-muted">Tidak ada jadwal pelajaran untuk hari
-                                                ini.</td>
+                                            <th>Waktu</th>
+                                            <th>Mata Pelajaran</th>
+                                            <th>Guru</th>
+                                            <th>Status</th>
                                         </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($schedules as $schedule)
+                                            @php
+                                                $now = \Carbon\Carbon::now()->toTimeString();
+                                                $isCurrent = ($now >= $schedule->jam_mulai && $now <= $schedule->jam_selesai);
+                                            @endphp
+                                            <tr class="{{ $isCurrent ? 'bg-light-cyan' : '' }}">
+                                                <td>
+                                                    <span class="badge badge-info">{{ substr($schedule->jam_mulai, 0, 5) }} -
+                                                        {{ substr($schedule->jam_selesai, 0, 5) }}</span>
+                                                </td>
+                                                <td><strong>{{ $schedule->subject->nama_mapel }}</strong></td>
+                                                <td>{{ $schedule->teacher->user->name }}</td>
+                                                <td>
+                                                    @if($isCurrent)
+                                                        <span class="badge badge-success">Sedang Berlangsung</span>
+                                                    @elseif($now < $schedule->jam_mulai)
+                                                        <span class="badge badge-warning">Akan Datang</span>
+                                                    @else
+                                                        <span class="badge badge-secondary">Selesai</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted">Tidak ada jadwal pelajaran untuk hari
+                                                    ini.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -471,9 +487,9 @@
                     if (res.data.length > 0) {
                         res.data.forEach(function (item) {
                             html += `<tr>
-                                            <td><strong>${item.name}</strong></td>
-                                            <td>${item.pills}</td>
-                                        </tr>`;
+                                                <td><strong>${item.name}</strong></td>
+                                                <td>${item.pills}</td>
+                                            </tr>`;
                         });
                     } else {
                         html = '<tr><td colspan="2" class="text-center">Tidak ada data siswa.</td></tr>';

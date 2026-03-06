@@ -30,8 +30,19 @@ class AttendancePermissionController extends Controller
             });
         }
         // Admin sees all
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('anggotaRombel.pesertaDidik.user', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
         $permissions = $query->latest()->paginate(10);
+        $permissions->appends($request->all());
         return view('attendance_permissions.index', compact('permissions'));
     }
 

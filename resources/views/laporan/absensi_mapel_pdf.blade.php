@@ -2,68 +2,134 @@
 <html>
 
 <head>
+    <title>Laporan Absensi Mata Pelajaran - {{ $rombel->nama_rombel }}</title>
     <style>
         body {
-            font-family: sans-serif;
-            font-size: 11px;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 10px;
+            color: #333;
+            line-height: 1.4;
         }
 
-        table {
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #444;
+            padding-bottom: 10px;
+        }
+
+        .info {
+            margin-bottom: 15px;
+        }
+
+        .info table {
+            border: none;
+            width: 100%;
+        }
+
+        .info td {
+            border: none;
+            padding: 2px 0;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        table.data-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
         }
 
-        th,
-        td {
-            border: 1px solid #000;
-            padding: 5px;
-            text-align: left;
+        table.data-table th,
+        table.data-table td {
+            border: 1px solid #ddd;
+            padding: 6px 4px;
         }
 
-        th {
-            background: #eee;
+        table.data-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            color: #444;
+            text-transform: uppercase;
+            font-size: 8px;
             text-align: center;
         }
 
         .text-center {
-            text-align: center;
+            text-align: center !important;
+        }
+
+        .text-left {
+            text-align: left !important;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: right;
+            font-size: 8px;
+            color: #777;
+        }
+
+        .status-badge {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 8px;
         }
     </style>
 </head>
 
 <body>
-    <h3 align="center">LAPORAN ABSENSI MATA PELAJARAN</h3>
-    <p>
-        Kelas: {{ $rombel->nama_rombel }} <br>
-        Periode: {{ \Carbon\Carbon::parse($start)->format('d/m/Y') }} s/d
-        {{ \Carbon\Carbon::parse($end)->format('d/m/Y') }}
-    </p>
+    <div class="header">
+        <h2 style="margin: 0; font-size: 16px;">LAPORAN ABSENSI MATA PELAJARAN</h2>
+        <h4 style="margin: 5px 0; color: #666; font-size: 12px;">{{ $rombel->tahunAjar->nama ?? '' }}</h4>
+    </div>
 
-    <table>
+    <div class="info">
+        <table style="width: 100%;">
+            <tr>
+                <td style="width: 15%;"><strong>Kelas</strong></td>
+                <td style="width: 35%;">: {{ $rombel->nama_rombel }}</td>
+                <td style="width: 15%;"><strong>Periode</strong></td>
+                <td style="width: 35%;">: {{ \Carbon\Carbon::parse($start)->translatedFormat('d F Y') }} s/d
+                    {{ \Carbon\Carbon::parse($end)->translatedFormat('d F Y') }}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <table class="data-table">
         <thead>
             <tr>
-                <th>No</th>
-                <th>Tanggal</th>
-                <th>Waktu</th>
-                <th>Nama Siswa</th>
-                <th>Mata Pelajaran</th>
-                <th>Status</th>
+                <th style="width: 5%;">No</th>
+                <th style="width: 12%;">Tanggal</th>
+                <th style="width: 10%;">Waktu</th>
+                <th class="text-left" style="width: 28%;">Nama Siswa</th>
+                <th class="text-left" style="width: 25%;">Mata Pelajaran / Guru</th>
+                <th style="width: 10%;">Status</th>
             </tr>
         </thead>
         <tbody>
             @foreach($data as $index => $row)
-                <tr>
+                <tr style="{{ $row->status === 'tidak hadir' ? 'background-color: #fafafa; color: #999;' : '' }}">
                     <td class="text-center">{{ $index + 1 }}</td>
-                    <td class="text-center">{{ $row->tanggal->format('d/m/Y') }}</td>
-                    <td class="text-center">{{ $row->waktu_absen->format('H:i') }}</td>
-                    <td>{{ $row->anggotaRombel->pesertaDidik->user->name }}</td>
-                    <td>{{ $row->schedule->subject->nama_pelajaran ?? '-' }}</td>
-                    <td class="text-center">{{ strtoupper($row->status) }}</td>
+                    <td class="text-center">{{ $row->tanggal->translatedFormat('l, d/m/Y') }}</td>
+                    <td class="text-center">{{ $row->waktu_absen ? $row->waktu_absen->format('H:i') : '-' }}</td>
+                    <td class="text-left" style="font-weight: 500;">{{ $row->nama_siswa }}</td>
+                    <td class="text-left">
+                        <strong>{{ $row->nama_mapel }}</strong><br>
+                        <small style="color: inherit;">{{ $row->nama_guru }}</small>
+                    </td>
+                    <td class="text-center status-badge">
+                        {{ $row->status }}
+                    </td>
                 </tr>
             @endforeach
         </tbody>
     </table>
+
+    <div class="footer">
+        Dicetak pada: {{ \Carbon\Carbon::now()->translatedFormat('d F Y H:i') }}
+    </div>
 </body>
 
 </html>

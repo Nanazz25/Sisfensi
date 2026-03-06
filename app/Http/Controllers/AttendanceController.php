@@ -57,6 +57,28 @@ class AttendanceController extends Controller
         $now = Carbon::now();
         $today = $now->toDateString();
 
+        // Cek apakah hari ini adalah hari sekolah
+        $schoolDaysStr = \App\Models\SchoolSetting::where('key', 'hari_sekolah')->first()->value ?? 'senin,selasa,rabu,kamis,jumat';
+        $schoolDays = explode(',', $schoolDaysStr);
+        $dayName = strtolower($now->englishDayOfWeek);
+        $map = [
+            'monday' => 'senin',
+            'tuesday' => 'selasa',
+            'wednesday' => 'rabu',
+            'thursday' => 'kamis',
+            'friday' => 'jumat',
+            'saturday' => 'sabtu',
+            'sunday' => 'minggu'
+        ];
+        $hariIndo = $map[$dayName] ?? $dayName;
+
+        if (!in_array($hariIndo, $schoolDays)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hari ini adalah hari libur sekolah. Tidak dapat melakukan presensi.'
+            ], 403);
+        }
+
         // Cari siswa berdasarkan data wajah (Face Embedding) via AI Service
         $siswa = $this->faceService->match($request->face_embedding);
 

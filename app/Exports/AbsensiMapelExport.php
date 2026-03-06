@@ -25,13 +25,15 @@ class AbsensiMapelExport implements
     WithEvents,
     WithCustomStartCell
 {
-    protected $rombel_id, $start, $end;
+    protected $rombel_id, $start, $end, $subject_id, $teacher_id;
 
-    public function __construct($rombel_id, $start, $end)
+    public function __construct($rombel_id, $start, $end, $subject_id = null, $teacher_id = null)
     {
         $this->rombel_id = $rombel_id;
         $this->start = $start;
         $this->end = $end;
+        $this->subject_id = $subject_id;
+        $this->teacher_id = $teacher_id;
     }
 
     public function startCell(): string
@@ -41,27 +43,55 @@ class AbsensiMapelExport implements
 
     public function collection()
     {
-        $rombel = RombonganBelajar::findOrFail($this->rombel_id);
+        $rombel = RombonganBelajar::with('anggotaRombel.pesertaDidik.user')->findOrFail($this->rombel_id);
 
-        $data = Attendance::with(['anggotaRombel.pesertaDidik.user', 'schedule.subject'])
+        $query = Attendance::with(['anggotaRombel.pesertaDidik.user', 'schedule.subject', 'schedule.teacher'])
             ->whereHas('anggotaRombel', function ($q) use ($rombel) {
                 $q->where('rombongan_belajar_id', $rombel->id);
             })
             ->where('jenis_absensi', 'pelajaran')
-            ->whereBetween('tanggal', [$this->start, $this->end])
-            ->orderBy('tanggal', 'desc')
-            ->get();
+            ->whereBetween('tanggal', [$this->start, $this->end]);
 
-        return $data->map(function ($item, $index) {
-            return [
-                $index + 1,
-                $item->anggotaRombel->pesertaDidik->user->name,
-                $item->schedule->subject->nama_mapel ?? '-',
-                $item->tanggal->format('d/m/Y'),
-                $item->waktu_absen->format('H:i:s'),
-                strtoupper($item->status),
-            ];
+        if ($this->subject_id) {
+            $query->whereHas('schedule', function ($q) {
+                $q->where('subject_id', $this->subject_id);
+            });
+        }
+
+        if ($this->teacher_id) {
+            $query->whereHas('schedule', function ($q) {
+                $q->where('teacher_id', $this->teacher_id);
+            });
+        }
+
+        $logs = $query->orderBy('tanggal', 'desc')->get();
+        $grouped = $logs->groupBy(function ($item) {
+            return $item->tanggal->toDateString() . '_' . $item->schedule_id;
         });
+
+        $allStudents = $rombel->anggotaRombel->sortBy(function ($a) {
+            return $a->pesertaDidik->user->name;
+        });
+
+        $finalData = collect();
+        $index = 1;
+
+        foreach ($grouped as $sessionLogs) {
+            $first = $sessionLogs->first();
+            foreach ($allStudents as $student) {
+                $log = $sessionLogs->firstWhere('anggota_rombel_id', $student->id);
+                $finalData->push([
+                    $index++,
+                    $student->pesertaDidik->user->name,
+                    $first->schedule->subject->nama_mapel ?? '-',
+                    $first->tanggal->translatedFormat('l, d/m/Y'),
+                    $log ? $log->waktu_absen->format('H:i') : '-',
+                    strtoupper($log ? $log->status : 'tidak hadir'),
+                ]);
+            }
+        }
+
+        return $finalData;
     }
 
     public function headings(): array

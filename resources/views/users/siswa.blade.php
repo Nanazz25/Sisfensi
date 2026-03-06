@@ -14,43 +14,36 @@
 
         <div class="body">
 
-            <form method="GET" id="filterForm" class="row mb-3 align-items-center g-2">
-
+            <form method="GET" action="{{ route('users.siswa') }}" id="filterForm"
+                class="ajax-form compact-form row mb-3 align-items-center">
                 <div class="col-md-5">
                     <div class="input-group">
-                        <input type="text" name="q" value="{{ request('q') }}" class="form-control"
-                            placeholder="Cari nama / email">
-                        <div class="input-group-append">
-                            <button class="btn btn-outline-secondary" type="submit">
-                                <i class="fa fa-search"></i>
-                            </button>
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-right-0"><i
+                                    class="fa fa-search text-muted"></i></span>
                         </div>
+                        <input type="text" name="q" value="{{ request('q') }}" class="form-control border-left-0"
+                            placeholder="Cari nama / email...">
                     </div>
                 </div>
 
-                <div class="dropdown">
-                    <a href="javascript:void(0);" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
-                        <i class="fa fa-filter"></i> Urutkan
-                    </a>
-
-                    <ul class="dropdown-menu">
-                        <li>
-                            <a class="dropdown-item sort-option" data-value="desc" href="javascript:void(0);">
-                                <i class="fa fa-clock-o"></i> Terbaru
-                            </a>
-                        </li>
-                        <li class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item sort-option" data-value="asc" href="javascript:void(0);">
-                                <i class="fa fa-history"></i> Terlama
-                            </a>
-                        </li>
-                    </ul>
+                <div class="col-auto">
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
+                            <i class="fa fa-sort-amount-desc mr-1"></i> Urutkan
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item sort-option" data-value="desc"
+                                    href="javascript:void(0);">Terbaru</a></li>
+                            <li><a class="dropdown-item sort-option" data-value="asc" href="javascript:void(0);">Terlama</a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div class="col-auto">
-                    <a href="{{ route('users.siswa') }}" class="btn btn-outline-danger">
-                        <i class="fa fa-refresh"></i>
+                    <a href="{{ route('users.siswa') }}" class="btn btn-link text-danger p-0">
+                        <i class="fa fa-refresh"></i> Reset
                     </a>
                 </div>
 
@@ -111,9 +104,12 @@
 @section('afterAppScripts')
     <script>
         document.querySelectorAll('.sort-option').forEach(item => {
-            item.addEventListener('click', function() {
+            item.addEventListener('click', function () {
+                const form = document.getElementById('filterForm');
                 document.getElementById('sortInput').value = this.dataset.value;
-                document.getElementById('filterForm').submit();
+                form.dispatchEvent(new Event('submit', {
+                    cancelable: true
+                }));
             });
         });
     </script>
