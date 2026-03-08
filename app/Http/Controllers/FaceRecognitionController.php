@@ -16,8 +16,9 @@ class FaceRecognitionController extends Controller
      */
     public function indexEnroll()
     {
-        // Admin/Guru mendaftarkan siswa
-        $students = PesertaDidik::with('user')->get()->sortBy('user.name');
+        $students = PesertaDidik::with('user')->get()->sortBy(function ($student) {
+            return $student->user->name;
+        });
         return view('face.enroll', compact('students'));
     }
 

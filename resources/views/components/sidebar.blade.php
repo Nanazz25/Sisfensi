@@ -1,14 +1,13 @@
 <div id="left-sidebar" class="sidebar">
     <button type="button" class="btn-custom-close-sidebar d-lg-none"
-        style="position: absolute; top: 15px; right: 15px; z-index: 1001; background: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.3); padding: 5px 15px; border-radius: 20px; color: #dc3545; font-weight: 600; font-size: 0.9rem; transition: all 0.3s;"
-        onclick="document.body.classList.remove('offcanvas-active'); document.querySelector('.sidebar').classList.remove('open'); document.querySelectorAll('.overlay').forEach(el => el.style.display='none');">
-        <i class="fa fa-times mr-1"></i> Close
+        onclick="document.querySelector('.btn-toggle-offcanvas').click();">
+        <i class="fa fa-times"></i>
     </button>
     <div class="sidebar-scroll">
         <div class="user-account p-3 pb-0">
             <div class="d-flex align-items-center">
-                <img src="{{ asset('assets/images/user.png') }}" class="rounded-circle user-photo" width="45"
-                    alt="User Profile Picture">
+                <img src="{{ Auth::user()->avatar_url }}" class="rounded-circle user-photo" 
+                    style="width: 45px; height: 45px; flex-shrink: 0;" alt="User Profile Picture">
                 <div class="dropdown ml-2">
                     <span class="d-block font-12">Welcome,</span>
                     <a href="javascript:void(0);" class="dropdown-toggle user-name" data-toggle="dropdown">

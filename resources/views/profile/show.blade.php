@@ -16,9 +16,10 @@
                 <div class="body pt-0">
                     <div class="row mt-n5 px-4 mb-4 profile-header-row">
                         <div class="col-auto profile-image-container">
-                            <div class="profile-image border-5 border-white rounded-circle shadow"
-                                style="width: 130px; height: 130px; overflow: hidden; margin-top: -65px; border: 5px solid #fff;">
-                                <img src="{{ asset('assets/images/user.png') }}" class="img-fluid" alt="Profile Picture">
+                            <div class="profile-image border-5 border-white rounded-circle shadow d-flex align-items-center justify-content-center"
+                                style="width: 130px; height: 130px; overflow: hidden; margin-top: -65px; border: 5px solid #fff; background: #fff;">
+                                <img src="{{ $user->avatar_url }}" style="width: 100%; height: 100%; object-fit: cover;"
+                                    alt="Profile Picture">
                             </div>
                         </div>
                         <div class="col mt-3 profile-name-section">

@@ -10,24 +10,15 @@
                 <div class="body text-center">
 
                     @if($pesertaDidik->foto_wajah)
-                        <img src="{{ route('peserta-didik.photo', $pesertaDidik->id) }}" class="shadow mb-3" style="
-                            max-width: 200px;
-                            width: 100%;
-                            height: auto;
-                            border-radius: 12px;
-                            display: block;
-                            margin: 0 auto;
-                         ">
+                        <img src="{{ route('peserta-didik.photo', $pesertaDidik->id) }}"
+                            onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($pesertaDidik->nama_lengkap ?? $pesertaDidik->user->name) }}&background=00bcd4&color=fff&bold=true&size=512';"
+                            class="shadow mb-3"
+                            style="max-width: 200px; width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 12px; display: block; margin: 0 auto;">
 
                     @else
-                        <img src="{{ asset('assets/images/user.png') }}" class="shadow mb-3" style="
-                            max-width: 200px;
-                            width: 100%;
-                            height: auto;
-                            border-radius: 12px;
-                            display: block;
-                            margin: 0 auto;
-                        ">
+                        <img src="{{ optional($pesertaDidik->user)->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($pesertaDidik->nama_lengkap) . '&background=00bcd4&color=fff&bold=true&size=512' }}"
+                            class="shadow mb-3"
+                            style="max-width: 200px; width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 12px; display: block; margin: 0 auto;">
                     @endif
 
                     <span class="badge badge-info">

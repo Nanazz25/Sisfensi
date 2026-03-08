@@ -58,4 +58,18 @@ class User extends Authenticatable
     {
         return $this->hasOne(PesertaDidik::class);
     }
+    public function getInitialsAttribute()
+    {
+        $words = explode(' ', $this->name);
+        if (count($words) >= 2) {
+            return strtoupper(substr($words[0], 0, 1) . substr($words[count($words) - 1], 0, 1));
+        }
+        return strtoupper(substr($words[0], 0, 1));
+    }
+
+    public function getAvatarUrlAttribute()
+    {
+        $name = urlencode($this->name);
+        return "https://ui-avatars.com/api/?name={$name}&background=00bcd4&color=fff&bold=true&size=512";
+    }
 }
