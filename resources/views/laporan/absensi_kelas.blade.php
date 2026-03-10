@@ -29,13 +29,24 @@
                 </div>
 
                 <div class="body">
-                    <form method="GET" id="filter-form" class="mb-3">
-                        <div class="row align-items-end no-gutters mx-n1">
+                    <form method="GET" id="filter-form" class="mb-4 bg-light p-3 rounded-lg border">
+                        <div class="row mx-n2">
+                            <!-- Educational Filter -->
+                            <div class="col-lg-12 mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="small font-weight-bold text-uppercase text-primary m-0" style="letter-spacing: 1px;">Konteks Akademik</h6>
+                                    <a href="{{ route('laporan.absensi.kelas') }}" class="btn btn-sm btn-outline-secondary py-0" style="font-size: 10px;">
+                                        <i class="fa fa-undo mr-1"></i> Reset Filter
+                                    </a>
+                                </div>
+                                <hr class="my-2">
+                            </div>
+
                             @if(auth()->user()->role === 'admin')
-                                <div class="col-lg-3 col-md-4 px-1 mb-2">
-                                    <label class="small text-muted mb-1 font-weight-bold">Guru Wali Kelas</label>
-                                    <select name="teacher_id" class="form-control form-control-sm ajax-filter">
-                                        <option value="">-- Semua Walas --</option>
+                                <div class="col-lg-4 col-md-6 px-2 mb-3">
+                                    <label class="small text-muted mb-1">Wali Kelas</label>
+                                    <select name="teacher_id" class="form-control select2 ajax-filter">
+                                        <option value="">-- Semua Wali Kelas --</option>
                                         @foreach($teachers as $t)
                                             <option value="{{ $t->id }}" {{ request('teacher_id') == $t->id ? 'selected' : '' }}>
                                                 {{ $t->nama_lengkap }}
@@ -45,10 +56,22 @@
                                 </div>
                             @endif
 
-                            <div
-                                class="{{ auth()->user()->role === 'admin' ? 'col-lg-3 col-md-4' : 'col-lg-4 col-md-6' }} px-1 mb-2">
-                                <label class="small text-muted mb-1 font-weight-bold">Kelas</label>
-                                <select name="rombel_id" id="rombel_id" class="form-control form-control-sm ajax-filter"
+                            <div class="col-lg-4 col-md-6 px-2 mb-3">
+                                <label class="small text-muted mb-1">Tahun Ajaran</label>
+                                <select name="tahun_ajar_id" class="form-control ajax-filter">
+                                    <option value="">-- Semua Tahun Ajar --</option>
+                                    @foreach($tahunAjars as $ta)
+                                        <option value="{{ $ta->id }}" {{ request('tahun_ajar_id') == $ta->id ? 'selected' : '' }}>
+                                            {{ $ta->nama }} ({{ ucfirst($ta->semester) }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-lg-4 col-md-6 px-2 mb-3">
+                                <label class="small text-muted mb-1 font-weight-bold">Pilih Kelas <span
+                                        class="text-danger">*</span></label>
+                                <select name="rombel_id" id="rombel_id" class="form-control border-primary ajax-filter"
                                     required>
                                     <option value="">-- Pilih Kelas --</option>
                                     @foreach($rombels as $r)
@@ -59,22 +82,45 @@
                                 </select>
                             </div>
 
-                            <div class="col-lg-2 col-md-4 px-1 mb-2">
-                                <label class="small text-muted mb-1 font-weight-bold">Dari</label>
-                                <input type="date" name="start_date" class="form-control form-control-sm ajax-filter"
-                                    value="{{ $start }}">
+                            <!-- Timing Filter -->
+                            <div class="col-lg-12 mb-3 mt-2">
+                                <h6 class="small font-weight-bold text-uppercase text-secondary m-0"
+                                    style="letter-spacing: 1px;">Periode Waktu</h6>
+                                <hr class="my-2">
                             </div>
 
-                            <div class="col-lg-2 col-md-4 px-1 mb-2">
-                                <label class="small text-muted mb-1 font-weight-bold">Sampai</label>
-                                <input type="date" name="end_date" class="form-control form-control-sm ajax-filter"
-                                    value="{{ $end }}">
+                            <div class="col-lg-3 col-md-6 px-2 mb-3">
+                                <label class="small text-muted mb-1 text-info font-weight-bold">Bulan (Opsional)</label>
+                                <select name="month" class="form-control ajax-filter">
+                                    <option value="">-- Pilih Bulan --</option>
+                                    @foreach(range(1, 12) as $m)
+                                        <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>
+                                            {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
 
-                            <div class="col-lg-1 col-md-2 px-1 mb-2">
-                                <button type="submit" class="btn btn-primary btn-sm btn-block">
-                                    <i class="fa fa-refresh"></i>
-                                </button>
+                            <div class="col-lg-3 col-md-6 px-2 mb-3">
+                                <label class="small text-muted mb-1 text-info font-weight-bold">Tahun (Opsional)</label>
+                                <select name="year" class="form-control ajax-filter">
+                                    <option value="">-- Pilih Tahun --</option>
+                                    @foreach(range(date('Y'), date('Y') - 5) as $y)
+                                        <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>
+                                            {{ $y }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-lg-3 col-md-6 px-2 mb-3">
+                                <label class="small text-muted mb-1">Dari Tanggal</label>
+                                <input type="date" name="start_date" class="form-control ajax-filter" value="{{ $start }}">
+                            </div>
+
+                            <div class="col-lg-3 col-md-6 px-2 mb-3">
+                                <label class="small text-muted mb-1">Sampai Tanggal</label>
+                                <input type="date" name="end_date" class="form-control ajax-filter" value="{{ $end }}">
                             </div>
                         </div>
                     </form>
@@ -148,7 +194,6 @@
             const rombelSelect = $('#rombel_id');
 
             function updateResults() {
-                if (!rombelSelect.val()) return;
                 const formData = filterForm.serialize();
                 const url = window.location.pathname + '?' + formData;
                 window.history.pushState({}, '', url);
@@ -157,14 +202,31 @@
                     url: url,
                     type: 'GET',
                     success: function (response) {
-                        const newContent = $(response).find('#report-results').html();
+                        const htmlDoc = $(response);
+
+                        // 1. Update Rombel Select if it exists
+                        const newRombelSelect = htmlDoc.find('#rombel_id').html();
+                        const oldVal = rombelSelect.val();
+                        rombelSelect.html(newRombelSelect);
+
+                        // Re-select if it still exists in the list
+                        if (htmlDoc.find(`#rombel_id option[value="${oldVal}"]`).length > 0) {
+                            rombelSelect.val(oldVal);
+                        }
+
+                        // 2. Update results container
+                        const newContent = htmlDoc.find('#report-results').html();
                         resultsContainer.html(newContent);
-                        $('.header-action').html($(response).find('.header-action').html());
+
+                        // 3. Update export buttons
+                        $('.header-action').html(htmlDoc.find('.header-action').html());
                     }
                 });
             }
 
-            $('.ajax-filter').on('change', function () { updateResults(); });
+            $('.ajax-filter').on('change', function () {
+                updateResults();
+            });
         });
     </script>
 @endpush

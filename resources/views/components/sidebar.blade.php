@@ -6,7 +6,7 @@
     <div class="sidebar-scroll">
         <div class="user-account p-3 pb-0">
             <div class="d-flex align-items-center">
-                <img src="{{ Auth::user()->avatar_url }}" class="rounded-circle user-photo" 
+                <img src="{{ Auth::user()->avatar_url }}" class="rounded-circle user-photo"
                     style="width: 45px; height: 45px; flex-shrink: 0;" alt="User Profile Picture">
                 <div class="dropdown ml-2">
                     <span class="d-block font-12">Welcome,</span>
@@ -51,188 +51,131 @@
                 <nav id="left-sidebar-nav" class="sidebar-nav">
                     <ul id="main-menu" class="metismenu">
 
+                        <li class="header">UTAMA</li>
                         <li class="{{ request()->routeIs('dashboard.*') ? 'active' : '' }}">
                             <a href="{{ route('dashboard.index') }}">
-                                <i class="fa fa-dashboard"></i>
+                                <i class="fa fa-dashboard text-info"></i>
                                 <span>Dashboard</span>
                             </a>
                         </li>
 
                         @if(auth()->user()->role === 'admin')
+                            <li class="header">MANAJEMEN DATA</li>
                             <li class="{{ request()->routeIs('attendance.manual') ? 'active' : '' }}">
                                 <a href="{{ route('attendance.manual') }}">
-                                    <i class="fa fa-check-square-o"></i> <span>Kelola Presensi</span>
+                                    <i class="fa fa-check-square-o text-primary"></i> <span>Kelola Presensi</span>
                                 </a>
                             </li>
-                            {{-- Manajemen User --}}
                             <li class="{{ request()->is('users*') ? 'active' : '' }}">
                                 <a href="#Users" class="has-arrow">
-                                    <i class="fa fa-users"></i>
+                                    <i class="fa fa-users text-primary"></i>
                                     <span>Manajemen User</span>
                                 </a>
-                                <ul class="collapse {{ request()->routeIs('users.*') ? 'in' : '' }}">
-                                    <li class="{{ request()->routeIs('users.admin') ? 'active' : '' }}">
-                                        <a href="{{ route('users.admin') }}">
-                                            <i class="fa fa-user-secret"></i> <span>Admin</span>
-                                        </a>
-                                    </li>
-                                    <li class="{{ request()->routeIs('users.guru') ? 'active' : '' }}">
-                                        <a href="{{ route('users.guru') }}">
-                                            <i class="fa fa-graduation-cap"></i> <span>Guru</span>
-                                        </a>
-                                    </li>
-                                    <li class="{{ request()->routeIs('users.siswa') ? 'active' : '' }}">
-                                        <a href="{{ route('users.siswa') }}">
-                                            <i class="fa fa-user"></i> <span>Siswa</span>
-                                        </a>
-                                    </li>
+                                <ul class="collapse {{ request()->is('users*') ? 'in' : '' }}">
+                                    <li class="{{ request()->routeIs('users.admin') ? 'active' : '' }}"><a
+                                            href="{{ route('users.admin') }}">Admin</a></li>
+                                    <li class="{{ request()->routeIs('users.guru') ? 'active' : '' }}"><a
+                                            href="{{ route('users.guru') }}">Guru</a></li>
+                                    <li class="{{ request()->routeIs('users.siswa') ? 'active' : '' }}"><a
+                                            href="{{ route('users.siswa') }}">Siswa</a></li>
                                 </ul>
                             </li>
-
-                            {{-- Data Master --}}
                             <li
                                 class="{{ request()->routeIs('teachers.*') || request()->routeIs('peserta-didik.*') ? 'active' : '' }}">
                                 <a href="#DataMaster" class="has-arrow">
-                                    <i class="fa fa-database"></i>
+                                    <i class="fa fa-database text-primary"></i>
                                     <span>Data Master</span>
                                 </a>
                                 <ul
                                     class="collapse {{ request()->routeIs('teachers.*') || request()->routeIs('peserta-didik.*') ? 'in' : '' }}">
-                                    <li class="{{ request()->routeIs('teachers.*') ? 'active' : '' }}">
-                                        <a href="{{ route('teachers.index') }}">
-                                            <i class="fa fa-black-tie"></i> <span>Guru</span>
-                                        </a>
-                                    </li>
-                                    <li class="{{ request()->routeIs('peserta-didik.*') ? 'active' : '' }}">
-                                        <a href="{{ route('peserta-didik.index') }}">
-                                            <i class="fa fa-child"></i> <span>Peserta Didik</span>
-                                        </a>
-                                    </li>
+                                    <li class="{{ request()->routeIs('teachers.*') ? 'active' : '' }}"><a
+                                            href="{{ route('teachers.index') }}">Data Guru</a></li>
+                                    <li class="{{ request()->routeIs('peserta-didik.*') ? 'active' : '' }}"><a
+                                            href="{{ route('peserta-didik.index') }}">Data Siswa</a></li>
                                 </ul>
                             </li>
-                        @endif
-
-                        @if(in_array(auth()->user()->role, ['admin', 'guru']))
-                            {{-- Akademik --}}
-                            <li
-                                class="{{ request()->routeIs('tahun-ajar.*') || request()->routeIs('jurusan.*') || request()->routeIs('rombongan-belajar.*') || request()->routeIs('subjects.*') || request()->routeIs('schedules.*') ? 'active' : '' }}">
-                                <a href="#Akademik" class="has-arrow">
-                                    <i class="fa fa-mortar-board"></i>
-                                    <span>Akademik</span>
-                                </a>
-                                <ul
-                                    class="collapse {{ request()->routeIs('tahun-ajar.*') || request()->routeIs('jurusan.*') || request()->routeIs('rombongan-belajar.*') || request()->routeIs('subjects.*') || request()->routeIs('schedules.*') ? 'in' : '' }}">
-                                    @if(auth()->user()->role === 'admin')
-                                        <li class="{{ request()->routeIs('tahun-ajar.*') ? 'active' : '' }}">
-                                            <a href="{{ route('tahun-ajar.index') }}">
-                                                <i class="fa fa-calendar"></i> <span>Tahun Ajar</span>
-                                            </a>
-                                        </li>
-                                        <li class="{{ request()->routeIs('jurusan.*') ? 'active' : '' }}">
-                                            <a href="{{ route('jurusan.index') }}">
-                                                <i class="fa fa-folder"></i> <span>Jurusan</span>
-                                            </a>
-                                        </li>
-                                    @endif
-
-                                    <li class="{{ request()->routeIs('rombongan-belajar.*') ? 'active' : '' }}">
-                                        <a href="{{ route('rombongan-belajar.index') }}">
-                                            <i class="fa fa-sitemap"></i> <span>Rombongan Belajar</span>
-                                        </a>
-                                    </li>
-
-                                    @if(auth()->user()->role === 'admin')
-                                        <li class="{{ request()->routeIs('subjects.*') ? 'active' : '' }}">
-                                            <a href="{{ route('subjects.index') }}">
-                                                <i class="fa fa-book"></i> <span>Mata Pelajaran</span>
-                                            </a>
-                                        </li>
-                                        <li class="{{ request()->routeIs('schedules.*') ? 'active' : '' }}">
-                                            <a href="{{ route('schedules.index') }}">
-                                                <i class="fa fa-clock-o"></i> <span>Jadwal</span>
-                                            </a>
-                                        </li>
-                                    @endif
-                                </ul>
-                            </li>
-                        @endif
-
-                        @if(auth()->user()->role === 'admin')
-                            {{-- Sekolah --}}
                             <li
                                 class="{{ request()->routeIs('school-locations.*') || request()->routeIs('school-settings.*') ? 'active' : '' }}">
                                 <a href="#Sekolah" class="has-arrow">
-                                    <i class="fa fa-building"></i>
+                                    <i class="fa fa-building text-primary"></i>
                                     <span>Sekolah</span>
                                 </a>
                                 <ul
                                     class="collapse {{ request()->routeIs('school-locations.*') || request()->routeIs('school-settings.*') ? 'in' : '' }}">
-                                    <li class="{{ request()->routeIs('school-locations.*') ? 'active' : '' }}">
-                                        <a href="{{ route('school-locations.index') }}">
-                                            <i class="fa fa-map-marker"></i> <span>Lokasi Sekolah</span>
-                                        </a>
-                                    </li>
-                                    <li class="{{ request()->routeIs('school-settings.*') ? 'active' : '' }}">
-                                        <a href="{{ route('school-settings.index') }}">
-                                            <i class="fa fa-cog"></i> <span>Sistem Sekolah</span>
-                                        </a>
-                                    </li>
+                                    <li class="{{ request()->routeIs('school-locations.*') ? 'active' : '' }}"><a
+                                            href="{{ route('school-locations.index') }}">Lokasi Sekolah</a></li>
+                                    <li class="{{ request()->routeIs('school-settings.*') ? 'active' : '' }}"><a
+                                            href="{{ route('school-settings.index') }}">Sistem Sekolah</a></li>
                                 </ul>
                             </li>
                         @endif
 
                         @if(in_array(auth()->user()->role, ['admin', 'guru']))
-                            <li class="{{ request()->is('attendance-permissions*') ? 'active' : '' }}">
-                                <a href="{{ route('attendance-permissions.index') }}">
-                                    <i class="fa fa-file-text"></i>
-                                    <span>Pengajuan Izin</span>
-                                </a>
-                            </li>
-
-                            {{-- Presensi & Biometrik --}}
+                            <li class="header">AKADEMIK & PRESENSI</li>
                             <li
-                                class="{{ request()->is('face-recognition*') || request()->is('attendance*') ? 'active' : '' }}">
-                                <a href="#Presensi" class="has-arrow">
-                                    <i class="fa fa-camera"></i>
-                                    <span>Presensi & Biometrik</span>
+                                class="{{ request()->is('rombongan-belajar*') || request()->is('tahun-ajar*') || request()->is('jurusan*') || request()->is('subjects*') || request()->is('schedules*') ? 'active' : '' }}">
+                                <a href="#Akademik" class="has-arrow">
+                                    <i class="fa fa-mortar-board text-success"></i>
+                                    <span>Akademik</span>
                                 </a>
                                 <ul
-                                    class="collapse {{ request()->is('face-recognition*') || request()->is('attendance*') ? 'in' : '' }}">
-                                    <li class="{{ request()->routeIs('face.enroll') ? 'active' : '' }}">
-                                        <a href="{{ route('face.enroll') }}">
-                                            <i class="fa fa-id-card"></i> <span>Registrasi Wajah</span>
-                                        </a>
-                                    </li>
-                                    <li class="{{ request()->routeIs('attendance.scanner') ? 'active' : '' }}">
-                                        <a href="{{ route('attendance.scanner') }}">
-                                            <i class="fa fa-video-camera"></i> <span>Mulai Presensi</span>
-                                        </a>
-                                    </li>
+                                    class="collapse {{ request()->is('rombongan-belajar*') || request()->is('tahun-ajar*') || request()->is('jurusan*') ? 'in' : '' }}">
+                                    @if(auth()->user()->role === 'admin')
+                                        <li class="{{ request()->routeIs('tahun-ajar.*') ? 'active' : '' }}"><a
+                                                href="{{ route('tahun-ajar.index') }}">Tahun Ajar</a></li>
+                                        <li class="{{ request()->routeIs('jurusan.*') ? 'active' : '' }}"><a
+                                                href="{{ route('jurusan.index') }}">Jurusan</a></li>
+                                    @endif
+                                    <li class="{{ request()->routeIs('rombongan-belajar.*') ? 'active' : '' }}"><a
+                                            href="{{ route('rombongan-belajar.index') }}">Rombongan Belajar</a></li>
+                                    @if(auth()->user()->role === 'admin')
+                                        <li class="{{ request()->routeIs('subjects.*') ? 'active' : '' }}"><a
+                                                href="{{ route('subjects.index') }}">Mata Pelajaran</a></li>
+                                        <li class="{{ request()->routeIs('schedules.*') ? 'active' : '' }}"><a
+                                                href="{{ route('schedules.index') }}">Jadwal</a></li>
+                                    @endif
                                 </ul>
                             </li>
 
-                            {{-- Laporan --}}
+                            <li class="{{ request()->is('attendance-permissions*') ? 'active' : '' }}">
+                                <a href="{{ route('attendance-permissions.index') }}">
+                                    <i class="fa fa-check-circle text-warning"></i>
+                                    <span>Konfirmasi Izin</span>
+                                </a>
+                            </li>
+
+                            <li
+                                class="{{ request()->is('face-recognition*') || request()->is('attendance/*') ? 'active' : '' }}">
+                                <a href="#Presensi" class="has-arrow">
+                                    <i class="fa fa-camera text-info"></i>
+                                    <span>Biometrik</span>
+                                </a>
+                                <ul
+                                    class="collapse {{ request()->is('face-recognition*') || request()->is('attendance/*') ? 'in' : '' }}">
+                                    <li class="{{ request()->routeIs('face.enroll') ? 'active' : '' }}"><a
+                                            href="{{ route('face.enroll') }}">Registrasi Wajah</a></li>
+                                    <li class="{{ request()->routeIs('attendance.scanner') ? 'active' : '' }}"><a
+                                            href="{{ route('attendance.scanner') }}">Mulai Presensi</a></li>
+                                </ul>
+                            </li>
+
+                            <li class="header">LAPORAN</li>
                             <li class="{{ request()->is('laporan*') ? 'active' : '' }}">
                                 <a href="#Laporan" class="has-arrow">
-                                    <i class="fa fa-file-text"></i>
-                                    <span>Laporan</span>
+                                    <i class="fa fa-file-text text-danger"></i>
+                                    <span>Rekap Presensi</span>
                                 </a>
                                 <ul class="collapse {{ request()->is('laporan*') ? 'in' : '' }}">
-                                    <li class="{{ request()->routeIs('laporan.absensi.kelas') ? 'active' : '' }}">
-                                        <a href="{{ route('laporan.absensi.kelas') }}">
-                                            <i class="fa fa-circle-o"></i> <span>Absensi Harian</span>
-                                        </a>
-                                    </li>
-                                    <li class="{{ request()->routeIs('laporan.absensi.mapel') ? 'active' : '' }}">
-                                        <a href="{{ route('laporan.absensi.mapel') }}">
-                                            <i class="fa fa-circle-o"></i> <span>Absensi Mapel</span>
-                                        </a>
-                                    </li>
+                                    <li class="{{ request()->routeIs('laporan.absensi.kelas') ? 'active' : '' }}"><a
+                                            href="{{ route('laporan.absensi.kelas') }}">Harian Kelas</a></li>
+                                    <li class="{{ request()->routeIs('laporan.absensi.mapel') ? 'active' : '' }}"><a
+                                            href="{{ route('laporan.absensi.mapel') }}">Mata Pelajaran</a></li>
                                 </ul>
                             </li>
                         @endif
 
                         @if(auth()->user()->role === 'siswa')
+                            <li class="header">SISWA</li>
                             @php
                                 $myRombel = auth()->user()->pesertaDidik->anggotaRombel()->latest()->first();
                             @endphp
@@ -240,12 +183,12 @@
                             <li class="{{ request()->routeIs('rombongan-belajar.show') ? 'active' : '' }}">
                                 @if($myRombel)
                                     <a href="{{ route('rombongan-belajar.show', $myRombel->rombongan_belajar_id) }}">
-                                        <i class="fa fa-users"></i>
+                                        <i class="fa fa-university text-primary"></i>
                                         <span>Kelas Saya</span>
                                     </a>
                                 @else
                                     <a href="javascript:void(0);" class="text-muted">
-                                        <i class="fa fa-users"></i>
+                                        <i class="fa fa-university text-muted"></i>
                                         <span>Belum Ada Kelas</span>
                                     </a>
                                 @endif
@@ -253,15 +196,23 @@
 
                             <li class="{{ request()->routeIs('attendance.scanner') ? 'active' : '' }}">
                                 <a href="{{ route('attendance.scanner') }}">
-                                    <i class="fa fa-video-camera"></i>
-                                    <span>Presensi</span>
+                                    <i class="fa fa-video-camera text-success"></i>
+                                    <span>Presensi Wajah</span>
                                 </a>
                             </li>
 
-                            <li class="{{ request()->is('attendance-permissions*') ? 'active' : '' }}">
+                            <li
+                                class="{{ request()->is('attendance-permissions/create*') && request('type') == 'manual' ? 'active' : '' }}">
+                                <a href="{{ route('attendance-permissions.create', ['type' => 'manual']) }}">
+                                    <i class="fa fa-pencil-square-o text-warning"></i>
+                                    <span>Absen Manual</span>
+                                </a>
+                            </li>
+
+                            <li class="{{ request()->is('attendance-permissions*') && !request('type') ? 'active' : '' }}">
                                 <a href="{{ route('attendance-permissions.index') }}">
-                                    <i class="fa fa-file-text"></i>
-                                    <span>Pengajuan Izin</span>
+                                    <i class="fa fa-history text-info"></i>
+                                    <span>Riwayat & Izin</span>
                                 </a>
                             </li>
                         @endif

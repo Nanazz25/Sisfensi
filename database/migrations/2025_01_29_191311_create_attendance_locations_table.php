@@ -18,7 +18,7 @@ return new class extends Migration {
             $table->decimal('longitude', 11, 8);
             $table->integer('radius');
             $table->boolean('lokasi_valid');
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamps();
         });
     }
 

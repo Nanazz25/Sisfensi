@@ -12,6 +12,7 @@ export default defineConfig({
                 "resources/css/biometric.css",
                 "resources/css/dashboard.css",
                 "resources/js/app.js",
+                "resources/js/global-main.js",
                 "resources/js/biometric/attendance.scanner.js",
                 "resources/js/biometric/enroll.js",
             ],

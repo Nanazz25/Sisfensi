@@ -113,6 +113,39 @@ class RombonganBelajarController extends Controller
             ->get()
             ->groupBy('hari');
 
+        // Detailed presence lists for Today
+        $todayDate = now()->toDateString();
+        $todayAttendance = \App\Models\Attendance::whereIn('anggota_rombel_id', $anggotaIds)
+            ->where('tanggal', $todayDate)
+            ->where('jenis_absensi', 'masuk')
+            ->get()
+            ->keyBy('anggota_rombel_id');
+
+        $presenceLists = [
+            'hadir' => [],
+            'terlambat' => [],
+            'izin_sakit' => [],
+            'alpha' => [],
+            'belum' => [],
+        ];
+
+        foreach ($anggota as $item) {
+            $att = $todayAttendance->get($item->id);
+            if ($att) {
+                if ($att->status === 'hadir') {
+                    $presenceLists['hadir'][] = $item;
+                } elseif ($att->status === 'terlambat') {
+                    $presenceLists['terlambat'][] = $item;
+                } elseif (in_array($att->status, ['izin', 'sakit'])) {
+                    $presenceLists['izin_sakit'][] = $item;
+                } elseif ($att->status === 'alpha') {
+                    $presenceLists['alpha'][] = $item;
+                }
+            } else {
+                $presenceLists['belum'][] = $item;
+            }
+        }
+
         return view('rombongan_belajar.show', [
             'rombel' => $rombonganBelajar,
             'anggota' => $anggota,
@@ -121,7 +154,8 @@ class RombonganBelajarController extends Controller
             'percentage' => $percentage,
             'period' => $period,
             'isWalas' => $isWalas,
-            'schedules' => $schedules
+            'schedules' => $schedules,
+            'presenceLists' => $presenceLists
         ]);
     }
 

@@ -25,6 +25,11 @@ return new class extends Migration {
                 'value' => '14',
                 'description' => 'Jumlah hari penyimpanan face log (gagal verifikasi)'
             ],
+            [
+                'key' => 'hari_sekolah',
+                'value' => 'senin,selasa,rabu,kamis,jumat',
+                'description' => 'Hari-hari aktif sekolah (comma separated)'
+            ],
         ]);
     }
 

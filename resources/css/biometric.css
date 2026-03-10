@@ -75,6 +75,29 @@
 .success-overlay {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+}
+
+.success-overlay i {
+    font-size: 80px;
+    margin-bottom: 20px;
+    animation: success-icon 0.6s ease-out;
+}
+
+@keyframes success-icon {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .permission-card {

@@ -29,6 +29,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
     Route::get('/dashboard/attendance-detail/{schedule}', [DashboardController::class, 'getAttendanceDetail'])->name('dashboard.attendance-detail');
+    Route::get('/dashboard/attendance-chart', [DashboardController::class, 'getAttendanceChartData'])->name('dashboard.attendance-chart');
 
     // Attendance Permissions (Sakit/Izin)
     Route::resource('attendance-permissions', AttendancePermissionController::class);

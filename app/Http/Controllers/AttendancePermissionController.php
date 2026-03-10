@@ -43,22 +43,81 @@ class AttendancePermissionController extends Controller
 
         $permissions = $query->latest()->paginate(10);
         $permissions->appends($request->all());
+
+        // Calculate frequency for warnings (Teachers/Admins view)
+        if (auth()->user()->role !== 'siswa') {
+            foreach ($permissions as $permit) {
+                $monthStart = Carbon::now()->startOfMonth();
+                $monthEnd = Carbon::now()->endOfMonth();
+                $permit->monthly_count = AttendancePermission::where('anggota_rombel_id', $permit->anggota_rombel_id)
+                    ->whereIn('status', ['approved', 'pending'])
+                    ->whereIn('jenis', ['izin', 'sakit'])
+                    ->whereBetween('tanggal_mulai', [$monthStart, $monthEnd])
+                    ->count();
+            }
+        }
+
         return view('attendance_permissions.index', compact('permissions'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('attendance_permissions.create');
+        $user = auth()->user();
+        $monthlyCount = 0;
+
+        if ($user->role === 'siswa') {
+            $anggotaRombel = $user->pesertaDidik->anggotaRombel()->latest()->first();
+
+            if ($anggotaRombel) {
+                $today = Carbon::today()->toDateString();
+
+                // Cek apakah sudah ada absen "masuk" hari ini
+                $alreadyAttended = Attendance::where('anggota_rombel_id', $anggotaRombel->id)
+                    ->where('tanggal', $today)
+                    ->where('jenis_absensi', 'masuk')
+                    ->exists();
+
+                if ($alreadyAttended) {
+                    return redirect()->route('attendance-permissions.index')
+                        ->with('error', 'Anda sudah melakukan absensi hari ini.');
+                }
+
+                // Cek pengajuan pending hari ini
+                $pendingPermission = AttendancePermission::where('anggota_rombel_id', $anggotaRombel->id)
+                    ->where('status', 'pending')
+                    ->whereDate('tanggal_mulai', $today)
+                    ->exists();
+
+                if ($pendingPermission) {
+                    return redirect()->route('attendance-permissions.index')
+                        ->with('error', 'Anda memiliki pengajuan yang masih dalam proses untuk hari ini.');
+                }
+
+                // Hitung frekuensi izin/sakit bulan ini
+                $monthStart = Carbon::now()->startOfMonth();
+                $monthEnd = Carbon::now()->endOfMonth();
+                $monthlyCount = AttendancePermission::where('anggota_rombel_id', $anggotaRombel->id)
+                    ->whereIn('status', ['approved', 'pending'])
+                    ->whereIn('jenis', ['izin', 'sakit'])
+                    ->whereBetween('tanggal_mulai', [$monthStart, $monthEnd])
+                    ->count();
+            }
+        }
+
+        return view('attendance_permissions.create', compact('request', 'monthlyCount'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'tanggal_mulai' => 'required|date',
-            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-            'jenis' => 'required|in:izin,sakit',
+            'tanggal_selesai' => 'required|date|same:tanggal_mulai',
+            'jenis' => 'required|in:izin,sakit,manual',
             'keterangan' => 'required|string',
             'lampiran' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'jenis_absensi_manual' => 'nullable|in:masuk,pulang,mapel',
         ]);
 
         $user = auth()->user();
@@ -77,7 +136,24 @@ class AttendancePermissionController extends Controller
             ->exists();
 
         if ($existingAttendance) {
-            return back()->with('error', 'Tidak dapat mengajukan izin/sakit karena Anda sudah melakukan absensi pada tanggal tersebut.');
+            return back()->with('error', 'Tidak dapat mengajukan izin/sakit karena Anda sudah melakukan absensi pada rentang tanggal tersebut.');
+        }
+
+        // Cek pengajuan pending yang tumpang tindih
+        $overlappingPermission = AttendancePermission::where('anggota_rombel_id', $anggotaRombel->id)
+            ->where('status', 'pending')
+            ->where(function ($q) use ($start, $end) {
+                $q->whereBetween('tanggal_mulai', [$start->toDateString(), $end->toDateString()])
+                    ->orWhereBetween('tanggal_selesai', [$start->toDateString(), $end->toDateString()])
+                    ->orWhere(function ($q2) use ($start, $end) {
+                        $q2->where('tanggal_mulai', '<=', $start->toDateString())
+                            ->where('tanggal_selesai', '>=', $end->toDateString());
+                    });
+            })
+            ->exists();
+
+        if ($overlappingPermission) {
+            return back()->with('error', 'Anda sudah memiliki pengajuan yang masih dalam proses (pending) pada rentang tanggal tersebut.');
         }
 
         $data = $request->all();
@@ -111,16 +187,22 @@ class AttendancePermissionController extends Controller
             $end = Carbon::parse($permission->tanggal_selesai);
 
             while ($start <= $end) {
+                $statusAttendance = $permission->jenis; // 'izin' or 'sakit'
+                if ($permission->jenis === 'manual') {
+                    $statusAttendance = 'hadir';
+                }
+
                 Attendance::updateOrCreate(
                     [
                         'anggota_rombel_id' => $permission->anggota_rombel_id,
                         'tanggal' => $start->toDateString()
                     ],
                     [
-                        'waktu_absen' => now(),
-                        'jenis_absensi' => 'masuk',
-                        'status' => $permission->jenis, // 'izin' or 'sakit'
-                        'metode' => 'manual'
+                        'waktu_absen' => $permission->jenis === 'manual' ? $permission->created_at : now(),
+                        'jenis_absensi' => $permission->jenis === 'manual' ? ($permission->jenis_absensi_manual ?? 'masuk') : 'masuk',
+                        'status' => $statusAttendance,
+                        'metode' => 'manual',
+                        'remarks' => $permission->keterangan
                     ]
                 );
                 $start->addDay();
@@ -129,7 +211,8 @@ class AttendancePermissionController extends Controller
             // Jika ditolak, hapus record attendance yang terkait (jika ada)
             Attendance::where('anggota_rombel_id', $permission->anggota_rombel_id)
                 ->whereBetween('tanggal', [$permission->tanggal_mulai, $permission->tanggal_selesai])
-                ->whereIn('status', ['izin', 'sakit'])
+                ->whereIn('status', ['izin', 'sakit', 'hadir'])
+                ->where('metode', 'manual')
                 ->delete();
         }
 

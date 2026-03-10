@@ -44,11 +44,11 @@
                 <i class="fa fa-check-circle"></i>
                 <h1 id="successName" class="font-weight-bold">TERDAFTAR</h1>
                 <h4 id="successSub" class="mb-4">Wajah Berhasil Disimpan</h4>
-                <div class="d-flex gap-3 mt-2">
-                    <button class="btn btn-secondary btn-lg px-5 shadow-sm" onclick="resetEnroll()">
+                <div class="d-flex justify-content-center mt-2">
+                    <button class="btn btn-secondary btn-lg px-5 shadow-sm mx-2" onclick="resetEnroll()">
                         DAFTAR LAGI
                     </button>
-                    <button class="btn btn-outline-light btn-lg px-5"
+                    <button class="btn btn-outline-light btn-lg px-5 mx-2"
                         onclick="location.href='{{ route('dashboard.index') }}'">
                         DASHBOARD
                     </button>
@@ -176,21 +176,27 @@
     </div>
 
     {{-- Native Modal for Re-Registration Warning --}}
-    <div class="modal fade" id="confirmReRegisterModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+    <div class="modal fade" id="confirmReRegisterModal" tabindex="-1" role="dialog" aria-hidden="true"
+        data-backdrop="static">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title font-weight-bold text-dark"><i class="fa fa-exclamation-triangle text-warning mr-2"></i>Siswa Sudah Terdaftar</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="cancelReRegistration()">
+                    <h5 class="modal-title font-weight-bold text-dark"><i
+                            class="fa fa-exclamation-triangle text-warning mr-2"></i>Siswa Sudah Terdaftar</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                        onclick="cancelReRegistration()">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body text-center py-4">
-                    <p class="text-secondary mb-0">Wajah siswa ini sudah ada di sistem. Apakah Anda ingin mendaftarkan ulang? <br><b class="text-danger">(Foto lama akan diganti)</b></p>
+                    <p class="text-secondary mb-0">Wajah siswa ini sudah ada di sistem. Apakah Anda ingin mendaftarkan
+                        ulang? <br><b class="text-danger">(Foto lama akan diganti)</b></p>
                 </div>
                 <div class="modal-footer border-0 pt-0 justify-content-center pb-4">
-                    <button type="button" class="btn btn-light px-4 font-weight-bold" style="border-radius: 12px;" data-dismiss="modal" onclick="cancelReRegistration()">BATAL</button>
-                    <button type="button" class="btn btn-primary px-4 font-weight-bold shadow-sm" style="border-radius: 12px;" onclick="confirmReRegistration()">YA, DAFTAR ULANG</button>
+                    <button type="button" class="btn btn-light px-4 font-weight-bold" style="border-radius: 12px;"
+                        data-dismiss="modal" onclick="cancelReRegistration()">BATAL</button>
+                    <button type="button" class="btn btn-primary px-4 font-weight-bold shadow-sm"
+                        style="border-radius: 12px;" onclick="confirmReRegistration()">YA, DAFTAR ULANG</button>
                 </div>
             </div>
         </div>

@@ -132,6 +132,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link px-4 py-3" id="presence-tab" data-toggle="tab" href="#presence">
+                                <i class="fa fa-check-square-o mr-1"></i> Presensi Hari Ini
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link px-4 py-3" id="schedule-tab" data-toggle="tab" href="#schedule">
                                 <i class="fa fa-calendar mr-1"></i> Jadwal
                             </a>
@@ -139,8 +144,8 @@
                     </ul>
                 </div>
                 <style>
-                    .nav-tabs-minimal .nav-link { 
-                        color: #a0a0a0; 
+                    .nav-tabs-minimal .nav-link {
+                        color: #a0a0a0;
                         border: none;
                         border-bottom: 2px solid transparent;
                         border-radius: 0;
@@ -148,14 +153,27 @@
                         font-size: 13px;
                         font-weight: 600;
                     }
-                    .nav-tabs-minimal .nav-link.active { 
-                        color: #333 !important; 
+
+                    .nav-tabs-minimal .nav-link.active {
+                        color: #007bff !important;
                         background: transparent !important;
-                        border-bottom: 2px solid #333;
+                        border-bottom: 2px solid #007bff;
                     }
+
                     .nav-tabs-minimal .nav-link:hover:not(.active) {
                         color: #666;
                         border-bottom: 2px solid #e9ecef;
+                    }
+
+                    .presence-list-item {
+                        padding: 8px 12px;
+                        border-radius: 8px;
+                        margin-bottom: 5px;
+                        background: #fdfdfd;
+                        border: 1px solid #f0f0f0;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
                     }
                 </style>
                 <div class="body">
@@ -207,6 +225,64 @@
                             </div>
                         </div>
 
+                        {{-- Tab Presensi --}}
+                        <div class="tab-pane fade" id="presence">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="font-weight-bold mb-3 text-success"><i class="fa fa-check-circle mr-1"></i>
+                                        Hadir & Telat</h6>
+                                    @forelse(array_merge($presenceLists['hadir'], $presenceLists['terlambat']) as $item)
+                                        <div class="presence-list-item">
+                                            <span>{{ $item->pesertaDidik->user->name }}</span>
+                                            @php
+                                                // Find specific status
+                                                $isLate = collect($presenceLists['terlambat'])->contains('id', $item->id);
+                                            @endphp
+                                            <span class="badge {{ $isLate ? 'badge-warning' : 'badge-success' }}">
+                                                {{ $isLate ? 'Terlambat' : 'Hadir' }}
+                                            </span>
+                                        </div>
+                                    @empty
+                                        <p class="text-muted small italic">Belum ada yang hadir.</p>
+                                    @endforelse
+
+                                    <h6 class="font-weight-bold mb-3 mt-4 text-info"><i class="fa fa-info-circle mr-1"></i>
+                                        Izin & Sakit</h6>
+                                    @forelse($presenceLists['izin_sakit'] as $item)
+                                        <div class="presence-list-item">
+                                            <span>{{ $item->pesertaDidik->user->name }}</span>
+                                            <span class="badge badge-info">Izin/Sakit</span>
+                                        </div>
+                                    @empty
+                                        <p class="text-muted small italic">Tidak ada yang izin.</p>
+                                    @endforelse
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="font-weight-bold mb-3 text-danger"><i class="fa fa-times-circle mr-1"></i>
+                                        Alpha</h6>
+                                    @forelse($presenceLists['alpha'] as $item)
+                                        <div class="presence-list-item border-danger" style="background: #fffafa;">
+                                            <span>{{ $item->pesertaDidik->user->name }}</span>
+                                            <span class="badge badge-danger">Alpha</span>
+                                        </div>
+                                    @empty
+                                        <p class="text-muted small italic">Tidak ada keterangan alpha.</p>
+                                    @endforelse
+
+                                    <h6 class="font-weight-bold mb-3 mt-4 text-muted"><i class="fa fa-clock-o mr-1"></i>
+                                        Belum Absen</h6>
+                                    @forelse($presenceLists['belum'] as $item)
+                                        <div class="presence-list-item bg-light">
+                                            <span class="text-muted">{{ $item->pesertaDidik->user->name }}</span>
+                                            <span class="badge badge-secondary">Belum Absen</span>
+                                        </div>
+                                    @empty
+                                        <p class="text-muted small italic">Semua sudah terdata.</p>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
+
                         {{-- Tab Jadwal --}}
                         <div class="tab-pane fade" id="schedule">
                             <div class="row">
@@ -224,12 +300,16 @@
                                                         <div class="list-group-item py-2 px-3">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <div class="font-weight-bold text-dark">{{ $sch->subject->nama_mapel }}</div>
-                                                                    <div class="text-muted" style="font-size: 11px;">{{ $sch->teacher->user->name ?? '-' }}</div>
+                                                                    <div class="font-weight-bold text-dark">
+                                                                        {{ $sch->subject->nama_mapel }}</div>
+                                                                    <div class="text-muted" style="font-size: 11px;">
+                                                                        {{ $sch->teacher->user->name ?? '-' }}</div>
                                                                 </div>
                                                                 <div class="text-right">
-                                                                    <span class="badge badge-light border text-dark font-weight-normal px-2 py-1">
-                                                                        {{ substr($sch->jam_mulai, 0, 5) }} - {{ substr($sch->jam_selesai, 0, 5) }}
+                                                                    <span
+                                                                        class="badge badge-light border text-dark font-weight-normal px-2 py-1">
+                                                                        {{ substr($sch->jam_mulai, 0, 5) }} -
+                                                                        {{ substr($sch->jam_selesai, 0, 5) }}
                                                                     </span>
                                                                 </div>
                                                             </div>
@@ -266,9 +346,9 @@
                 labels: ['Hadir', 'Terlambat', 'Izin/Sakit', 'Alpha'],
                 datasets: [{
                     data: [
-                                {{ $stats['hadir'] }},
-                                {{ $stats['terlambat'] }},
-                                {{ $stats['izin_sakit'] }},
+                                    {{ $stats['hadir'] }},
+                                    {{ $stats['terlambat'] }},
+                                    {{ $stats['izin_sakit'] }},
                         {{ $stats['alpha'] }}
                     ],
                     backgroundColor: ['#28a745', '#ffc107', '#17a2b8', '#dc3545'],

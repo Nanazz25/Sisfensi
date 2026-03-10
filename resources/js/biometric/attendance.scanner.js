@@ -214,29 +214,28 @@ function startDetection() {
 
         try {
             // Dynamic resize: Always match current visible video dimensions
+            const videoRect = video.getBoundingClientRect();
             const displaySize = {
-                width: video.clientWidth,
-                height: video.clientHeight,
+                width: videoRect.width,
+                height: videoRect.height,
             };
 
             // Optimization: Hanya match dimension jika size valid
             if (displaySize.width > 0 && displaySize.height > 0) {
-                // Cek canvas match dimensions manual untuk menghindari re-allocation berat
                 if (
-                    canvas.width !== displaySize.width ||
-                    canvas.height !== displaySize.height
+                    Math.abs(canvas.width - displaySize.width) > 2 ||
+                    Math.abs(canvas.height - displaySize.height) > 2
                 ) {
                     faceapi.matchDimensions(canvas, displaySize);
                 }
             }
 
-            // Detection options: Input size kecil lebih cepat (160 atau 224)
-            // withFaceLandmarks necessary for aligning face for descriptor
+            // Detection options
             const det = await faceapi
                 .detectSingleFace(
                     video,
                     new faceapi.TinyFaceDetectorOptions({
-                        inputSize: 160, // Lowered from 224 for better speed
+                        inputSize: 160,
                         scoreThreshold: 0.5,
                     }),
                 )
@@ -247,7 +246,30 @@ function startDetection() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             if (det && displaySize.width > 0) {
-                const resized = faceapi.resizeResults(det, displaySize);
+                // PENTING: Fix Gepeng/Off-position Box karena object-fit: cover
+                const videoWidth = video.videoWidth;
+                const videoHeight = video.videoHeight;
+                const canvasWidth = displaySize.width;
+                const canvasHeight = displaySize.height;
+
+                const xScale = canvasWidth / videoWidth;
+                const yScale = canvasHeight / videoHeight;
+                const finalScale = Math.max(xScale, yScale); // tiru object-fit: cover
+
+                const xOffset = (canvasWidth - videoWidth * finalScale) / 2;
+                const yOffset = (canvasHeight - videoHeight * finalScale) / 2;
+
+                const resized = {
+                    detection: {
+                        box: {
+                            x: det.detection.box.x * finalScale + xOffset,
+                            y: det.detection.box.y * finalScale + yOffset,
+                            width: det.detection.box.width * finalScale,
+                            height: det.detection.box.height * finalScale,
+                        },
+                    },
+                };
+
                 drawStylizedBox(ctx, resized.detection.box);
 
                 if (!isFaceDetected) {
@@ -330,13 +352,14 @@ btnAbsen.onclick = async () => {
             toastr[data.status === "info" ? "info" : "error"](data.message);
             isProcessing = false;
             btnAbsen.innerHTML =
-                '<i class="fa fa-camera mr-2"></i> KONFIRMASI HADIR';
+                '<i class="fa fa-camera mr-2"></i> ' +
+                getButtonLabel(currentType);
         }
     } catch (e) {
         toastr.error("Gangguan koneksi server");
         isProcessing = false;
         btnAbsen.innerHTML =
-            '<i class="fa fa-camera mr-2"></i> KONFIRMASI HADIR';
+            '<i class="fa fa-camera mr-2"></i> ' + getButtonLabel(currentType);
     }
 };
 
@@ -346,13 +369,26 @@ window.setType = function (newType, el) {
         .querySelectorAll(".type-btn")
         .forEach((b) => b.classList.remove("active"));
     el.classList.add("active");
+
+    if (!isProcessing) {
+        btnAbsen.innerHTML =
+            '<i class="fa fa-camera mr-2"></i> ' + getButtonLabel(currentType);
+    }
+
     toastr.info("Kategori diubah ke: " + newType.toUpperCase());
 };
+
+function getButtonLabel(type) {
+    if (type === "masuk") return "KONFIRMASI HADIR";
+    if (type === "mapel") return "KONFIRMASI MAPEL";
+    return "KONFIRMASI PULANG";
+}
 
 window.resetScanner = function () {
     successOverlay.style.display = "none";
     isProcessing = false;
-    btnAbsen.innerHTML = '<i class="fa fa-camera mr-2"></i> KONFIRMASI HADIR';
+    btnAbsen.innerHTML =
+        '<i class="fa fa-camera mr-2"></i> ' + getButtonLabel(currentType);
 };
 
 init();

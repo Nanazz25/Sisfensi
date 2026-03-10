@@ -33,11 +33,11 @@
                 <i class="fa fa-check-circle"></i>
                 <h1 id="successName" class="font-weight-bold">BERHASIL</h1>
                 <h4 id="successTime" class="mb-4">Absensi Tercatat</h4>
-                <div class="d-flex gap-3 mt-2">
-                    <button class="btn btn-secondary btn-lg px-5 shadow-sm" onclick="resetScanner()">
+                <div class="d-flex justify-content-center mt-2">
+                    <button class="btn btn-secondary btn-lg px-5 shadow-sm mx-2" onclick="resetScanner()">
                         ABSEN LAGI
                     </button>
-                    <button class="btn btn-outline-light btn-lg px-5"
+                    <button class="btn btn-outline-light btn-lg px-5 mx-2"
                         onclick="location.href='{{ route('dashboard.index') }}'">
                         DASHBOARD
                     </button>
@@ -103,11 +103,11 @@
             <button class="type-selector-toggle" id="typeSelectorToggle" onclick="toggleTypeSelector()">
                 <span>
                     <i class="fa 
-                                    @if($type == 'masuk') fa-sign-in
-                                    @elseif($type == 'mapel') fa-book
-                                    @else fa-sign-out
-                                    @endif
-                                "></i>
+                                            @if($type == 'masuk') fa-sign-in
+                                            @elseif($type == 'mapel') fa-book
+                                            @else fa-sign-out
+                                            @endif
+                                        "></i>
                     @if($type == 'masuk') Presensi Masuk
                     @elseif($type == 'mapel') Presensi Mapel
                     @else Presensi Pulang
@@ -137,7 +137,11 @@
 
             <div class="mt-auto">
                 <button id="btnAbsen" class="btn btn-primary btn-absen-large shadow-lg pulse-button" disabled>
-                    <i class="fa fa-camera mr-2"></i> KONFIRMASI HADIR
+                    <i class="fa fa-camera mr-2"></i>
+                    @if($type == 'masuk') KONFIRMASI HADIR
+                    @elseif($type == 'mapel') KONFIRMASI MAPEL
+                    @else KONFIRMASI PULANG
+                    @endif
                 </button>
                 <div class="text-center mt-3">
                     <small class="text-muted font-italic">Posisikan wajah di tengah area kamera</small>

@@ -19,6 +19,8 @@ return new class extends Migration {
             $table->enum('jenis_absensi', ['masuk', 'pelajaran', 'pulang']);
             $table->enum('status', ['hadir', 'izin', 'sakit', 'alpha', 'terlambat', 'pending']);
             $table->enum('metode', ['wajah', 'manual']);
+            $table->text('remarks')->nullable();
+            $table->foreignId('processed_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
         });
     }
