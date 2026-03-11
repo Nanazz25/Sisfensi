@@ -57,8 +57,9 @@
                             <th>#</th>
                             <th>Nama</th>
                             <th>Email</th>
+                            <th>Password</th>
                             <th>Dibuat</th>
-                            <th width="120">Aksi</th>
+                            <th width="150">Aksi</th>
                         </tr>
                     </thead>
 
@@ -68,11 +69,27 @@
                                 <td>{{ $loop->iteration + $users->firstItem() - 1 }}</td>
                                 <td>{{ $item->name }}</td>
                                 <td>{{ $item->email }}</td>
+                                <td>
+                                    @if($item->password_changed)
+                                        <span class="badge badge-success" title="User sudah merubah password"><i
+                                                class="fa fa-check-circle mr-1"></i> Sudah Dirubah</span>
+                                    @else
+                                        <code>{{ $item->initial_password ?? '-' }}</code>
+                                    @endif
+                                </td>
                                 <td>{{ $item->created_at->format('d M Y') }}</td>
                                 <td>
                                     <a href="{{ route('users.edit', $item->id) }}" class="btn btn-sm btn-warning">
                                         <i class="fa fa-edit"></i>
                                     </a>
+
+                                    <form action="{{ route('users.reset-password', $item->id) }}" method="POST" class="d-inline"
+                                        onsubmit="return confirm('Reset password untuk {{ $item->name }}?')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Reset Password">
+                                            <i class="fa fa-refresh"></i>
+                                        </button>
+                                    </form>
 
                                     <button class="btn btn-sm btn-danger btn-delete" data-name="{{ $item->name }}"
                                         data-action="{{ route('users.destroy', $item->id) }}" data-toggle="modal"

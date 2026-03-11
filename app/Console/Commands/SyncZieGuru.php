@@ -42,11 +42,15 @@ class SyncZieGuru extends Command
                 $jk = 'L';
             }
 
+            $plainPassword = \Illuminate\Support\Str::random(8);
+
             $user = User::updateOrCreate(
                 ['email' => $guru['email']],
                 [
                     'name' => $guru['nama'],
-                    'password' => Hash::make('password'),
+                    'password' => Hash::make($plainPassword),
+                    'initial_password' => $plainPassword,
+                    'password_changed' => false,
                     'role' => 'guru',
                 ]
             );

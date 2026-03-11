@@ -57,6 +57,11 @@
                                 <i class="fa fa-dashboard text-info"></i>
                                 <span>Dashboard</span>
                             </a>
+                        <li class="{{ request()->routeIs('profile.*') ? 'active' : '' }}">
+                            <a href="{{ route('profile.show') }}">
+                                <i class="fa fa-user text-warning"></i>
+                                <span>Profil & Keamanan</span>
+                            </a>
                         </li>
 
                         @if(auth()->user()->role === 'admin')

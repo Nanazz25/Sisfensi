@@ -13,6 +13,7 @@ use App\Models\Attendance;
 use App\Models\AttendancePermission;
 use App\Models\RombonganBelajar;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -41,12 +42,19 @@ class DashboardController extends Controller
                 'total_guru' => Teacher::count(),
                 'total_rombel' => RombonganBelajar::count(),
                 'pending_permissions' => AttendancePermission::where('status', 'pending')->count(),
-                'absensi_hari_ini' => [
-                    'hadir' => Attendance::where('tanggal', $today)->where('status', 'hadir')->where('jenis_absensi', 'masuk')->count(),
-                    'terlambat' => Attendance::where('tanggal', $today)->where('status', 'terlambat')->where('jenis_absensi', 'masuk')->count(),
-                    'izin_sakit' => Attendance::where('tanggal', $today)->whereIn('status', ['izin', 'sakit'])->count(),
-                    'alpha' => Attendance::where('tanggal', $today)->where('status', 'alpha')->count(),
-                ],
+                'absensi_hari_ini' => (function () use ($today) {
+                    $stats = Attendance::where('tanggal', $today)
+                        ->select('status', 'jenis_absensi', DB::raw('count(*) as total'))
+                        ->groupBy('status', 'jenis_absensi')
+                        ->get();
+
+                    return [
+                        'hadir' => $stats->where('status', 'hadir')->where('jenis_absensi', 'masuk')->sum('total'),
+                        'terlambat' => $stats->where('status', 'terlambat')->where('jenis_absensi', 'masuk')->sum('total'),
+                        'izin_sakit' => $stats->whereIn('status', ['izin', 'sakit'])->sum('total'),
+                        'alpha' => $stats->where('status', 'alpha')->sum('total'),
+                    ];
+                })(),
             ];
 
             // Filter data for charts
@@ -54,20 +62,22 @@ class DashboardController extends Controller
             $data['jurusans'] = \App\Models\Jurusan::orderBy('nama_jurusan')->get();
             $data['tahunAjars'] = \App\Models\TahunAjar::orderBy('created_at', 'desc')->get();
 
-            // Top Classes ranking
+            // Top Classes ranking - Optimized
             $startDate = ($period === 'month') ? Carbon::now()->startOfMonth()->toDateString() : Carbon::now()->startOfWeek()->toDateString();
+            $diffDays = Carbon::parse($startDate)->diffInDays(Carbon::parse($today)) + 1;
+
+            $attendanceCounts = Attendance::join('anggota_rombel', 'attendance.anggota_rombel_id', '=', 'anggota_rombel.id')
+                ->whereBetween('tanggal', [$startDate, $today])
+                ->whereIn('status', ['hadir', 'terlambat'])
+                ->where('jenis_absensi', 'masuk')
+                ->select('anggota_rombel.rombongan_belajar_id', DB::raw('count(*) as total'))
+                ->groupBy('anggota_rombel.rombongan_belajar_id')
+                ->pluck('total', 'rombongan_belajar_id');
 
             $data['top_classes'] = RombonganBelajar::withCount(['anggotaRombel as total_anggota'])
                 ->get()
-                ->map(function ($rombel) use ($startDate, $today) {
-                    $anggotaIds = $rombel->anggotaRombel->pluck('id');
-                    $hadir = Attendance::whereIn('anggota_rombel_id', $anggotaIds)
-                        ->whereBetween('tanggal', [$startDate, $today])
-                        ->whereIn('status', ['hadir', 'terlambat'])
-                        ->where('jenis_absensi', 'masuk')
-                        ->count();
-
-                    $diffDays = Carbon::parse($startDate)->diffInDays(Carbon::parse($today)) + 1;
+                ->map(function ($rombel) use ($attendanceCounts, $diffDays) {
+                    $hadir = $attendanceCounts[$rombel->id] ?? 0;
                     $total_possible = $rombel->total_anggota * $diffDays;
                     $percentage = $total_possible > 0 ? round(($hadir / $total_possible) * 100, 1) : 0;
 
@@ -221,12 +231,17 @@ class DashboardController extends Controller
 
         if ($period === 'day') {
             $today = Carbon::today()->toDateString();
+            $dayStats = $query->clone()->where('tanggal', $today)
+                ->select('status', DB::raw('count(*) as total'))
+                ->groupBy('status')
+                ->pluck('total', 'status');
+
             $labels = ['Hadir', 'Terlambat', 'Izin/Sakit', 'Alpha'];
             $dataset = [
-                $query->clone()->where('tanggal', $today)->where('status', 'hadir')->count(),
-                $query->clone()->where('tanggal', $today)->where('status', 'terlambat')->count(),
-                $query->clone()->where('tanggal', $today)->whereIn('status', ['izin', 'sakit'])->count(),
-                $query->clone()->where('tanggal', $today)->where('status', 'alpha')->count(),
+                $dayStats['hadir'] ?? 0,
+                $dayStats['terlambat'] ?? 0,
+                ($dayStats['izin'] ?? 0) + ($dayStats['sakit'] ?? 0),
+                $dayStats['alpha'] ?? 0,
             ];
             return response()->json([
                 'type' => 'doughnut',
@@ -236,28 +251,50 @@ class DashboardController extends Controller
         }
 
         $count = ($period === 'week') ? 7 : (($period === 'month') ? 30 : 12);
+        $startDate = ($period === 'year') ? Carbon::today()->subMonths(11)->startOfMonth() : Carbon::today()->subDays($count - 1);
 
-        for ($i = $count - 1; $i >= 0; $i--) {
-            if ($period === 'week' || $period === 'month') {
+        if ($period === 'week' || $period === 'month') {
+            $rawStats = $query->clone()
+                ->whereBetween('tanggal', [$startDate->toDateString(), Carbon::today()->toDateString()])
+                ->select('tanggal', 'status', DB::raw('count(*) as total'))
+                ->groupBy('tanggal', 'status')
+                ->get()
+                ->groupBy('tanggal');
+
+            for ($i = $count - 1; $i >= 0; $i--) {
                 $date = Carbon::today()->subDays($i);
                 $dateStr = $date->toDateString();
                 $labels[] = $date->translatedFormat('d M');
 
-                $datasets['hadir'][] = $query->clone()->where('tanggal', $dateStr)->where('status', 'hadir')->count();
-                $datasets['terlambat'][] = $query->clone()->where('tanggal', $dateStr)->where('status', 'terlambat')->count();
-                $datasets['izin_sakit'][] = $query->clone()->where('tanggal', $dateStr)->whereIn('status', ['izin', 'sakit'])->count();
-                $datasets['alpha'][] = $query->clone()->where('tanggal', $dateStr)->where('status', 'alpha')->count();
-            } else {
-                // Year
-                $month = Carbon::today()->subMonths($i);
-                $labels[] = $month->translatedFormat('F');
-                $start = $month->startOfMonth()->toDateString();
-                $end = $month->endOfMonth()->toDateString();
+                $dayData = $rawStats[$dateStr] ?? collect();
+                $dayPluck = $dayData->pluck('total', 'status');
 
-                $datasets['hadir'][] = $query->clone()->whereBetween('tanggal', [$start, $end])->where('status', 'hadir')->count();
-                $datasets['terlambat'][] = $query->clone()->whereBetween('tanggal', [$start, $end])->where('status', 'terlambat')->count();
-                $datasets['izin_sakit'][] = $query->clone()->whereBetween('tanggal', [$start, $end])->whereIn('status', ['izin', 'sakit'])->count();
-                $datasets['alpha'][] = $query->clone()->whereBetween('tanggal', [$start, $end])->where('status', 'alpha')->count();
+                $datasets['hadir'][] = $dayPluck['hadir'] ?? 0;
+                $datasets['terlambat'][] = $dayPluck['terlambat'] ?? 0;
+                $datasets['izin_sakit'][] = ($dayPluck['izin'] ?? 0) + ($dayPluck['sakit'] ?? 0);
+                $datasets['alpha'][] = $dayPluck['alpha'] ?? 0;
+            }
+        } else {
+            // Year: Group by Month
+            $rawStats = $query->clone()
+                ->whereBetween('tanggal', [$startDate->toDateString(), Carbon::today()->toDateString()])
+                ->select(DB::raw("MONTH(tanggal) as month"), 'status', DB::raw('count(*) as total'))
+                ->groupBy('month', 'status')
+                ->get()
+                ->groupBy('month');
+
+            for ($i = 11; $i >= 0; $i--) {
+                $month = Carbon::today()->subMonths($i);
+                $monthNum = (int) $month->format('m');
+                $labels[] = $month->translatedFormat('F');
+
+                $monthData = $rawStats[$monthNum] ?? collect();
+                $monthPluck = $monthData->pluck('total', 'status');
+
+                $datasets['hadir'][] = $monthPluck['hadir'] ?? 0;
+                $datasets['terlambat'][] = $monthPluck['terlambat'] ?? 0;
+                $datasets['izin_sakit'][] = ($monthPluck['izin'] ?? 0) + ($monthPluck['sakit'] ?? 0);
+                $datasets['alpha'][] = $monthPluck['alpha'] ?? 0;
             }
         }
 

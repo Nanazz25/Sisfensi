@@ -31,17 +31,34 @@ class RombonganBelajarController extends Controller
             $query->where('tahun_ajar_id', $aktif->id);
         }
 
+        if ($request->filled('jurusan_id')) {
+            $query->where('jurusan_id', $request->jurusan_id);
+        }
+
+        if ($request->filled('angkatan')) {
+            $romanMap = ['10' => 'X', '11' => 'XI', '12' => 'XII'];
+            $roman = $romanMap[$request->angkatan] ?? $request->angkatan;
+
+            $query->where(function ($q) use ($roman) {
+                $q->where('nama_rombel', 'like', $roman . ' %')
+                    ->orWhere('nama_rombel', 'like', $roman . '-%')
+                    ->orWhere('nama_rombel', $roman);
+            });
+        }
+
         $sort = $request->get('sort', 'desc');
         $query->orderBy('created_at', $sort);
 
-        $rombels = $query->paginate(10)->withQueryString();
+        $rombels = $query->paginate(15)->withQueryString();
 
         $tahunAjars = TahunAjar::orderBy('created_at', 'desc')->get();
+        $jurusans = Jurusan::orderBy('nama_jurusan')->get();
         $tahunAjarAktif = $this->tahunAjarAktif();
 
         return view('rombongan_belajar.index', compact(
             'rombels',
             'tahunAjars',
+            'jurusans',
             'tahunAjarAktif'
         ));
     }

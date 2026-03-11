@@ -21,7 +21,7 @@
             <div class="vertical-align-middle auth-main">
                 <div class="auth-box">
                     <div class="top">
-                        <img src="assets/images/logo-white.svg" alt="Iconic">
+                        <h3 class="text-white font-weight-bold"><i class="fa fa-clock-o mr-2"></i> SISFENSI</h3>
                     </div>
                     <div class="card">
                         <div class="header">
@@ -41,8 +41,16 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="signin-password" class="control-label sr-only">Password</label>
-                                    <input type="password" class="form-control" id="signin-password" name="password"
-                                        placeholder="Password" required>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="signin-password" name="password"
+                                            placeholder="Password" required>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary toggle-password" type="button"
+                                                style="border-color: #ced4da; border-left: none;">
+                                                <i class="fa fa-eye-slash text-muted"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="form-group clearfix">
                                     <label class="fancy-checkbox element-left">
@@ -52,8 +60,8 @@
                                 </div>
                                 <button type="submit" class="btn btn-primary btn-lg btn-block">LOGIN</button>
                                 <div class="bottom">
-                                    <span class="helper-text m-b-10"><i class="fa fa-lock"></i> </span>
-                                    <span>Don't have an account? </span>
+                                    <span class="helper-text mt-3 m-b-10"><i class="fa fa-lock"></i> Lupa Password? Hubungi IT Support</span>
+                                    <span>Belum punya akun? <br> Hubungi <a href="javascript:void(0);">Admin Sekolah</a> untuk akses masuk.</span>
                                 </div>
                             </form>
                         </div>
@@ -62,6 +70,23 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.querySelector('.toggle-password').addEventListener('click', function () {
+            const input = document.getElementById('signin-password');
+            const icon = this.querySelector('i');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        });
+    </script>
 </body>
 
 </html>

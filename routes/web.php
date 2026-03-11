@@ -28,6 +28,8 @@ Route::middleware('auth')->group(function () {
     // Dashboard & Profile
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/password', [\App\Http\Controllers\ProfileController::class, 'editPassword'])->name('profile.password.edit');
+    Route::post('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password.update');
     Route::get('/dashboard/attendance-detail/{schedule}', [DashboardController::class, 'getAttendanceDetail'])->name('dashboard.attendance-detail');
     Route::get('/dashboard/attendance-chart', [DashboardController::class, 'getAttendanceChartData'])->name('dashboard.attendance-chart');
 
@@ -56,6 +58,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
             Route::post('/', [UserController::class, 'store'])->name('users.store');
             Route::put('/{user}', [UserController::class, 'update'])->name('users.update');
+            Route::post('/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
             Route::delete('/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         });
 

@@ -98,11 +98,15 @@ class SyncZieSiswa extends Command
                 ]);
             } else {
                 // Buat User baru (atau gunakan yang sudah ada jika email sama)
+                $plainPassword = Str::random(8); // Generate random password
+
                 $user = User::firstOrCreate(
                     ['email' => $email],
                     [
                         'name' => $siswa['nama'],
-                        'password' => bcrypt('password'),
+                        'password' => bcrypt($plainPassword),
+                        'initial_password' => $plainPassword,
+                        'password_changed' => false,
                         'role' => 'siswa'
                     ]
                 );

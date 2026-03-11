@@ -116,10 +116,13 @@
                                 @endif
                             </div>
 
-                            <div class="mt-4 pt-3 border-top text-center text-md-left">
-                                <button onclick="history.back()" class="btn btn-outline-secondary px-5 shadow-sm">
-                                    <i class="fa fa-arrow-left mr-1"></i> Kembali ke Halaman Sebelumnya
+                            <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                                <button onclick="history.back()" class="btn btn-outline-secondary px-4 shadow-sm">
+                                    <i class="fa fa-arrow-left mr-1"></i> Kembali
                                 </button>
+                                <a href="{{ route('profile.password.edit') }}" class="btn btn-primary px-4 shadow-sm">
+                                    <i class="fa fa-lock mr-1"></i> Ubah Password
+                                </a>
                             </div>
                         </div>
                     </div>

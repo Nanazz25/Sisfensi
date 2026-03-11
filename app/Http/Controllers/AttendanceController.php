@@ -160,6 +160,7 @@ class AttendanceController extends Controller
         $date = $request->date ?? date('Y-m-d');
         $students = [];
 
+        // Ambil data siswa berdasarkan rombel_id
         if ($request->filled('rombel_id')) {
             $students = AnggotaRombel::with([
                 'pesertaDidik.user',

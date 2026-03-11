@@ -69,19 +69,22 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users',
-            'role' => 'required|in:admin,guru,siswa',
-            'password' => 'required|min:6'
+            'role' => 'required|in:admin,guru,siswa'
         ]);
+
+        $plainPassword = $request->role === 'admin' ? 'password' : \Illuminate\Support\Str::random(8);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'role' => $request->role,
-            'password' => Hash::make($request->password),
+            'password' => Hash::make($plainPassword),
+            'initial_password' => $plainPassword,
+            'password_changed' => false,
         ]);
 
         return $this->redirectByRole($user->role)
-            ->with('success', 'User berhasil ditambahkan');
+            ->with('success', "User berhasil ditambahkan. Password: $plainPassword");
     }
 
     public function edit(User $user)
@@ -97,20 +100,33 @@ class UserController extends Controller
             'role' => 'required|in:admin,guru,siswa'
         ]);
 
-        $user->update([
+        $data = [
             'name' => $request->name,
             'email' => $request->email,
             'role' => $request->role,
-        ]);
+        ];
 
         if ($request->filled('password')) {
-            $user->update([
-                'password' => Hash::make($request->password),
-            ]);
+            $data['password'] = Hash::make($request->password);
+            $data['password_changed'] = true;
         }
+
+        $user->update($data);
 
         return $this->redirectByRole($user->role)
             ->with('success', 'User berhasil diupdate');
+    }
+
+    public function resetPassword(User $user)
+    {
+        $newPassword = \Illuminate\Support\Str::random(8);
+        $user->update([
+            'password' => Hash::make($newPassword),
+            'initial_password' => $newPassword,
+            'password_changed' => false
+        ]);
+
+        return back()->with('success', "Password {$user->name} berhasil direset menjadi: $newPassword");
     }
 
     public function destroy(User $user)
