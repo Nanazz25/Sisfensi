@@ -164,6 +164,23 @@
                                 </ul>
                             </li>
 
+                            <li class="{{ request()->is('assessment*') ? 'active' : '' }}">
+                                <a href="#Penilaian" class="has-arrow">
+                                    <i class="fa fa-star text-warning"></i>
+                                    <span>Penilaian</span>
+                                </a>
+                                <ul class="collapse {{ request()->is('assessment*') ? 'in' : '' }}">
+                                    @if(auth()->user()->role === 'admin')
+                                        <li class="{{ request()->routeIs('assessment_category.*') ? 'active' : '' }}">
+                                            <a href="{{ route('assessment_category.index') }}">Kategori Penilaian</a>
+                                        </li>
+                                    @endif
+                                    <li class="{{ request()->routeIs('assessment.index') ? 'active' : '' }}">
+                                        <a href="{{ route('assessment.index') }}">Input Penilaian</a>
+                                    </li>
+                                </ul>
+                            </li>
+
                             <li class="header">LAPORAN</li>
                             <li class="{{ request()->is('laporan*') ? 'active' : '' }}">
                                 <a href="#Laporan" class="has-arrow">
@@ -218,6 +235,13 @@
                                 <a href="{{ route('attendance-permissions.index') }}">
                                     <i class="fa fa-history text-info"></i>
                                     <span>Riwayat & Izin</span>
+                                </a>
+                            </li>
+
+                            <li class="{{ request()->routeIs('assessment.show') ? 'active' : '' }}">
+                                <a href="{{ route('assessment.show', auth()->id()) }}">
+                                    <i class="fa fa-star text-warning"></i>
+                                    <span>Nilai Saya</span>
                                 </a>
                             </li>
                         @endif

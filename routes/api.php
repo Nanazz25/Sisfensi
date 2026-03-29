@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\FaceController;
+use App\Http\Controllers\FaceRecognitionController;
 
-Route::post('/simpan-wajah', [FaceController::class, 'store']);
+// Commented out because FaceController does not exist and FaceRecognitionController uses 'enroll' method
+// Route::post('/simpan-wajah', [FaceRecognitionController::class, 'store']);

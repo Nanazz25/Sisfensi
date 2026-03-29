@@ -8,30 +8,47 @@
                         <h5 class="font-weight-bold mb-1 text-white">Bimbingan Kelas</h5>
                         <p class="mb-0 text-white-50 small"><i class="fa fa-university mr-1"></i> {{ $walas_data['nama_rombel'] }}</p>
                     </div>
-                    <div class="col-md-9 p-3 bg-white">
-                        <div class="row text-center align-items-center">
-                            <div class="col-4 border-right">
-                                <h2 class="mb-0 font-weight-bold text-success">{{ $walas_data['hadir'] }}</h2>
-                                <small class="text-muted font-weight-bold text-uppercase" style="letter-spacing: 1px; font-size: 10px;">HADIR</small>
-                            </div>
-                            <div class="col-4 border-right">
-                                <h2 class="mb-0 font-weight-bold text-warning">{{ $walas_data['belum_absen'] }}</h2>
-                                <small class="text-muted font-weight-bold text-uppercase" style="letter-spacing: 1px; font-size: 10px;">BELUM ABSEN</small>
-                            </div>
-                            <div class="col-4">
-                                @if($walas_data['pending_izin'] > 0)
-                                    <div class="d-flex flex-column align-items-center">
-                                        <span class="badge badge-danger px-3 py-1 mb-2 shadow-xs">{{ $walas_data['pending_izin'] }} Pengajuan</span>
-                                        <a href="{{ route('attendance-permissions.index') }}" class="btn btn-sm btn-primary rounded-pill px-4 font-weight-bold shadow-sm">
-                                            Verifikasi
+                    <div class="col-md-9 p-0 bg-white">
+                        <div class="row text-center align-items-center no-gutters">
+                            <div class="col-md-5 py-3 border-right">
+                                <div class="row">
+                                    <div class="col-6 border-right">
+                                        <h2 class="mb-0 font-weight-bold text-success">{{ $walas_data['hadir'] }}</h2>
+                                        <small class="text-muted font-weight-bold text-uppercase" style="letter-spacing: 1px; font-size: 10px;">HADIR</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <h2 class="mb-0 font-weight-bold text-warning">{{ $walas_data['belum_absen'] }}</h2>
+                                        <small class="text-muted font-weight-bold text-uppercase" style="letter-spacing: 1px; font-size: 10px;">BELUM ABSEN</small>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-center">
+                                    @if($walas_data['pending_izin'] > 0)
+                                        <a href="{{ route('attendance-permissions.index') }}" class="btn btn-xs btn-danger rounded-pill px-3 font-weight-bold shadow-sm">
+                                            {{ $walas_data['pending_izin'] }} Pending Izin
                                         </a>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md-7 py-3 px-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <small class="font-weight-bold text-muted text-uppercase" style="letter-spacing: 0.5px; font-size: 10px;">Rata-rata Karakter Kelas</small>
+                                    <a href="{{ route('assessment.index') }}" class="small font-weight-bold text-primary">Lihat Semua</a>
+                                </div>
+                                @forelse($walas_data['character_indicators'] as $ci)
+                                    <div class="mb-2">
+                                        <div class="d-flex justify-content-between mb-0">
+                                            <span class="small font-weight-bold" style="font-size: 11px;">{{ $ci['name'] }}</span>
+                                            <span class="small font-weight-bold text-info" style="font-size: 11px;">{{ $ci['score'] }}</span>
+                                        </div>
+                                        <div class="progress progress-xxs shadow-xs mt-0">
+                                            <div class="progress-bar bg-gradient-info" style="width: {{ $ci['score'] * 10 }}%"></div>
+                                        </div>
                                     </div>
-                                @else
-                                    <div class="text-success small">
-                                        <i class="fa fa-check-circle-o fa-2x mb-1 d-block"></i>
-                                        <span class="font-weight-bold">Semua Aman</span>
+                                @empty
+                                    <div class="text-center py-2">
+                                        <small class="text-muted italic">Data karakter belum tersedia bulan ini</small>
                                     </div>
-                                @endif
+                                @endforelse
                             </div>
                         </div>
                     </div>

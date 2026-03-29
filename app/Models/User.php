@@ -8,6 +8,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Teacher;
 use App\Models\PesertaDidik;
+use App\Models\Assessment;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -73,5 +75,14 @@ class User extends Authenticatable
     {
         $name = urlencode($this->name);
         return "https://ui-avatars.com/api/?name={$name}&background=00bcd4&color=fff&bold=true&size=512";
+    }
+    public function receivedAssessments(): HasMany
+    {
+        return $this->hasMany(Assessment::class, 'evaluatee_id');
+    }
+
+    public function givenAssessments(): HasMany
+    {
+        return $this->hasMany(Assessment::class, 'evaluator_id');
     }
 }

@@ -89,6 +89,7 @@ class AttendanceReportController extends Controller
                     ->get();
 
                 $data[] = [
+                    'nis' => $anggota->pesertaDidik->no_induk,
                     'nama' => $anggota->pesertaDidik->user->name,
                     'hadir' => $attendance->where('jenis_absensi', 'masuk')->whereIn('status', ['hadir', 'terlambat'])->count(),
                     'izin' => $attendance->where('status', 'izin')->count(),

@@ -69,9 +69,17 @@ class AttendanceService
         } elseif ($type === 'pulang') {
             // Ambil jam pulang dari database
             $jamPulang = SchoolSetting::where('key', 'jam_pulang')->value('value') ?? '15:00';
+            $pulangDateTime = Carbon::createFromFormat('Y-m-d H:i', $today . ' ' . substr($jamPulang, 0, 5));
+            $limitDateTime = $pulangDateTime->copy()->addHours(3);
+
             // Cek apakah sudah jam pulang
-            if ($currentTime < $jamPulang) {
+            if ($now->lt($pulangDateTime)) {
                 throw new \Exception('Belum jam pulang.');
+            }
+
+            // Batas waktu absen pulang: Max 3 jam setelah jam pulang
+            if ($now->gt($limitDateTime)) {
+                throw new \Exception('Batas waktu presensi pulang sudah habis (Maksimal 3 jam setelah jam pulang).');
             }
             // Cek apakah siswa sudah absen pulang
             if (

@@ -141,6 +141,11 @@
                                 <i class="fa fa-calendar mr-1"></i> Jadwal
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-4 py-3" id="character-tab" data-toggle="tab" href="#character">
+                                <i class="fa fa-bar-chart mr-1"></i> Karakter
+                            </a>
+                        </li>
                     </ul>
                 </div>
                 <style>
@@ -329,6 +334,78 @@
                                 @endif
                             </div>
                         </div>
+
+                        {{-- Tab Karakter --}}
+                        <div class="tab-pane fade" id="character">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <div>
+                                            <h6 class="font-weight-bold mb-1 text-dark">Rata-rata Karakter Kelas</h6>
+                                            <small class="text-muted">Analisis performa karakter berdasarkan seluruh anggota rombel</small>
+                                        </div>
+                                    </div>
+
+                                    @if($averageAssessment->count() > 0)
+                                        <div class="row">
+                                            <div class="col-lg-7">
+                                                <div style="height: 300px;">
+                                                    <canvas id="classCharChart"></canvas>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-5">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-custom spacing5">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Kategori</th>
+                                                                <th class="text-center">Skor</th>
+                                                                <th width="100">Progres</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($averageAssessment as $avg)
+                                                            <tr>
+                                                                <td><span class="font-weight-bold">{{ $avg['name'] }}</span></td>
+                                                                <td class="text-center"><strong>{{ $avg['score'] }}</strong>/10</td>
+                                                                <td>
+                                                                    <div class="progress progress-xs mb-0">
+                                                                        <div class="progress-bar {{ $avg['score'] >= 7 ? 'bg-success' : ($avg['score'] >= 5 ? 'bg-warning' : 'bg-danger') }}" 
+                                                                             role="progressbar" 
+                                                                             style="width: {{ $avg['score'] * 10 }}%"></div>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        @if(auth()->user()->role === 'siswa')
+                                        <div class="mt-4 p-3 bg-light rounded border border-info">
+                                            <div class="d-flex align-items-center">
+                                                <div class="mr-3">
+                                                    <i class="fa fa-lightbulb-o fa-2x text-info"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-1 font-weight-bold text-info">Analisis Pribadi Anda</h6>
+                                                    <p class="mb-0 small text-muted">Grafik di atas menunjukkan rata-rata kelas. Kamu bisa melihat detil perbandingan nilai pribadimu dengan rata-rata kelas di halaman <a href="{{ route('assessment.show', auth()->id()) }}" class="font-weight-bold text-info">Detail Penilaian Pribadi</a>.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endif
+                                    @else
+                                        <div class="text-center py-5">
+                                            <i class="fa fa-bar-chart fa-4x text-light mb-3"></i>
+                                            <h5 class="text-muted">Data penilaian belum tersedia</h5>
+                                            <p class="text-muted">Belum ada penilaian yang dilakukan untuk siswa di rombel ini.</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -364,6 +441,50 @@
                 }
             }
         });
+
+        // Chart Karakter Kelas (Radar Style)
+        @if($averageAssessment->count() > 0)
+        const charCtx = document.getElementById('classCharChart').getContext('2d');
+        new Chart(charCtx, {
+            type: 'radar',
+            data: {
+                labels: {!! json_encode($averageAssessment->pluck('name')) !!},
+                datasets: [{
+                    label: 'Rata-rata Kelas',
+                    data: {!! json_encode($averageAssessment->pluck('score')) !!},
+                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    pointBackgroundColor: 'rgba(52, 152, 219, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(52, 152, 219, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { display: true },
+                        suggestedMin: 0,
+                        suggestedMax: 10,
+                        ticks: { stepSize: 2, display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ' Skor: ' + context.raw + ' / 10';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        @endif
     </script>
 @endsection
 

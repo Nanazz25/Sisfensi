@@ -117,6 +117,13 @@
                                     class="fa fa-book"></i></div>
                             <span class="font-weight-bold small">Laporan Mapel</span>
                         </a>
+                        <a href="{{ route('assessment.index') }}"
+                            class="list-group-item list-group-item-action d-flex align-items-center border-0 py-3 mb-2 bg-light rounded shadow-xs">
+                            <div class="icon-in-bg bg-warning text-white rounded mr-3 shadow-sm"
+                                style="width: 35px; height: 35px; line-height:35px; text-align:center;"><i
+                                    class="fa fa-star"></i></div>
+                            <span class="font-weight-bold small">Penilaian Karakter</span>
+                        </a>
                         <a href="{{ route('users.siswa') }}"
                             class="list-group-item list-group-item-action d-flex align-items-center border-0 py-3 mb-2 bg-light rounded shadow-xs">
                             <div class="icon-in-bg bg-success text-white rounded mr-3 shadow-sm"
@@ -127,19 +134,44 @@
                     </div>
 
                     <div class="mt-4 pt-2 border-top">
-                        <h6 class="font-weight-bold small text-muted text-uppercase mb-3">Ranking Presensi</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="font-weight-bold small text-muted text-uppercase mb-0">Ranking Presensi</h6>
+                            <small class="text-muted">Bulan Ini</small>
+                        </div>
                         @foreach($top_classes as $tc)
                             <div class="mb-2">
                                 <div class="d-flex justify-content-between mb-1">
                                     <span class="small font-weight-bold">{{ $tc['nama'] }}</span>
                                     <span class="small text-muted">{{ $tc['percentage'] }}%</span>
                                 </div>
-                                <div class="progress progress-xs">
+                                <div class="progress progress-xs shadow-xs">
                                     <div class="progress-bar bg-{{ $tc['percentage'] > 90 ? 'success' : ($tc['percentage'] > 70 ? 'info' : 'warning') }}"
                                         style="width: {{ $tc['percentage'] }}%"></div>
                                 </div>
                             </div>
                         @endforeach
+                    </div>
+
+                    <div class="mt-4 pt-2 border-top">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="font-weight-bold small text-muted text-uppercase mb-0">Rata-rata Karakter</h6>
+                            <small class="text-muted font-weight-bold text-info"><i class="fa fa-star"></i></small>
+                        </div>
+                        @forelse($stats['top_indicators'] as $ti)
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="small font-weight-bold">{{ $ti['name'] }}</span>
+                                    <span class="small text-dark font-weight-bold">{{ $ti['score'] }}<small class="text-muted">/10</small></span>
+                                </div>
+                                <div class="progress progress-xs shadow-xs">
+                                    <div class="progress-bar bg-gradient-info" style="width: {{ $ti['score'] * 10 }}%"></div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center py-2">
+                                <small class="text-muted italic">Belum ada data nilai bulan ini</small>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -152,8 +184,14 @@
     <div class="card shadow-sm border-0">
         <div class="header d-flex justify-content-between align-items-center pb-0">
             <h2 class="font-weight-bold">Status Kehadiran Hari Ini</h2>
-            <span class="badge badge-soft-info mr-2 shadow-xs"><i
-                    class="fa fa-clock-o mr-1"></i>{{ date('H:i') }}</span>
+            <div class="d-flex align-items-center">
+                <span class="badge badge-soft-warning mr-2 shadow-xs" title="Total Penilaian Hari Ini">
+                    <i class="fa fa-check-square-o mr-1"></i>{{ $stats['total_assessment_today'] }} Dinilai
+                </span>
+                <span class="badge badge-soft-info shadow-xs">
+                    <i class="fa fa-clock-o mr-1"></i>{{ date('H:i') }}
+                </span>
+            </div>
         </div>
         <div class="body pt-3">
             <div class="row text-center mx-0">

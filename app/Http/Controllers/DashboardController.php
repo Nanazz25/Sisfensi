@@ -13,6 +13,9 @@ use App\Models\Attendance;
 use App\Models\AttendancePermission;
 use App\Models\RombonganBelajar;
 use App\Models\User;
+use App\Models\Assessment;
+use App\Models\AssessmentDetail;
+use App\Models\AssessmentCategory;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -55,6 +58,18 @@ class DashboardController extends Controller
                         'alpha' => $stats->where('status', 'alpha')->sum('total'),
                     ];
                 })(),
+                'total_assessment_today' => Assessment::where('assessment_date', $today)->count(),
+                'top_indicators' => AssessmentDetail::whereHas('assessment', function($q) {
+                        $q->where('assessment_date', '>=', now()->startOfMonth());
+                    })
+                    ->select('category_id', DB::raw('AVG(score) as avg_score'))
+                    ->groupBy('category_id')
+                    ->with('category')
+                    ->get()
+                    ->map(fn($item) => [
+                        'name' => $item->category->name ?? 'Kategori Nilai',
+                        'score' => round($item->avg_score, 1)
+                    ])->sortByDesc('score')->take(3),
             ];
 
             // Filter data for charts
@@ -133,6 +148,20 @@ class DashboardController extends Controller
                         'hadir' => $hadirCount,
                         'belum_absen' => max(0, count($anggotaIds) - $hadirCount),
                         'pending_izin' => AttendancePermission::whereIn('anggota_rombel_id', $anggotaIds)->where('status', 'pending')->count(),
+                        'character_indicators' => AssessmentDetail::whereHas('assessment', function($q) use ($rombel) {
+                                $q->whereHas('evaluatee.pesertaDidik.anggotaRombel', function($ar) use ($rombel) {
+                                    $ar->where('rombongan_belajar_id', $rombel->id);
+                                })
+                                ->where('assessment_date', '>=', now()->startOfMonth());
+                            })
+                            ->select('category_id', DB::raw('AVG(score) as avg_score'))
+                            ->groupBy('category_id')
+                            ->with('category')
+                            ->get()
+                            ->map(fn($item) => [
+                                'name' => $item->category->name ?? 'Kategori',
+                                'score' => round($item->avg_score, 1)
+                            ])->sortByDesc('score')->take(3),
                     ];
                 }
             }
@@ -157,6 +186,23 @@ class DashboardController extends Controller
                         'pulang' => Attendance::where('anggota_rombel_id', $anggotaRombel->id)->where('tanggal', $today)->where('jenis_absensi', 'pulang')->first(),
                         'permissions' => AttendancePermission::where('anggota_rombel_id', $anggotaRombel->id)->where('status', 'pending')->count(),
                     ];
+
+                    $data['assessment_score'] = AssessmentDetail::whereHas('assessment', function($q) use ($user) {
+                            $q->where('evaluatee_id', $user->id);
+                        })
+                        ->whereIn('id', function($sub) use ($user) {
+                            $sub->selectRaw('MAX(ad.id)')
+                                ->from('assessment_details as ad')
+                                ->join('assessments as a', 'ad.assessment_id', '=', 'a.id')
+                                ->where('a.evaluatee_id', $user->id)
+                                ->groupBy('ad.category_id');
+                        })
+                        ->with('category')
+                        ->get()
+                        ->map(fn($item) => [
+                            'name' => $item->category->name ?? '?',
+                            'score' => $item->score
+                        ]);
                 }
             }
         }

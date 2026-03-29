@@ -11,7 +11,7 @@
                 </div>
                 <div class="body">
                     @if($monthlyCount >= 3)
-                        <div class="alert alert-warning border-0 shadow-xs mb-4 p-3 d-flex align-items-center rounded-lg">
+                        <div class="alert alert-warning border-0 shadow-xs mb-4 p-3 d-flex align-items-center rounded-lg" id="frequency_warning_alert">
                             <div class="icon-circle bg-warning text-white mr-3 shadow-sm" style="width:40px; height:40px; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
                                 <i class="fa fa-warning"></i>
                             </div>
@@ -21,6 +21,16 @@
                             </div>
                         </div>
                     @endif
+
+                    <div class="alert alert-danger border-0 shadow-xs mb-4 p-3 d-none align-items-center rounded-lg" id="manual_limit_alert">
+                        <div class="icon-circle bg-danger text-white mr-3 shadow-sm" style="width:40px; height:40px; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+                            <i class="fa fa-clock-o"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 font-weight-bold">Batas Waktu Habis</h6>
+                            <p class="mb-0 small opacity-75">Pengajuan <strong>Absen Manual</strong> tidak dapat dilakukan karena sudah melewati jam pulang ({{ substr($jamPulang, 0, 5) }}). Silakan hubungi admin sekolah jika ada kendala mendesak.</p>
+                        </div>
+                    </div>
 
                     <form action="{{ route('attendance-permissions.store') }}" method="POST" enctype="multipart/form-data" id="permissionForm">
                         @csrf
@@ -142,7 +152,7 @@
             </div>
             
             @if($monthlyCount >= 3)
-            <div class="card border-0 shadow-sm mt-3" style="border-radius: 15px; background: #fff5f5;">
+            <div class="card border-0 shadow-sm mt-3" style="border-radius: 15px; background: #fff5f5;" id="frequency_warning_card">
                 <div class="body p-3 text-center">
                     <i class="fa fa-exclamation-triangle text-danger mb-2" style="font-size: 2rem;"></i>
                     <h6 class="text-danger font-weight-bold mb-1">Sudah Sering Izin</h6>
@@ -167,8 +177,18 @@
             const tglMulai = document.getElementById('tanggal_mulai');
             const tglSelesaiHidden = document.getElementById('tanggal_selesai_hidden');
             const dateHint = document.getElementById('date_hint');
+            const freqAlert = document.getElementById('frequency_warning_alert');
+            const freqCard = document.getElementById('frequency_warning_card');
+            const manualLimitAlert = document.getElementById('manual_limit_alert');
 
             const today = "{{ date('Y-m-d') }}";
+            const jamPulangLimit = "{{ $jamPulang }}";
+
+            function isAfterDismissal() {
+                const now = new Date();
+                const currentTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+                return currentTime >= jamPulangLimit;
+            }
 
             // Sync hidden end date
             tglMulai.addEventListener('change', function() {
@@ -196,19 +216,43 @@
                     tglMulai.readOnly = true;
                     tglSelesaiHidden.value = today;
                     
-                    dateHint.innerHTML = "Absen manual hanya bisa dilakukan untuk hari ini.";
-                    dateHint.classList.add('text-danger');
+                    if (isAfterDismissal()) {
+                        dateHint.innerHTML = "Absen manual tidak bisa dilakukan karena sudah lewat jam pulang (" + jamPulangLimit.substring(0, 5) + ").";
+                        dateHint.classList.add('text-danger');
+                        submitBtn.disabled = true;
+                        submitBtn.classList.add('opacity-50');
+                        manualLimitAlert.classList.remove('d-none');
+                        manualLimitAlert.classList.add('d-flex');
+                    } else {
+                        dateHint.innerHTML = "Absen manual hanya bisa dilakukan untuk hari ini.";
+                        dateHint.classList.add('text-primary');
+                        dateHint.classList.remove('text-danger');
+                        submitBtn.disabled = false;
+                        submitBtn.classList.remove('opacity-50');
+                        manualLimitAlert.classList.add('d-none');
+                        manualLimitAlert.classList.remove('d-flex');
+                    }
                     
                     getLocation();
                 } else {
                     manualTypeWrapper.classList.add('d-none');
                     gpsCard.classList.add('d-none');
+                    manualLimitAlert.classList.add('d-none');
+                    manualLimitAlert.classList.remove('d-flex');
                     
                     // Unlock date
                     tglMulai.readOnly = false;
                     dateHint.innerHTML = "Hanya berlaku untuk 1 hari.";
                     dateHint.classList.remove('text-danger');
+                    dateHint.classList.remove('text-primary');
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-50');
                 }
+
+                // Toggle frequency warnings (only show for izin/sakit)
+                const showWarning = (this.value === 'izin' || this.value === 'sakit');
+                if (freqAlert) freqAlert.classList.toggle('d-none', !showWarning);
+                if (freqCard) freqCard.classList.toggle('d-none', !showWarning);
             });
 
             // Trigger initial state

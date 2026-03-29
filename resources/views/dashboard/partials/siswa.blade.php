@@ -48,22 +48,60 @@
 <div class="col-lg-3 col-md-6">
     <div class="card card-status shadow-sm border-0">
         <div class="body d-flex align-items-center">
-            <div class="status-icon bg-info text-white text-center mr-3">
-                <i class="fa fa-heartbeat"></i>
+            <div class="status-icon bg-info text-white text-center mr-3 shadow-sm">
+                <i class="fa fa-star"></i>
             </div>
             <div>
                 <small class="text-muted d-block font-weight-bold text-uppercase"
-                    style="font-size: 10px; letter-spacing: 0.5px;">Kesehatan</small>
-                <h6 class="mb-0 font-weight-bold text-dark">Normal</h6>
+                    style="font-size: 10px; letter-spacing: 0.5px;">Rata-rata Karakter</small>
+                <h6 class="mb-0 font-weight-bold text-dark">
+                    @php
+                        $avgChar = $assessment_score ? round($assessment_score->avg('score'), 1) : 0;
+                    @endphp
+                    {{ $avgChar > 0 ? $avgChar . '/10' : 'Belum Ada' }}
+                </h6>
             </div>
         </div>
     </div>
 </div>
 
 <div class="col-lg-8 col-md-12">
-    <div class="card">
+    <div class="card shadow-sm border-0">
         <div class="header">
-            <h2>Jadwal Pelajaran Hari Ini</h2>
+            <h2 class="font-weight-bold">Status Karakter Anda</h2>
+        </div>
+        <div class="body">
+            @if($assessment_score && count($assessment_score) > 0)
+                <div class="row">
+                    @foreach($assessment_score->take(6) as $as)
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="font-weight-bold small text-dark">{{ $as['name'] }}</span>
+                                <span class="font-weight-bold text-info small">{{ $as['score'] }}<small class="text-muted">/10</small></span>
+                            </div>
+                            <div class="progress progress-xs shadow-xs">
+                                <div class="progress-bar bg-gradient-info" style="width: {{ $as['score'] * 10 }}%"></div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="text-right mt-2">
+                    <a href="{{ route('assessment.show', auth()->id()) }}" class="btn btn-sm btn-outline-primary rounded-pill px-4">
+                        <i class="fa fa-line-chart mr-1"></i> Lihat History & Radar Chart
+                    </a>
+                </div>
+            @else
+                <div class="py-4 text-center">
+                    <i class="fa fa-star-o fa-3x text-muted mb-2 opacity-50"></i>
+                    <p class="text-muted mb-0">Belum ada data penilaian karakter untuk Anda.</p>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="header">
+            <h2 class="font-weight-bold">Jadwal Pelajaran Hari Ini</h2>
         </div>
         <div class="body">
             @if(!$is_school_day)

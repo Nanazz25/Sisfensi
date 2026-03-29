@@ -18,6 +18,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\SchoolSettingController;
 use App\Http\Controllers\AttendancePermissionController;
+use App\Http\Controllers\AssessmentCategoryController;
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -76,6 +77,9 @@ Route::middleware('auth')->group(function () {
         Route::post('rombongan-belajar/{rombel}/anggota', [AnggotaRombelController::class, 'store'])->name('rombels.anggota.store');
         Route::delete('rombongan-belajar/{rombel}/anggota/{anggotaRombel}', [AnggotaRombelController::class, 'destroy'])->name('rombels.anggota.destroy');
         Route::get('/ajax/siswa-by-rombel/{rombel}', [AnggotaRombelController::class, 'getSiswaByRombel'])->name('ajax.siswa.by.rombel');
+
+        // Kategori Penilaian
+        Route::resource('assessment-category', AssessmentCategoryController::class)->names('assessment_category');
     });
 
     // --- ADMIN & GURU ---
@@ -103,7 +107,17 @@ Route::middleware('auth')->group(function () {
             Route::get('/absensi-mapel/excel', [AttendanceReportController::class, 'exportMapelExcel'])->name('laporan.absensi.mapel.excel');
             Route::get('/absensi-mapel/detail', [AttendanceReportController::class, 'getDetailMapel'])->name('laporan.absensi.mapel.detail');
         });
+
+        // Penilaian (Admin & Guru)
+        Route::prefix('assessment')->group(function () {
+            Route::get('/', [\App\Http\Controllers\AssessmentController::class, 'index'])->name('assessment.index');
+            Route::get('/create', [\App\Http\Controllers\AssessmentController::class, 'create'])->name('assessment.create');
+            Route::post('/', [\App\Http\Controllers\AssessmentController::class, 'store'])->name('assessment.store');
+        });
     });
+
+    // Assessment Detail (Siswa can see their own)
+    Route::get('/assessment/{id}', [\App\Http\Controllers\AssessmentController::class, 'show'])->name('assessment.show');
 
     // --- SEMUA ROLE (Scan Presence & Info Kelas) ---
     Route::middleware('role:admin,guru,siswa')->group(function () {

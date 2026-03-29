@@ -1,8 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
-    // --- Global AJAX Handler ---
+    // --- Handler AJAX Global ---
+    // Area utama di mana konten AJAX akan dimuat
     const ajaxContentArea = document.querySelector("#ajax-content-area");
 
-    // Simple Debounce function
+    // Fungsi Debounce sederhana untuk menunda eksekusi fungsi
+    // Berguna untuk mencegah pemanggilan API berulang kali saat mengetik
     function debounce(func, wait) {
         let timeout;
         return function () {
@@ -13,7 +15,8 @@ document.addEventListener("DOMContentLoaded", function () {
         };
     }
 
-    // Helper to show/hide loading state on specific search input
+    // Helper untuk menampilkan/menyembunyikan status loading pada input pencarian tertentu
+    // Mengganti ikon kaca pembesar menjadi spinner saat sedang memproses
     function toggleInputLoading(input, isLoading) {
         const group = input.closest(".input-group");
         if (!group) return;
@@ -29,14 +32,15 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Function to load content via AJAX
+    // Fungsi utama untuk memuat konten halaman secara asinkron (AJAX)
     async function loadAjaxContent(url, options = {}) {
+        // Jika container AJAX tidak ditemukan, lakukan reload halaman biasa
         if (!ajaxContentArea) {
             window.location.href = url;
             return;
         }
 
-        // Store focus state
+        // Simpan status fokus elemen saat ini agar bisa dikembalikan setelah DOM diupdate
         const focusedName = document.activeElement
             ? document.activeElement.name
             : null;
@@ -44,32 +48,36 @@ document.addEventListener("DOMContentLoaded", function () {
             ? document.activeElement.selectionStart
             : null;
 
+        // Tampilkan overlay loading dan mulai progress bar
         ajaxContentArea.classList.add("loading-overlay");
         const topProgress = document.getElementById("ajax-progress-bar");
         if (topProgress) topProgress.style.width = "30%";
 
         try {
+            // Lakukan pemanggilan ke server dengan header khusus XMLHttpRequest
             const response = await fetch(url, {
                 headers: { "X-Requested-With": "XMLHttpRequest" },
             });
 
             if (topProgress) topProgress.style.width = "80%";
 
-            if (!response.ok) throw new Error("Response not OK");
+            if (!response.ok) throw new Error("Respons server tidak OK");
 
+            // Ambil teks HTML dan parsing untuk mendapatkan area konten yang baru
             const html = await response.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, "text/html");
             const newArea = doc.querySelector("#ajax-content-area");
 
             if (newArea) {
+                // Update DOM dengan konten baru dan simpan URL ke history browser
                 ajaxContentArea.innerHTML = newArea.innerHTML;
                 window.history.pushState({}, "", url);
 
-                // Re-initialize listeners
+                // Inisialisasi ulang semua pendengar event karena elemen DOM baru saja diganti
                 initGlobalHandlers();
 
-                // Restore focus
+                // Kembalikan fokus ke elemen input sebelumnya jika ada
                 if (focusedName) {
                     const el = ajaxContentArea.querySelector(
                         `[name="${focusedName}"]`,
@@ -85,20 +93,23 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 }
 
+                // Jalankan callback jika disediakan
                 if (options.callback) options.callback();
             } else {
+                // Jika struktur tidak cocok, lakukan reload halaman penuh
                 window.location.href = url;
             }
         } catch (error) {
-            console.error("AJAX Error:", error);
-            window.location.href = url; // Fallback
+            console.error("Kesalahan AJAX:", error);
+            window.location.href = url; // Fallback jika terjadi error fatal
         } finally {
+            // Sembunyikan loading overlay dan selesaikan progress bar
             ajaxContentArea.classList.remove("loading-overlay");
             if (topProgress) {
                 topProgress.style.width = "100%";
                 setTimeout(() => (topProgress.style.width = "0%"), 300);
             }
-            // Reset all icons
+            // Atur ulang semua ikon loading menjadi ikon cari kembali
             document.querySelectorAll(".fa-spinner.fa-spin").forEach((icon) => {
                 icon.classList.remove("fa-spinner", "fa-spin", "text-info");
                 icon.classList.add("fa-search");
@@ -106,27 +117,29 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Helper to get form URL with params using URL API
+    // Helper untuk membuat URL lengkap dengan parameter dari data form
     function getFormUrl(form) {
         const action = form.getAttribute("action") || window.location.pathname;
         const url = new URL(action, window.location.origin);
         const formData = new FormData(form);
         for (const [key, value] of formData) {
+            // Tambahkan parameter ke URL jika memiliki nilai
             if (value) url.searchParams.set(key, value);
             else url.searchParams.delete(key);
         }
         return url.toString();
     }
 
-    // Initialize/Re-initialize global listeners
+    // Fungsi untuk mendaftarkan semua event listener global
     function initGlobalHandlers() {
-        // 1. Intercept Pagination
+        // 1. Tangani Klik Link Navigasi/Pagination agar menggunakan AJAX
         document
             .querySelectorAll(".pagination a, .page-link")
             .forEach((link) => {
                 if (!link.classList.contains("ajax-bound")) {
                     link.classList.add("ajax-bound");
                     link.addEventListener("click", function (e) {
+                        // Jalankan AJAX hanya untuk link valid yang bukan anchor internal
                         if (this.href && !this.href.includes("#")) {
                             e.preventDefault();
                             loadAjaxContent(this.href);
@@ -135,12 +148,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             });
 
-        // 2. Intercept Search/Filter Forms
+        // 2. Tangani Form yang ditandai dengan class 'ajax-form'
         document.querySelectorAll("form.ajax-form").forEach((form) => {
             if (!form.classList.contains("ajax-bound")) {
                 form.classList.add("ajax-bound");
 
-                // Instant filters for select/date
+                // Filter Instan: Trigger AJAX saat nilai Select atau Input Date berubah
                 form.querySelectorAll('select, input[type="date"]').forEach(
                     (input) => {
                         input.addEventListener("change", () => {
@@ -149,7 +162,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     },
                 );
 
-                // Debounced search for text inputs
+                // Pencarian Tertunda: Trigger AJAX dengan jeda 500ms saat mengetik
                 form.querySelectorAll(
                     'input[type="text"], input[type="search"]',
                 ).forEach((input) => {
@@ -168,6 +181,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
                 });
 
+                // Tangani pengiriman form secara manual (saat tekan Enter)
                 form.addEventListener("submit", function (e) {
                     e.preventDefault();
                     loadAjaxContent(getFormUrl(this));
@@ -175,7 +189,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-        // 3. Global Delete Modal Handler
+        // 3. Handler Global untuk Modal Hapus (Mengisi data otomatis ke modal)
         document.querySelectorAll(".btn-delete").forEach((btn) => {
             btn.addEventListener("click", function () {
                 const name = this.dataset.name || "";
@@ -187,7 +201,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
-        // 4. Global Confirm Modal Handler
+        // 4. Handler Global untuk Modal Konfirmasi Umum
         document.querySelectorAll(".btn-confirm").forEach((btn) => {
             btn.addEventListener("click", function () {
                 const title = this.dataset.title || "Konfirmasi";
@@ -220,46 +234,47 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Initial run
+    // Jalankan inisialisasi pertama kali saat aplikasi dimuat
     initGlobalHandlers();
 
-    // --- Sidebar & UI ---
+    // --- Sidebar & Antarmuka Pengguna (UI) ---
+    // Fungsi untuk menutup sidebar pada tampilan mobile
     const handleSidebarClose = (e) => {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
         }
 
-        // 1. Hapus class active dari body
+        // 1. Hapus class active dari body untuk menyembunyikan sidebar
         document.body.classList.remove("offcanvas-active");
 
-        // 2. Hide overlay
+        // 2. Sembunyikan elemen overlay gelap
         const overlays = document.querySelectorAll(".overlay");
         overlays.forEach((overlay) => {
             overlay.style.display = "none";
         });
     };
 
-    // Gunakan class custom yang kita buat di sidebar component
+    // Cari dan daftarkan event untuk tombol tutup kustom pada sidebar
     const sidebarCloseBtn = document.querySelector(".btn-custom-close-sidebar");
     if (sidebarCloseBtn) {
         sidebarCloseBtn.addEventListener("click", handleSidebarClose);
     }
 
-    // Handle klik pada overlay
+    // Daftarkan event klik pada overlay agar sidebar menutup saat area luar diklik
     document.addEventListener("click", function (e) {
         if (e.target.classList.contains("overlay")) {
             handleSidebarClose(e);
         }
     });
 
-    // Monitor tombol burger navbar
+    // Monitor tombol burger/toggle di navbar untuk membuka sidebar
     const navbarToggleBtn = document.querySelector(
         ".navbar .btn-toggle-offcanvas",
     );
     if (navbarToggleBtn) {
         navbarToggleBtn.addEventListener("click", function () {
-            // Reset overlay visibility saat buka
+            // Tampilkan kembali overlay saat sidebar dibuka
             setTimeout(() => {
                 if (document.body.classList.contains("offcanvas-active")) {
                     const overlays = document.querySelectorAll(".overlay");
@@ -272,7 +287,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // EXTRA SAFTY: Ensure sidebar is closed on mobile load
+    // KEAMANAN TAMBAHAN: Pastikan sidebar otomatis tertutup jika halaman dimuat pada resolusi mobile
     if (window.innerWidth < 992) {
         document.body.classList.remove("offcanvas-active");
     }

@@ -1,0 +1,242 @@
+/* Assessment Custom Styles - High Stability Version */
+
+/* Container for cards to ensure they align and behave well */
+.assessment-grid {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: -10px;
+    margin-left: -10px;
+}
+
+.assessment-item {
+    padding-right: 10px;
+    padding-left: 10px;
+    margin-bottom: 20px;
+}
+
+/* Base Card Styling */
+.student-card {
+    background: #fff;
+    border: 1px solid #ebf1f5;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.student-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    border-color: #3498db;
+}
+
+.student-card:hover .card-avatar-wrapper {
+    border-color: #3498db;
+    transform: scale(1.05);
+}
+
+/* Status Badge */
+.status-badge-floating {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 5;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-done {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-pending {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Avatar Section */
+.card-avatar-wrapper {
+    margin: 25px auto 15px;
+    width: 80px;
+    height: 80px;
+    position: relative;
+    border-radius: 50%;
+    background: #f8fafc;
+    padding: 3px;
+    border: 2px solid #eef2f7;
+    transition: all 0.3s ease;
+}
+
+.card-avatar-wrapper img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.role-icon-small {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    border: 2px solid #fff;
+    z-index: 2;
+}
+
+/* Info Section */
+.student-info {
+    text-align: center;
+    padding: 0 20px 20px;
+}
+
+.student-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 4px;
+    display: block;
+    text-transform: uppercase;
+}
+
+.student-email {
+    font-size: 11px;
+    color: #95a5a6;
+    margin-bottom: 15px;
+    display: block;
+}
+
+/* Stats Row */
+.card-stats-row {
+    display: flex;
+    background: #f8fafc;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #f1f5f9;
+}
+
+.stat-item {
+    flex: 1;
+    padding: 12px 5px;
+    text-align: center;
+    transition: background 0.2s ease;
+}
+
+.stat-item:hover {
+    background: #f1f5f9;
+}
+
+.stat-item:first-child {
+    border-right: 1px solid #e2e8f0;
+}
+
+.stat-label {
+    display: block;
+    font-size: 8px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+.stat-value {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #334155;
+}
+
+/* Action Button */
+.btn-card-action {
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 8px 15px;
+    transition: all 0.2s;
+}
+
+/* Mobile Responsiveness - 2 Columns */
+@media (max-width: 575.98px) {
+    .assessment-item {
+        padding-right: 5px;
+        padding-left: 5px;
+        margin-bottom: 15px;
+    }
+    
+    .student-card {
+        border-radius: 12px;
+    }
+    
+    .status-badge-floating {
+        top: 8px;
+        right: 8px;
+        padding: 3px 8px;
+        font-size: 8px;
+    }
+    
+    .card-avatar-wrapper {
+        width: 60px;
+        height: 60px;
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+    
+    .role-icon-small {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .role-icon-small i {
+        font-size: 8px !important;
+    }
+    
+    .student-info {
+        padding: 0 10px 15px;
+    }
+    
+    .student-name {
+        font-size: 11px;
+    }
+    
+    .student-email {
+        font-size: 9px;
+        margin-bottom: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .card-stats-row {
+        flex-direction: column;
+        margin-bottom: 12px;
+    }
+    
+    .stat-item {
+        padding: 5px;
+        border-right: none !important;
+    }
+    
+    .stat-item:first-child {
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .stat-value {
+        font-size: 9px;
+    }
+    
+    .btn-card-action {
+        font-size: 10px;
+        padding: 6px 10px;
+    }
+}

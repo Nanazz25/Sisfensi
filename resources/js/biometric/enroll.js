@@ -1,4 +1,4 @@
-// ================== ELEMENT ==================
+// ================== ELEMEN UI ==================
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const statusText = document.getElementById("statusText");
@@ -11,51 +11,52 @@ const studentSelectMobile = document.getElementById("studentSelect_mobile");
 const permissionOverlay = document.getElementById("permissionOverlay");
 const successOverlay = document.getElementById("successOverlay");
 
-// ================== STATE ==================
-let isModelsLoaded = false;
-let isProcessing = false;
-let lastDetection = null;
+// ================== STATUS APLIKASI ==================
+let isModelsLoaded = false; // Status apakah model AI sudah siap
+let isProcessing = false;   // Status apakah sedang mengirim data ke server
+let lastDetection = null;    // Hasil deteksi wajah terakhir
 
-// ================== INIT ==================
+// ================== KEGIATAN AWAL (INIT) ==================
+// Mempersiapkan model AI dan kamera saat halaman dimuat
 async function init() {
     try {
-        updateStatus("Syncing AI...");
+        updateStatus("Menghubungkan AI...");
 
-        // Ensure libraries are totally ready
+        // Pastikan pustaka Face-API sudah dimuat di browser
         if (typeof faceapi === "undefined") {
-            throw new Error("Face-API library not loaded yet!");
+            throw new Error("Pustaka Face-API belum dimuat!");
         }
 
         const MODEL_URL = "/models";
 
-        console.log("Loading Face-API models...");
+        console.log("Memuat model Face-API...");
 
-        // Load sequentially for better stability and error pinpointing
+        // Muat model satu per satu secara sekuensial untuk stabilitas lebih baik
         try {
             await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-            console.log("TinyFaceDetector loaded.");
+            console.log("TinyFaceDetector berhasil dimuat.");
         } catch (e) {
-            console.error("Failed to load TinyFaceDetector:", e);
+            console.error("Gagal memuat TinyFaceDetector:", e);
         }
 
         try {
             await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-            console.log("FaceLandmark68Net loaded.");
+            console.log("FaceLandmark68Net berhasil dimuat.");
         } catch (e) {
-            console.error("Failed to load FaceLandmark68Net:", e);
+            console.error("Gagal memuat FaceLandmark68Net:", e);
         }
 
         try {
             await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-            console.log("FaceRecognitionNet loaded.");
+            console.log("FaceRecognitionNet berhasil dimuat.");
         } catch (e) {
-            console.error("Failed to load FaceRecognitionNet:", e);
+            console.error("Gagal memuat FaceRecognitionNet:", e);
         }
 
         isModelsLoaded = true;
-        console.log("All models attempted. Starting camera...");
+        console.log("Semua model telah dicoba. Memulai kamera...");
 
-        // Even if some models failed, try to start camera
+        // Minta izin akses kamera dengan resolusi ideal 720p
         const stream = await navigator.mediaDevices.getUserMedia({
             video: {
                 facingMode: "user",
@@ -67,11 +68,12 @@ async function init() {
         video.srcObject = stream;
         video.onloadedmetadata = () => {
             video.play();
-            permissionOverlay.classList.remove("show");
-            startDetection(); // This will handle if specific features aren't available
+            permissionOverlay.classList.remove("show"); // Sembunyikan panduan izin jika berhasil
+            startDetection(); // Mulai loop pemindaian wajah
         };
     } catch (e) {
-        console.error("Core Init Error:", e);
+        console.error("Kesalahan Inisialisasi Utama:", e);
+        // Tampilkan overlay instruksi jika akses ditolak browser
         if (
             e.name === "NotAllowedError" ||
             e.name === "PermissionDeniedError"
@@ -79,11 +81,11 @@ async function init() {
             permissionOverlay.classList.add("show");
         }
         toastr.error("Gagal inisialisasi: " + e.message);
-        updateStatus("System Error", "error");
+        updateStatus("Gangguan Sistem", "error");
     }
 }
 
-// Global Permission Request
+// Fungsi global untuk memicu permintaan izin kamera (digunakan di tombol manual)
 window.requestPermissions = async function (event) {
     const btn = event?.currentTarget || event?.target;
     if (btn) {
@@ -111,44 +113,46 @@ window.requestPermissions = async function (event) {
     }
 };
 
-// ================== UI HELPERS ==================
+// ================== HELPER ANTARMUKA (UI) ==================
+// Memperbarui indikator status deteksi wajah di layar
 function updateStatus(text, type = "default") {
     statusText.innerText = text;
     statusDot.className =
         "dot " + (type === "active" ? "green" : type === "error" ? "red" : "");
 }
 
+// Menggambar kotak penanda wajah kustom yang futuristik
 function drawStylizedBox(ctx, box) {
     const { x, y, width, height } = box;
     const cornerLength = 30;
     const lineWidth = 4;
 
-    ctx.strokeStyle = "#4f46e5";
+    ctx.strokeStyle = "#4f46e5"; // Indigo Blue
     ctx.lineWidth = lineWidth;
     ctx.lineJoin = "round";
 
-    // Top Left
+    // Kiri Atas
     ctx.beginPath();
     ctx.moveTo(x, y + cornerLength);
     ctx.lineTo(x, y);
     ctx.lineTo(x + cornerLength, y);
     ctx.stroke();
 
-    // Top Right
+    // Kanan Atas
     ctx.beginPath();
     ctx.moveTo(x + width - cornerLength, y);
     ctx.lineTo(x + width, y);
     ctx.lineTo(x + width, y + cornerLength);
     ctx.stroke();
 
-    // Bottom Left
+    // Kiri Bawah
     ctx.beginPath();
     ctx.moveTo(x, y + height - cornerLength);
     ctx.lineTo(x, y + height);
     ctx.lineTo(x + cornerLength, y + height);
     ctx.stroke();
 
-    // Bottom Right
+    // Kanan Bawah
     ctx.beginPath();
     ctx.moveTo(x + width - cornerLength, y + height);
     ctx.lineTo(x + width, y + height);
@@ -159,9 +163,10 @@ function drawStylizedBox(ctx, box) {
     ctx.fillRect(x, y, width, height);
 }
 
-// ================== DETECTION ==================
+// ================== PROSES DETEKSI ==================
 function startDetection() {
     const runDetection = async () => {
+        // Jangan jalankan jika sedang memproses data atau model belum siap
         if (!isModelsLoaded || isProcessing) {
             setTimeout(runDetection, 200);
             return;
@@ -173,6 +178,7 @@ function startDetection() {
         }
 
         try {
+            // Adaptasi ukuran canvas sesuai tampilan video di layar
             const videoRect = video.getBoundingClientRect();
             const displaySize = {
                 width: videoRect.width,
@@ -188,6 +194,7 @@ function startDetection() {
                 }
             }
 
+            // Jalankan deteksi wajah tunggal dengan akurasi tinggi
             const detection = await faceapi
                 .detectSingleFace(
                     video,
@@ -208,8 +215,7 @@ function startDetection() {
                 accuracyBar.style.width = "0%";
                 enrollBtn.disabled = true;
             } else {
-                // PENTING: Fix Gepeng Box karena object-fit: cover
-                // Kita hitung skala yang benar agar box tidak gepeng
+                // PERBAIKAN: Hitung skala manual agar kotak deteksi tetap presisi di layar object-fit: cover
                 const videoWidth = video.videoWidth;
                 const videoHeight = video.videoHeight;
                 const canvasWidth = displaySize.width;
@@ -217,7 +223,7 @@ function startDetection() {
 
                 const xScale = canvasWidth / videoWidth;
                 const yScale = canvasHeight / videoHeight;
-                const finalScale = Math.max(xScale, yScale); // tiru object-fit: cover
+                const finalScale = Math.max(xScale, yScale); // Meniru object-fit: cover
 
                 const xOffset = (canvasWidth - videoWidth * finalScale) / 2;
                 const yOffset = (canvasHeight - videoHeight * finalScale) / 2;
@@ -233,8 +239,10 @@ function startDetection() {
                     },
                 };
 
+                // Gambar kotak penanda
                 drawStylizedBox(ctx, resized.detection.box);
 
+                // Update indikator akurasi di UI
                 const score = Math.round(detection.detection.score * 100);
                 accuracyBadge.innerText = `${score}%`;
                 accuracyBar.style.width = `${score}%`;
@@ -247,19 +255,22 @@ function startDetection() {
                 updateStatus("SIAP DAFTAR", "active");
             }
         } catch (err) {
-            console.error("Detection Error:", err);
+            console.error("Kesalahan Deteksi:", err);
         }
 
+        // Jalankan frame berikutnya dengan jeda singkat
         setTimeout(runDetection, 150);
     };
 
     runDetection();
 }
 
-// ================== ENROLL ==================
+// ================== PENDAFTARAN WAJAH (ENROLL) ==================
 enrollBtn.addEventListener("click", async () => {
+    // Pastikan wajah siap dan tidak sedang memproses
     if (!lastDetection || isProcessing) return;
 
+    // Ambil ID siswa dari selector (baik desktop maupun mobile)
     const studentId = studentSelectDesktop.value || studentSelectMobile.value;
     if (!studentId) {
         toastr.warning("Silakan pilih siswa terlebih dahulu!");
@@ -273,7 +284,8 @@ enrollBtn.addEventListener("click", async () => {
 
     const box = lastDetection.detection.box;
 
-    // === HITUNG AREA WAJAH (PERSEGI 1:1) ===
+    // --- LOGIKA POTONG WAJAH (SQUARE 1:1) ---
+    // Mengambil area wajah saja dengan rasio kotak sempurna agar rapi di database
     const size = Math.max(box.width, box.height);
     const centerX = box.x + box.width / 2;
     const centerY = box.y + box.height / 2;
@@ -282,25 +294,27 @@ enrollBtn.addEventListener("click", async () => {
     const sy = Math.max(centerY - size / 2, 0);
 
     const shot = document.createElement("canvas");
-    const outputSize = 300; // hasil akhir 1:1
+    const outputSize = 300; // Ukuran foto profil akhir
     shot.width = outputSize;
     shot.height = outputSize;
 
     const ctx = shot.getContext("2d");
 
+    // Crop video sumber ke area wajah yang terdeteksi
     ctx.drawImage(
         video,
         sx,
         sy,
         size,
-        size, // source (crop wajah)
+        size, // Sumber (area wajah)
         0,
         0,
         outputSize,
-        outputSize, // output (1:1)
+        outputSize, // Hasil (kotak 300x300)
     );
 
     try {
+        // Kirim foto profil wajah dan data vektor wajah (embedding) ke Server
         const response = await fetch(window.enrollEndpoint, {
             method: "POST",
             headers: {
@@ -309,8 +323,8 @@ enrollBtn.addEventListener("click", async () => {
                 "X-CSRF-TOKEN": window.csrfToken,
             },
             body: JSON.stringify({
-                image: shot.toDataURL("image/jpeg", 0.8),
-                face_embedding: Array.from(lastDetection.descriptor),
+                image: shot.toDataURL("image/jpeg", 0.8), // Hasil foto profil JPG
+                face_embedding: Array.from(lastDetection.descriptor), // Data unik wajah
                 peserta_didik_id: studentId,
             }),
         });
@@ -318,6 +332,7 @@ enrollBtn.addEventListener("click", async () => {
         const data = await response.json();
 
         if (data.status === "ok") {
+            // Tampilkan layar sukses jika pendaftaran diterima server
             successOverlay.classList.add("show");
             toastr.success(data.message);
         } else {
@@ -333,15 +348,18 @@ enrollBtn.addEventListener("click", async () => {
     }
 });
 
+// Fungsi untuk mereset tampilan pendaftaran agar bisa digunakan kembali
 window.resetEnroll = function () {
     successOverlay.classList.remove("show");
     isProcessing = false;
     enrollBtn.disabled = false;
     enrollBtn.innerHTML =
         '<i class="fa fa-user-plus mr-2"></i> DAFTARKAN WAJAH';
+    // Reset selector siswa (menggunakan Select2 jika aktif)
     if (studentSelectDesktop)
         $(studentSelectDesktop).val(null).trigger("change");
     if (studentSelectMobile) $(studentSelectMobile).val(null).trigger("change");
 };
 
+// Mulai inisialisasi saat struktur dokumen selesai dimuat
 document.addEventListener("DOMContentLoaded", init);

@@ -17,9 +17,9 @@
                     @endif
                 </div>
                 <div class="body">
-                    <form action="{{ route('attendance-permissions.index') }}" method="GET" class="mb-4">
+                    <form action="{{ route('attendance-permissions.index') }}" method="GET" class="ajax-form compact-form mb-4">
                         <div class="row align-items-end">
-                            <div class="col-md-4 col-sm-6">
+                            <div class="col-lg-3 col-md-4 col-sm-6 mb-2 mb-lg-0">
                                 <label class="small font-weight-bold text-muted mb-1">Cari Nama</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
@@ -30,7 +30,31 @@
                                         placeholder="Ketik nama..." value="{{ request('search') }}">
                                 </div>
                             </div>
-                            <div class="col-md-3 col-sm-6">
+                            
+                            @if(auth()->user()->role === 'admin')
+                                <div class="col-lg-2 col-md-4 col-sm-6 mb-2 mb-lg-0">
+                                    <label class="small font-weight-bold text-muted mb-1">Tingkat</label>
+                                    <select name="level" class="form-control">
+                                        <option value="">Semua</option>
+                                        <option value="X" {{ request('level') == 'X' ? 'selected' : '' }}>X (10)</option>
+                                        <option value="XI" {{ request('level') == 'XI' ? 'selected' : '' }}>XI (11)</option>
+                                        <option value="XII" {{ request('level') == 'XII' ? 'selected' : '' }}>XII (12)</option>
+                                    </select>
+                                </div>
+                                <div class="col-lg-2 col-md-4 col-sm-6 mb-2 mb-lg-0">
+                                    <label class="small font-weight-bold text-muted mb-1">Kelas</label>
+                                    <select name="class_id" class="form-control">
+                                        <option value="">Semua Kelas</option>
+                                        @foreach($classes as $class)
+                                            <option value="{{ $class->id }}" {{ request('class_id') == $class->id ? 'selected' : '' }}>
+                                                {{ $class->nama_rombel }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+
+                            <div class="col-lg-2 col-md-4 col-sm-6 mb-2 mb-lg-0">
                                 <label class="small font-weight-bold text-muted mb-1">Status</label>
                                 <select name="status" class="form-control">
                                     <option value="">Semua Status</option>
@@ -42,8 +66,11 @@
                                     </option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-primary btn-block">Filter</button>
+
+                            <div class="col-lg-1 col-md-4 col-sm-6">
+                                <a href="{{ route('attendance-permissions.index') }}" class="btn btn-outline-danger btn-block" title="Reset Filter">
+                                    <i class="fa fa-refresh"></i>
+                                </a>
                             </div>
                         </div>
                     </form>

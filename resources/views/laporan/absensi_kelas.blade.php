@@ -140,6 +140,7 @@
                                 <table class="table table-hover mt-3 js-basic-example dataTable">
                                     <thead>
                                         <tr>
+                                            <th>NIS</th>
                                             <th>Nama Siswa</th>
                                             <th class="text-center">Hadir</th>
                                             <th class="text-center">Izin</th>
@@ -150,6 +151,7 @@
                                     <tbody>
                                         @forelse($data as $row)
                                             <tr>
+                                                <td class="font-weight-bold text-dark">{{ $row['nis'] }}</td>
                                                 <td class="font-weight-bold text-dark">{{ $row['nama'] }}</td>
                                                 <td class="text-center">
                                                     <span class="text-success font-weight-bold">{{ $row['hadir'] }}</span>

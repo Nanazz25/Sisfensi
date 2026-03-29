@@ -16,20 +16,32 @@ class AttendancePermissionController extends Controller
         $user = auth()->user();
         $query = AttendancePermission::with(['anggotaRombel.pesertaDidik.user', 'anggotaRombel.rombonganBelajar', 'approver']);
 
+        // Siswa melihat pengajuan izin/sakitnya sendiri
         if ($user->role === 'siswa') {
             $query->whereHas('anggotaRombel', function ($q) use ($user) {
                 $q->where('peserta_didik_id', $user->pesertaDidik->id);
             });
         } elseif ($user->role === 'guru') {
-            $query->whereHas('anggotaRombel', function ($q) use ($user) {
-                $q->where('rombongan_belajar_id', $user->teacher->id ?? 0); // Walas logic can be refined
-                // Or check wali_kelas_id in rombongan_belajar
-                $q->whereHas('rombonganBelajar', function ($rq) use ($user) {
-                    $rq->where('wali_kelas_id', $user->teacher->id ?? 0);
-                });
+            // Menampilkan siswa yang berada di kelas binaannya
+            $query->whereHas('anggotaRombel.rombonganBelajar', function ($rq) use ($user) {
+                $rq->where('wali_kelas_id', $user->teacher->id ?? 0);
             });
         }
-        // Admin sees all
+        // Admin melihat semua
+        if ($user->role === 'admin') {
+            if ($request->filled('class_id')) {
+                $query->whereHas('anggotaRombel', function($q) use ($request) {
+                    $q->where('rombongan_belajar_id', $request->class_id);
+                });
+            }
+
+            if ($request->filled('level')) {
+                $query->whereHas('anggotaRombel.rombonganBelajar', function($q) use ($request) {
+                    $q->where('nama_rombel', 'like', $request->level . ' %');
+                });
+            }
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('anggotaRombel.pesertaDidik.user', function ($q) use ($search) {
@@ -44,7 +56,10 @@ class AttendancePermissionController extends Controller
         $permissions = $query->latest()->paginate(10);
         $permissions->appends($request->all());
 
-        // Calculate frequency for warnings (Teachers/Admins view)
+        // Ambil data rombel untuk filter admin
+        $classes = ($user->role === 'admin') ? \App\Models\RombonganBelajar::orderBy('nama_rombel')->get() : collect();
+
+        // Menghitung frekuensi untuk peringatan (Tampilan Guru/Admin)
         if (auth()->user()->role !== 'siswa') {
             foreach ($permissions as $permit) {
                 $monthStart = Carbon::now()->startOfMonth();
@@ -57,7 +72,7 @@ class AttendancePermissionController extends Controller
             }
         }
 
-        return view('attendance_permissions.index', compact('permissions'));
+        return view('attendance_permissions.index', compact('permissions', 'classes'));
     }
 
     public function create(Request $request)
@@ -104,7 +119,9 @@ class AttendancePermissionController extends Controller
             }
         }
 
-        return view('attendance_permissions.create', compact('request', 'monthlyCount'));
+        $jamPulang = \App\Models\SchoolSetting::where('key', 'jam_pulang')->value('value') ?? '15:00';
+
+        return view('attendance_permissions.create', compact('request', 'monthlyCount', 'jamPulang'));
     }
 
     public function store(Request $request)
@@ -125,6 +142,14 @@ class AttendancePermissionController extends Controller
 
         if (!$anggotaRombel) {
             return back()->with('error', 'Anda tidak terdaftar di kelas manapun.');
+        }
+
+        // Batasi absen manual: Tidak bisa dilakukan jika sudah lewat jam pulang
+        if ($request->jenis === 'manual') {
+            $jamPulang = \App\Models\SchoolSetting::where('key', 'jam_pulang')->value('value') ?? '15:00';
+            if (now()->toTimeString() >= $jamPulang) {
+                return back()->with('error', 'Pengajuan absen manual tidak dapat dilakukan setelah jam pulang (' . substr($jamPulang, 0, 5) . ').');
+            }
         }
 
         $start = Carbon::parse($request->tanggal_mulai);
