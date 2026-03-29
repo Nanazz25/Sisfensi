@@ -163,20 +163,26 @@ class RombonganBelajarController extends Controller
             }
         }
 
-        // Assessment Averages for Admin & Walas/Members
+        // Rata-rata Penilaian untuk Admin & Walas/Anggota
         $studentUserIds = $anggota->pluck('pesertaDidik.user_id');
-        $averageAssessment = \App\Models\AssessmentDetail::whereHas('assessment', function($q) use ($studentUserIds) {
+        $detailsAssessed = \App\Models\AssessmentDetail::whereHas('assessment', function($q) use ($studentUserIds) {
                 $q->whereIn('evaluatee_id', $studentUserIds);
             })
-            ->with('category')
             ->get()
-            ->groupBy('category_id')
-            ->map(function($details) {
-                return [
-                    'name' => $details->first()->category->name ?? 'N/A',
-                    'score' => round($details->avg('score'), 1)
-                ];
-            })->values();
+            ->groupBy('category_id');
+
+        // Hanya ambil kategori yang ditujukan untuk 'siswa' dan yang saat ini aktif.
+        $studentCategories = \App\Models\AssessmentCategory::where('type', 'siswa')
+                                ->where('is_active', true)
+                                ->get();
+
+        $averageAssessment = $studentCategories->map(function($category) use ($detailsAssessed) {
+            $details = $detailsAssessed->get($category->id);
+            return [
+                'name' => $category->name,
+                'score' => $details ? round($details->avg('score'), 1) : 0
+            ];
+        });
 
         return view('rombongan_belajar.show', [
             'rombel' => $rombonganBelajar,

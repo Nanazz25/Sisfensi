@@ -126,6 +126,9 @@ Route::middleware('auth')->group(function () {
             Route::post('/verify', [AttendanceController::class, 'verify'])->name('attendance.verify');
         });
 
+        // Route for Calendar Data API
+        Route::get('/api/attendance-calendar/{peserta_didik_id?}', [AttendanceController::class, 'getCalendarData'])->name('attendance.calendar');
+
         // Show Rombel (Students can see their own class)
         Route::get('/rombongan-belajar/{rombongan_belajar}', [RombonganBelajarController::class, 'show'])
             ->name('rombongan-belajar.show');

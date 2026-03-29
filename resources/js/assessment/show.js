@@ -24,7 +24,9 @@ document.addEventListener('DOMContentLoaded', function() {
         new Chart(ctx, {
             type: 'radar',
             data: {
-                labels: window.radarChartData.labels,
+                // Memecah label setiap spasi agar membungkus jadi multi-baris
+                // sehingga tidak menggeser titik tengah (center) dari grafik radar
+                labels: window.radarChartData.labels.map(label => label.split(' ')),
                 datasets: [{
                     label: 'Skor Penilaian Terakhir',
                     data: window.radarChartData.values,

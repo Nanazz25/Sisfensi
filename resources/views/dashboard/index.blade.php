@@ -4,6 +4,41 @@
 
 @section('afterAppStyles')
     {{-- Custom styles already loaded globally via layout --}}
+    @if(auth()->user()->role === 'siswa')
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+    <style>
+        .fc { font-family: 'Nunito', sans-serif; }
+        .fc-toolbar-title { font-size: 1.25rem !important; font-weight: 700 !important; color: #333; }
+        .fc-button-primary { background-color: #00bcd4 !important; border-color: #00bcd4 !important; border-radius: 8px !important; padding: 0.4rem 1rem !important; font-weight: bold !important; text-transform: capitalize !important; box-shadow: 0 2px 4px rgba(0, 188, 212, 0.2); }
+        .fc-button-primary:hover { background-color: #00a0b5 !important; border-color: #00a0b5 !important; }
+        .fc-daygrid-day-number { font-weight: bold; color: #555; padding: 8px !important; text-decoration: none; }
+        .fc-theme-standard td, .fc-theme-standard th { border-color: #eef2f5 !important; }
+        .fc-col-header-cell-cushion { padding: 10px !important; font-weight: 700; color: #666; text-transform: uppercase; font-size: 0.85rem; text-decoration: none; }
+        .fc-day-today { background-color: rgba(0, 188, 212, 0.05) !important; }
+        .fc-event { cursor: pointer; border-radius: 6px !important; padding: 2px 5px !important; font-weight: 600 !important; border: none !important; margin-bottom: 2px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .fc-daygrid-event-harness { margin: 0 4px !important; }
+
+        /* Ensure event titles never stretch the calendar width */
+        .fc-event-title, .fc-event-main {
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            display: block !important;
+        }
+
+        /* Responsive Styling for Mobile */
+        @media (max-width: 768px) {
+            .fc-header-toolbar { flex-direction: column !important; gap: 10px; }
+            .fc-toolbar-title { font-size: 1.1rem !important; }
+            .fc-button-primary { padding: 0.3rem 0.6rem !important; font-size: 0.85rem !important; }
+            .fc-col-header-cell-cushion { padding: 4px 0 !important; font-size: 0.65rem !important; text-align: center; }
+            .fc-daygrid-day-number { padding: 4px !important; font-size: 0.8rem !important; }
+            .fc-event { font-size: 0.55rem !important; padding: 1px 2px !important; text-align: center; }
+            .fc .fc-toolbar.fc-header-toolbar { margin-bottom: 0.5em !important; }
+            .fc-daygrid-event-harness { margin: 0 1px !important; }
+        }
+    </style>
+    @endif
 @endsection
 
 @section('content')
@@ -131,4 +166,53 @@
             });
         }
     </script>
+
+    @if(auth()->user()->role === 'siswa')
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/id.js"></script>
+    
+    @if(isset($assessment_score) && count($assessment_score) > 0)
+        <!-- Chart JS for dashboard student status -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            window.radarChartData = {
+                labels: {!! json_encode($assessment_score->pluck('name')) !!},
+                values: {!! json_encode($assessment_score->pluck('score')) !!}
+            };
+        </script>
+        @vite('resources/js/assessment/show.js')
+    @endif
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('student-attendance-calendar');
+            if (calendarEl) {
+                var calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    locale: 'id',
+                    headerToolbar: {
+                        left: 'title',
+                        right: 'prev,next today'
+                    },
+                    height: 'auto',
+                    contentHeight: 'auto',
+                    handleWindowResize: true,
+                    events: '{{ route('attendance.calendar') }}',
+                    eventClick: function(info) {
+                        toastr.info("Status: " + info.event.title);
+                    }
+                });
+                calendar.render();
+                
+                // Force recalculation of calendar size after window resize/DevTools open
+                // Resolves the issue where calendar gets squished on instant resize before refresh
+                window.addEventListener('resize', function() {
+                    setTimeout(function() {
+                        calendar.updateSize();
+                    }, 250);
+                });
+            }
+        });
+    </script>
+    @endif
 @endsection

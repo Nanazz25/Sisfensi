@@ -292,7 +292,7 @@
                         <div class="tab-pane fade" id="schedule">
                             <div class="row">
                                 @php $hasSchedule = false; @endphp
-                                @foreach(['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'] as $hari)
+                                @foreach(['senin', 'selasa', 'rabu', 'kamis', 'jumat'] as $hari)
                                     @if(isset($schedules[$hari]))
                                         @php $hasSchedule = true; @endphp
                                         <div class="col-md-6 mb-3">

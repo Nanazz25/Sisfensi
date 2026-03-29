@@ -206,4 +206,108 @@ class AttendanceController extends Controller
 
         return back()->with('success', 'Status kehadiran berhasil diperbarui secara manual.');
     }
+
+    public function getCalendarData(Request $request, $peserta_didik_id = null)
+    {
+        $user = auth()->user();
+        
+        // 1. Menentukan ID Peserta Didik
+        if (!$peserta_didik_id) {
+            if ($user->role === 'siswa') {
+                $peserta_didik_id = $user->pesertaDidik->id ?? null;
+            } else {
+                return response()->json([]);
+            }
+        }
+        
+        if (!$peserta_didik_id) return response()->json([]);
+
+        $pesertaDidik = \App\Models\PesertaDidik::find($peserta_didik_id);
+        if (!$pesertaDidik) return response()->json([]);
+
+        // 2. Otorisasi (Pengecekan Hak Akses)
+        if ($user->role === 'siswa' && $pesertaDidik->user_id !== $user->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        if ($user->role === 'guru') {
+            $teacher = $user->teacher;
+            if ($teacher) {
+                $rombelFromSchedules = \App\Models\Schedule::where('teacher_id', $teacher->id)->pluck('rombongan_belajar_id');
+                $rombelFromWali = \App\Models\RombonganBelajar::where('wali_kelas_id', $teacher->id)->pluck('id');
+                $rombelIds = $rombelFromSchedules->concat($rombelFromWali)->unique();
+                
+                $isInClass = \App\Models\AnggotaRombel::where('peserta_didik_id', $peserta_didik_id)
+                    ->whereIn('rombongan_belajar_id', $rombelIds)->exists();
+                    
+                if (!$isInClass) {
+                    return response()->json(['error' => 'Unauthorized. Siswa bukan dari kelas Anda.'], 403);
+                }
+            } else {
+                return response()->json(['error' => 'Tidak punya akses'], 403);
+            }
+        }
+
+        // 3. Mengambil Data Kehadiran
+        $events = [];
+        $anggotaRombelIds = \App\Models\AnggotaRombel::where('peserta_didik_id', $peserta_didik_id)->pluck('id');
+        
+        $start = $request->start ? Carbon::parse($request->start) : Carbon::now()->startOfMonth();
+        $end = $request->end ? Carbon::parse($request->end) : Carbon::now()->endOfMonth();
+
+        // Rekaman absensi (hanya "masuk" untuk kemudahan tampikan pada kalender)
+        $attendances = Attendance::whereIn('anggota_rombel_id', $anggotaRombelIds)
+            ->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()])
+            ->where('jenis_absensi', 'masuk')
+            ->get();
+
+        foreach ($attendances as $att) {
+            $color = '#6c757d'; // warna bawaan
+            switch ($att->status) {
+                case 'hadir': $color = '#28a745'; break;
+                case 'terlambat': $color = '#ffc107'; break;
+                case 'izin': $color = '#17a2b8'; break;
+                case 'sakit': $color = '#17a2b8'; break;
+                case 'alpha': $color = '#dc3545'; break;
+            }
+
+            $events[] = [
+                'id' => 'att_' . $att->id,
+                'title' => ucfirst($att->status),
+                'start' => $att->tanggal,
+                'color' => $color,
+                'allDay' => true,
+            ];
+        }
+
+        // 4. Menghasilkan Jadwal "Libur" untuk akhir pekan atau hari non-sekolah
+        $schoolDaysStr = \App\Models\SchoolSetting::where('key', 'hari_sekolah')->first()->value ?? 'senin,selasa,rabu,kamis,jumat';
+        $schoolDays = explode(',', $schoolDaysStr);
+        
+        $enToId = [
+            'monday' => 'senin', 'tuesday' => 'selasa', 'wednesday' => 'rabu',
+            'thursday' => 'kamis', 'friday' => 'jumat', 'saturday' => 'sabtu', 'sunday' => 'minggu'
+        ];
+
+        $currentDate = $start->copy();
+        while ($currentDate <= $end) {
+            $dayNameEn = strtolower($currentDate->englishDayOfWeek);
+            $dayNameId = $enToId[$dayNameEn] ?? $dayNameEn;
+
+            if (!in_array($dayNameId, $schoolDays)) {
+                $events[] = [
+                    'id' => 'holiday_' . $currentDate->format('Ymd'),
+                    'title' => 'Libur',
+                    'start' => $currentDate->toDateString(),
+                    'backgroundColor' => '#ffe5e5',
+                    'borderColor' => '#ffe5e5',
+                    'textColor' => '#dc3545',
+                    'allDay' => true
+                ];
+            }
+            $currentDate->addDay();
+        }
+
+        return response()->json($events);
+    }
 }

@@ -8,8 +8,39 @@ class FaceRecognitionService
 {
     public function match(array $capturedEmbedding, $threshold = 0.5)
     {
-        // Ambil semua siswa yang punya data wajah
-        $students = PesertaDidik::whereNotNull('face_embedding')->get();
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $query = PesertaDidik::whereNotNull('face_embedding');
+
+        // Filter siswa berdasarkan role
+        if ($user) {
+            // Jika user adalah siswa
+            if ($user->role === 'siswa') {
+                $query->where('user_id', $user->id);
+            } elseif ($user->role === 'guru') {
+                // Jika user adalah guru
+                $teacher = \App\Models\Teacher::where('user_id', $user->id)->first();
+                if ($teacher) {
+                    // Ambil rombel dari jadwal
+                    $rombelFromSchedules = \App\Models\Schedule::where('teacher_id', $teacher->id)->pluck('rombongan_belajar_id');
+                    // Ambil rombel dari wali kelas
+                    $rombelFromWali = \App\Models\RombonganBelajar::where('wali_kelas_id', $teacher->id)->pluck('id');
+                    
+                    // Gabungkan rombel dari jadwal dan wali kelas
+                    $rombelIds = $rombelFromSchedules->concat($rombelFromWali)->unique();
+                    
+                    // Ambil peserta didik dari rombel
+                    $pesertaIds = \App\Models\AnggotaRombel::whereIn('rombongan_belajar_id', $rombelIds)->pluck('peserta_didik_id')->unique();
+                    
+                    // Filter peserta didik
+                    $query->whereIn('id', $pesertaIds);
+                } else {
+                    $query->whereNull('id'); // Jika guru tidak ditemukan
+                }
+            }
+        }
+
+        // Ambil data siswa yang sudah difilter
+        $students = $query->get();
 
         // Variabel untuk menyimpan hasil terbaik
         $matched = null;

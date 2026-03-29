@@ -187,7 +187,7 @@ class DashboardController extends Controller
                         'permissions' => AttendancePermission::where('anggota_rombel_id', $anggotaRombel->id)->where('status', 'pending')->count(),
                     ];
 
-                    $data['assessment_score'] = AssessmentDetail::whereHas('assessment', function($q) use ($user) {
+                    $latestScores = AssessmentDetail::whereHas('assessment', function($q) use ($user) {
                             $q->where('evaluatee_id', $user->id);
                         })
                         ->whereIn('id', function($sub) use ($user) {
@@ -197,12 +197,19 @@ class DashboardController extends Controller
                                 ->where('a.evaluatee_id', $user->id)
                                 ->groupBy('ad.category_id');
                         })
-                        ->with('category')
                         ->get()
-                        ->map(fn($item) => [
-                            'name' => $item->category->name ?? '?',
-                            'score' => $item->score
-                        ]);
+                        ->keyBy('category_id');
+
+                    if ($latestScores->count() > 0) {
+                        $data['assessment_score'] = AssessmentCategory::where('type', 'siswa')->get()->map(function($category) use ($latestScores) {
+                            return [
+                                'name' => $category->name,
+                                'score' => isset($latestScores[$category->id]) ? $latestScores[$category->id]->score : 0
+                            ];
+                        });
+                    } else {
+                        $data['assessment_score'] = [];
+                    }
                 }
             }
         }
@@ -305,7 +312,9 @@ class DashboardController extends Controller
                 ->select('tanggal', 'status', DB::raw('count(*) as total'))
                 ->groupBy('tanggal', 'status')
                 ->get()
-                ->groupBy('tanggal');
+                ->groupBy(function($item) {
+                    return \Carbon\Carbon::parse($item->tanggal)->toDateString();
+                });
 
             for ($i = $count - 1; $i >= 0; $i--) {
                 $date = Carbon::today()->subDays($i);

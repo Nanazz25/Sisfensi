@@ -47,7 +47,31 @@ class PesertaDidikController extends Controller
 
         $pesertaDidik->load('user');
 
-        return view('peserta-didik.show', compact('pesertaDidik'));
+        $latestScores = \App\Models\AssessmentDetail::whereHas('assessment', function($q) use ($pesertaDidik) {
+                $q->where('evaluatee_id', $pesertaDidik->user_id);
+            })
+            ->whereIn('id', function($sub) use ($pesertaDidik) {
+                $sub->selectRaw('MAX(ad.id)')
+                    ->from('assessment_details as ad')
+                    ->join('assessments as a', 'ad.assessment_id', '=', 'a.id')
+                    ->where('a.evaluatee_id', $pesertaDidik->user_id)
+                    ->groupBy('ad.category_id');
+            })
+            ->get()
+            ->keyBy('category_id');
+
+        if ($latestScores->count() > 0) {
+            $assessment_score = \App\Models\AssessmentCategory::where('type', 'siswa')->get()->map(function($category) use ($latestScores) {
+                return [
+                    'name' => $category->name,
+                    'score' => isset($latestScores[$category->id]) ? $latestScores[$category->id]->score : 0
+                ];
+            });
+        } else {
+            $assessment_score = collect();
+        }
+
+        return view('peserta-didik.show', compact('pesertaDidik', 'assessment_score'));
     }
 
     public function showPhoto(PesertaDidik $pesertaDidik)

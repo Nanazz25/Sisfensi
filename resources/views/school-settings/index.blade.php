@@ -32,10 +32,18 @@
                                                 <button type="button" class="close"
                                                     data-dismiss="modal"><span>&times;</span></button>
                                             </div>
-                                            <div class="modal-body">
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm table-striped">
-                                                        <thead>
+                                            <div class="modal-body p-0">
+                                                <div class="px-3 pt-3 pb-2 border-bottom bg-light">
+                                                    <div class="input-group input-group-sm">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text"><i class="fa fa-search"></i></span>
+                                                        </div>
+                                                        <input type="text" id="searchAlphaStudent" class="form-control" placeholder="Cari nama siswa atau kelas cepat...">
+                                                    </div>
+                                                </div>
+                                                <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
+                                                    <table class="table table-sm table-striped table-hover mb-0" id="alphaStudentTable">
+                                                        <thead class="thead-light" style="position: sticky; top: 0; z-index: 10;">
                                                             <tr>
                                                                 <th>Nama Siswa</th>
                                                                 <th>Kelas (Rombel)</th>
@@ -45,7 +53,7 @@
                                                         <tbody>
                                                             @foreach(session('alpha_data') as $student)
                                                                 <tr>
-                                                                    <td>{{ $student['name'] }}</td>
+                                                                    <td class="font-weight-bold">{{ $student['name'] }}</td>
                                                                     <td>{{ $student['rombel'] }}</td>
                                                                     <td>{{ $student['walas'] }}</td>
                                                                 </tr>
@@ -54,7 +62,8 @@
                                                     </table>
                                                 </div>
                                             </div>
-                                            <div class="modal-footer">
+                                            <div class="modal-footer bg-white border-top">
+                                                <span class="text-muted small mr-auto">Total: {{ count(session('alpha_data')) }} siswa di-Alpha-kan</span>
                                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
                                             </div>
                                         </div>
@@ -187,4 +196,35 @@
     </div>
 
     <x-modal-confirm />
+@endsection
+
+@section('afterAppScripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Reusable search function untuk modal asli maupun modal dummy
+            function applyLiveSearch(inputId, tableId) {
+                const searchInput = document.getElementById(inputId);
+                const tableBody = document.querySelector('#' + tableId + ' tbody');
+                
+                if (searchInput && tableBody) {
+                    searchInput.addEventListener('input', function () {
+                        const filter = this.value.toLowerCase();
+                        const rows = tableBody.getElementsByTagName('tr');
+
+                        for (let i = 0; i < rows.length; i++) {
+                            let textContent = rows[i].textContent || rows[i].innerText;
+                            if (textContent.toLowerCase().indexOf(filter) > -1) {
+                                rows[i].style.display = '';
+                            } else {
+                                rows[i].style.display = 'none';
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Pasang ke tabel asli saja
+            applyLiveSearch('searchAlphaStudent', 'alphaStudentTable');
+        });
+    </script>
 @endsection

@@ -65,39 +65,32 @@
     </div>
 </div>
 
-<div class="col-lg-8 col-md-12">
-    <div class="card shadow-sm border-0">
-        <div class="header">
-            <h2 class="font-weight-bold">Status Karakter Anda</h2>
-        </div>
-        <div class="body">
-            @if($assessment_score && count($assessment_score) > 0)
-                <div class="row">
-                    @foreach($assessment_score->take(6) as $as)
-                        <div class="col-md-6 mb-3">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="font-weight-bold small text-dark">{{ $as['name'] }}</span>
-                                <span class="font-weight-bold text-info small">{{ $as['score'] }}<small class="text-muted">/10</small></span>
-                            </div>
-                            <div class="progress progress-xs shadow-xs">
-                                <div class="progress-bar bg-gradient-info" style="width: {{ $as['score'] * 10 }}%"></div>
-                            </div>
+    <div class="col-lg-8 col-md-12">
+        <div class="card shadow-sm border-0">
+            <div class="header">
+                <h2 class="font-weight-bold">Status Karakter Anda</h2>
+            </div>
+            <div class="body text-center">
+                @if($assessment_score && count($assessment_score) > 0)
+                    <div style="max-width: 500px; margin: 0 auto;">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <a href="{{ route('assessment.show', auth()->id()) }}" class="btn btn-sm btn-outline-primary rounded-pill px-4">
+                            <i class="fa fa-line-chart mr-1"></i> Detail Riwayat Karakter
+                        </a>
+                    </div>
+                @else
+                    <div class="py-4 text-center">
+                        <div class="icon-circle bg-light d-inline-flex align-items-center justify-content-center mb-3" style="width: 65px; height: 65px; border-radius: 50%;">
+                            <i class="fa fa-star-o fa-2x text-muted opacity-50"></i>
                         </div>
-                    @endforeach
-                </div>
-                <div class="text-right mt-2">
-                    <a href="{{ route('assessment.show', auth()->id()) }}" class="btn btn-sm btn-outline-primary rounded-pill px-4">
-                        <i class="fa fa-line-chart mr-1"></i> Lihat History & Radar Chart
-                    </a>
-                </div>
-            @else
-                <div class="py-4 text-center">
-                    <i class="fa fa-star-o fa-3x text-muted mb-2 opacity-50"></i>
-                    <p class="text-muted mb-0">Belum ada data penilaian karakter untuk Anda.</p>
-                </div>
-            @endif
+                        <h6 class="font-weight-bold text-dark mb-1">Murni & Bersih</h6>
+                        <p class="text-muted mb-0" style="font-size: 13px;">Belum ada data penilaian karakter untuk Anda saat ini.</p>
+                    </div>
+                @endif
+            </div>
         </div>
-    </div>
 
     <div class="card shadow-sm border-0">
         <div class="header">
@@ -105,10 +98,12 @@
         </div>
         <div class="body">
             @if(!$is_school_day)
-                <div class="alert alert-warning border-0 shadow-xs mb-0 py-4 text-center">
-                    <i class="fa fa-coffee fa-3x mb-3 d-block opacity-50"></i>
-                    <h5 class="mb-1 font-weight-bold">Hari Libur / Non-Sekolah</h5>
-                    <p class="mb-0 text-muted">Nikmati waktu istirahatmu! Tidak ada jadwal pelajaran hari ini.</p>
+                <div class="bg-light border-0 mb-0 py-4 text-center" style="border-radius: 12px;">
+                    <div class="icon-circle bg-white shadow-sm d-inline-flex align-items-center justify-content-center mb-3" style="width: 65px; height: 65px; border-radius: 50%;">
+                        <i class="fa fa-coffee fa-2x text-warning opacity-75"></i>
+                    </div>
+                    <h6 class="mb-1 font-weight-bold text-dark">Hari Libur / Non-Sekolah</h6>
+                    <p class="mb-0 text-muted" style="font-size: 13px;">Nikmati waktu istirahatmu! Tidak ada jadwal pelajaran hari ini.</p>
                 </div>
             @else
                 <div class="table-responsive">
@@ -203,9 +198,7 @@
                 <a href="{{ route('attendance-permissions.create') }}"
                     class="list-group-item list-group-item-action d-flex justify-content-between align-items-center mt-2 {{ ($alreadyAttended || $hasPending) ? 'bg-light text-muted' : '' }}"
                     style="{{ ($alreadyAttended || $hasPending) ? 'pointer-events: none;' : '' }}">
-                    <span><i
-                            class="fa fa-file-text-o mr-2 {{ ($alreadyAttended || $hasPending) ? 'text-muted' : 'text-warning' }}"></i>
-                        Pengajuan Izin / Manual</span>
+                    <span><i class="fa fa-file-text-o mr-2 {{ ($alreadyAttended || $hasPending) ? 'text-muted' : 'text-warning' }}"></i> Pengajuan Izin / Manual</span>
                     @if($alreadyAttended)
                         <span class="badge badge-soft-secondary">Sudah Absen</span>
                     @elseif($hasPending)
@@ -231,6 +224,18 @@
                     <i class="fa fa-location-arrow mr-1"></i> Mendeteksi Lokasi...
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- KALENDER SIKLUS KEHADIRAN SISWA -->
+<div class="col-lg-12 col-md-12">
+    <div class="card shadow-sm border-0">
+        <div class="header">
+            <h2 class="font-weight-bold">Kalender Kehadiran & Streak Absensi</h2>
+        </div>
+        <div class="body">
+            <div id="student-attendance-calendar"></div>
         </div>
     </div>
 </div>
