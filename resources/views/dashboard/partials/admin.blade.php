@@ -56,32 +56,89 @@
     </div>
 </div>
 
+{{-- ATTENDANCE SUMMARY --}}
+<div class="col-lg-12">
+    <div class="card shadow-sm border-0">
+        <div class="header d-flex justify-content-between align-items-center pb-0">
+            <h2 class="font-weight-bold">Status Kehadiran Hari Ini</h2>
+            <div class="d-flex align-items-center">
+                <span class="badge badge-soft-warning mr-2 shadow-xs" title="Total Penilaian Hari Ini">
+                    <i class="fa fa-check-square-o mr-1"></i>{{ $stats['total_assessment_today'] }} Dinilai
+                </span>
+                <span class="badge badge-soft-info shadow-xs">
+                    <i class="fa fa-clock-o mr-1"></i>{{ date('H:i') }}
+                </span>
+            </div>
+        </div>
+        <div class="body pt-3">
+            <div class="row text-center mx-0">
+                <div class="col-lg-3 col-6 px-1 mb-2">
+                    <div class="p-3 rounded bg-light shadow-xs">
+                        <small class="mb-0 text-muted small d-block font-weight-bold">HADIR</small>
+                        <h4 class="font-weight-bold text-success mb-0">{{ $stats['absensi_hari_ini']['hadir'] }}</h4>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6 px-1 mb-2">
+                    <div class="p-3 rounded bg-light shadow-xs">
+                        <small class="mb-0 text-muted small d-block font-weight-bold">TELAT</small>
+                        <h4 class="font-weight-bold text-warning mb-0">{{ $stats['absensi_hari_ini']['terlambat'] }}
+                        </h4>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6 px-1 mb-2">
+                    <div class="p-3 rounded bg-light shadow-xs">
+                        <small class="mb-0 text-muted small d-block font-weight-bold">IZIN/SAKIT</small>
+                        <h4 class="font-weight-bold text-info mb-0">{{ $stats['absensi_hari_ini']['izin_sakit'] }}</h4>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6 px-1 mb-2">
+                    <div class="p-3 rounded bg-light shadow-xs">
+                        <small class="mb-0 text-muted small d-block font-weight-bold">ALPHA</small>
+                        <h4 class="font-weight-bold text-danger mb-0">{{ $stats['absensi_hari_ini']['alpha'] }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- ATTENDANCE CHART & MENU --}}
 <div class="col-lg-12">
     <div class="card shadow-sm border-0">
         <div class="header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
             <h2 class="font-weight-bold mb-3 mb-md-0">Statistik Kehadiran</h2>
 
-            <div class="d-flex flex-wrap align-items-center" style="gap: 10px;">
-                <!-- Filter Type -->
-                <select id="chartFilterType" class="form-control form-control-sm" style="width: auto;">
-                    <option value="all">Semua Data</option>
-                    <option value="rombel">Per Kelas</option>
-                    <option value="angkatan">Per Angkatan</option>
-                    <option value="jurusan">Per Jurusan</option>
-                </select>
+            <div class="d-flex flex-column align-items-md-end" style="gap: 5px;">
+                <div class="d-flex flex-wrap align-items-center justify-content-md-end" style="gap: 10px;">
+                    <!-- Filter Type -->
+                    <select id="chartFilterType" class="form-control form-control-sm" style="width: auto;">
+                        <option value="all">Semua Data</option>
+                        <option value="rombel">Per Kelas</option>
+                        <option value="angkatan">Per Angkatan</option>
+                        <option value="jurusan">Per Jurusan</option>
+                    </select>
 
-                <!-- Dynamic Filter Value -->
-                <select id="chartFilterValue" class="form-control form-control-sm d-none" style="width: auto;">
-                </select>
+                    <!-- Dynamic Filter Value -->
+                    <select id="chartFilterValue" class="form-control form-control-sm d-none" style="width: auto;">
+                    </select>
 
-                <!-- Period Filter -->
-                <div class="btn-group btn-group-sm">
-                    <button type="button" class="btn btn-outline-primary btn-period active"
-                        data-period="day">Hari</button>
-                    <button type="button" class="btn btn-outline-primary btn-period" data-period="week">Minggu</button>
-                    <button type="button" class="btn btn-outline-primary btn-period" data-period="month">Bulan</button>
-                    <button type="button" class="btn btn-outline-primary btn-period" data-period="year">Tahun</button>
+                    <!-- Period Filter -->
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-primary btn-period active"
+                            data-period="day">Hari</button>
+                        <button type="button" class="btn btn-outline-primary btn-period" data-period="week">Minggu</button>
+                        <button type="button" class="btn btn-outline-primary btn-period" data-period="month">Bulan</button>
+                        <button type="button" class="btn btn-outline-primary btn-period" data-period="year">Tahun</button>
+                        <button type="button" class="btn btn-outline-primary btn-period" data-period="custom">Kustom</button>
+                    </div>
+                </div>
+                <div id="customDateContainer" class="d-none flex-wrap align-items-center justify-content-md-end mt-2" style="gap: 10px;">
+                    <div class="d-flex align-items-center" style="gap: 5px;">
+                        <input type="date" id="customStartDate" class="form-control form-control-sm" style="width: 140px;">
+                        <span class="text-muted small">sampai</span>
+                        <input type="date" id="customEndDate" class="form-control form-control-sm" style="width: 140px;">
+                    </div>
+                    <button type="button" id="btnApplyCustom" class="btn btn-sm btn-primary">Terapkan</button>
                 </div>
             </div>
         </div>
@@ -179,53 +236,9 @@
     </div>
 </div>
 
-{{-- ATTENDANCE SUMMARY --}}
-<div class="col-lg-12">
-    <div class="card shadow-sm border-0">
-        <div class="header d-flex justify-content-between align-items-center pb-0">
-            <h2 class="font-weight-bold">Status Kehadiran Hari Ini</h2>
-            <div class="d-flex align-items-center">
-                <span class="badge badge-soft-warning mr-2 shadow-xs" title="Total Penilaian Hari Ini">
-                    <i class="fa fa-check-square-o mr-1"></i>{{ $stats['total_assessment_today'] }} Dinilai
-                </span>
-                <span class="badge badge-soft-info shadow-xs">
-                    <i class="fa fa-clock-o mr-1"></i>{{ date('H:i') }}
-                </span>
-            </div>
-        </div>
-        <div class="body pt-3">
-            <div class="row text-center mx-0">
-                <div class="col-lg-3 col-6 px-1 mb-2">
-                    <div class="p-3 rounded bg-light shadow-xs">
-                        <small class="mb-0 text-muted small d-block font-weight-bold">HADIR</small>
-                        <h4 class="font-weight-bold text-success mb-0">{{ $stats['absensi_hari_ini']['hadir'] }}</h4>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-6 px-1 mb-2">
-                    <div class="p-3 rounded bg-light shadow-xs">
-                        <small class="mb-0 text-muted small d-block font-weight-bold">TELAT</small>
-                        <h4 class="font-weight-bold text-warning mb-0">{{ $stats['absensi_hari_ini']['terlambat'] }}
-                        </h4>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-6 px-1 mb-2">
-                    <div class="p-3 rounded bg-light shadow-xs">
-                        <small class="mb-0 text-muted small d-block font-weight-bold">IZIN/SAKIT</small>
-                        <h4 class="font-weight-bold text-info mb-0">{{ $stats['absensi_hari_ini']['izin_sakit'] }}</h4>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-6 px-1 mb-2">
-                    <div class="p-3 rounded bg-light shadow-xs">
-                        <small class="mb-0 text-muted small d-block font-weight-bold">ALPHA</small>
-                        <h4 class="font-weight-bold text-danger mb-0">{{ $stats['absensi_hari_ini']['alpha'] }}</h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-@push('scripts')
+@section('afterAppScripts')
+    @parent
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         $(document).ready(function () {
@@ -284,17 +297,29 @@
                 const filterType = $('#chartFilterType').val();
                 const filterValue = $('#chartFilterValue').val();
 
+                let requestData = {
+                    period: currentPeriod,
+                    filter_type: filterType,
+                    filter_value: filterValue
+                };
+
+                if (currentPeriod === 'custom') {
+                    const sd = $('#customStartDate').val();
+                    const ed = $('#customEndDate').val();
+                    if (!sd || !ed) {
+                        return; // Wait for valid input
+                    }
+                    requestData.start_date = sd;
+                    requestData.end_date = ed;
+                }
+
                 $('#chartLoader').removeClass('d-none');
                 $('#chartNoData').addClass('d-none');
                 $('#chartContainer').addClass('d-none');
 
                 $.ajax({
                     url: "{{ route('dashboard.attendance-chart') }}",
-                    data: {
-                        period: currentPeriod,
-                        filter_type: filterType,
-                        filter_value: filterValue
-                    },
+                    data: requestData,
                     success: function (resp) {
                         $('#chartLoader').addClass('d-none');
 
@@ -342,6 +367,20 @@
                 $('.btn-period').removeClass('active');
                 $(this).addClass('active');
                 currentPeriod = $(this).data('period');
+
+                if (currentPeriod === 'custom') {
+                    $('#customDateContainer').removeClass('d-none').addClass('d-flex');
+                } else {
+                    $('#customDateContainer').addClass('d-none').removeClass('d-flex');
+                    loadChartData();
+                }
+            });
+
+            $('#btnApplyCustom').on('click', function() {
+                if (!$('#customStartDate').val() || !$('#customEndDate').val()) {
+                    toastr.warning('Silakan pilih rentang tanggal mulai dan akhir.');
+                    return;
+                }
                 loadChartData();
             });
 
@@ -359,4 +398,4 @@
             color: #fff;
         }
     </style>
-@endpush
+@endsection

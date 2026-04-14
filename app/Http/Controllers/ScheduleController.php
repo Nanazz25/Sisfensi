@@ -59,6 +59,33 @@ class ScheduleController extends Controller
         return view('schedules.show', compact('rombel', 'schedules', 'schoolDays'));
     }
 
+    public function mySchedules()
+    {
+        $user = auth()->user();
+        if ($user->role !== 'guru' || !$user->teacher) {
+            abort(403, 'Akses khusus Guru');
+        }
+
+        $activeTahunAjarId = \App\Models\TahunAjar::where('is_active', true)->value('id');
+
+        // Get active school days from settings
+        $schoolDaysStr = \App\Models\SchoolSetting::where('key', 'hari_sekolah')->first()->value ?? 'senin,selasa,rabu,kamis,jumat';
+        $schoolDays = explode(',', $schoolDaysStr);
+
+        $schedules = Schedule::with(['subject', 'rombonganBelajar.jurusan'])
+            ->whereHas('rombonganBelajar', function ($query) use ($activeTahunAjarId) {
+                $query->where('tahun_ajar_id', $activeTahunAjarId);
+            })
+            ->where('teacher_id', $user->teacher->id)
+            ->whereIn('hari', $schoolDays)
+            ->orderByRaw("FIELD(hari, 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu')")
+            ->orderBy('jam_mulai')
+            ->get()
+            ->groupBy('hari');
+
+        return view('schedules.my_schedules', compact('schedules', 'schoolDays'));
+    }
+
     public function create()
     {
         return view('schedules.form', [

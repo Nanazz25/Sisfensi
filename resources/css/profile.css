@@ -39,3 +39,10 @@
         margin-bottom: 15px;
     }
 }
+
+@media (min-width: 768px) {
+    .desktop-profile-text {
+        margin-top: -40px !important;
+        min-height: 105px;
+    }
+}

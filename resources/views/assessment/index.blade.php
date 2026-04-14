@@ -7,8 +7,8 @@
 @endsection
 
 @section('content')
-<div class="row clearfix mb-4">
-    <div class="col-lg-12 mb-3">
+<div class="row clearfix mb-2">
+    <div class="col-lg-12 mb-2">
         <div class="card shadow-sm border-0">
             <div class="body">
                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -42,10 +42,10 @@
     
     <div class="col-lg-12">
         <div class="card shadow-sm border-0">
-            <div class="body p-3">
-                <h6 class="mb-3 font-weight-bold text-dark"><i class="fa fa-bar-chart mr-2 text-info"></i>Rata-rata Skor per Kategori</h6>
+            <div class="body p-2">
+                <h6 class="mb-2 font-weight-bold text-dark"><i class="fa fa-bar-chart mr-2 text-info"></i>Rata-rata Skor per Kategori</h6>
                 @if($averageChartData->count() > 0)
-                    <div style="height: 200px; position: relative;">
+                    <div style="height: 180px; position: relative;">
                         <canvas id="averageChart"></canvas>
                     </div>
                 @else
@@ -61,15 +61,15 @@
 <div class="row clearfix">
     <div class="col-lg-12">
         <div class="card shadow-sm border-0">
-            <div class="header d-flex justify-content-between align-items-center">
+            <div class="header d-flex justify-content-between align-items-center pb-0">
                 <h2 class="font-weight-bold">Daftar {{ Auth::user()->role === 'admin' ? 'Guru' : 'Siswa' }} yang Dinilai</h2>
                 <a href="{{ route('assessment.create') }}" class="btn btn-primary shadow-sm rounded-pill px-4">
                     <i class="fa fa-plus-circle mr-1"></i> Penilaian Massal
                 </a>
             </div>
-            <div class="body">
+            <div class="body pt-3">
                 {{-- Filter Section --}}
-                <div class="mb-4">
+                <div class="mb-3">
                     <form method="GET" action="{{ route('assessment.index') }}" id="filterForm" class="row align-items-center">
                         <div class="col-lg-4 col-md-5 mb-2">
                             <div class="input-group shadow-xs rounded-pill overflow-hidden border">

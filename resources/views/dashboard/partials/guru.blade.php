@@ -136,6 +136,10 @@
         </div>
         <div class="body">
             <div class="list-group list-group-custom">
+                <a href="{{ route('schedules.my_schedules') }}" class="list-group-item list-group-item-action d-flex align-items-center mb-2 border-0 bg-light rounded shadow-xs">
+                    <div class="icon-in-bg bg-success text-white rounded mr-3 text-center" style="width: 35px; height: 35px; line-height:35px;"><i class="fa fa-calendar-check-o"></i></div>
+                    <span class="font-weight-bold">Jadwal Mengajar Saya</span>
+                </a>
                 <a href="{{ route('attendance-permissions.index') }}" class="list-group-item list-group-item-action d-flex align-items-center mb-2 border-0 bg-light rounded shadow-xs">
                     <div class="icon-in-bg bg-primary text-white rounded mr-3 text-center" style="width: 35px; height: 35px; line-height:35px;"><i class="fa fa-envelope-o"></i></div>
                     <span class="font-weight-bold">Pengajuan Izin</span>

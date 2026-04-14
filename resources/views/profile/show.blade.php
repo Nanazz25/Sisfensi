@@ -14,31 +14,29 @@
                 <div class="profile-banner bg-gradient-primary" style="height: 120px;"></div>
 
                 <div class="body pt-0">
-                    <div class="row mt-n5 px-4 mb-4 profile-header-row">
-                        <div class="col-auto profile-image-container">
+                    <div class="row mt-n5 px-4 mb-4 profile-header-row text-center text-md-left">
+                        <div class="col-12 col-md-auto profile-image-container d-flex justify-content-center justify-content-md-start">
                             <div class="profile-image border-5 border-white rounded-circle shadow d-flex align-items-center justify-content-center"
                                 style="width: 130px; height: 130px; overflow: hidden; margin-top: -65px; border: 5px solid #fff; background: #fff;">
                                 <img src="{{ $user->avatar_url }}" style="width: 100%; height: 100%; object-fit: cover;"
                                     alt="Profile Picture">
                             </div>
                         </div>
-                        <div class="col mt-3 profile-name-section">
-                            <div class="d-md-flex align-items-center justify-content-between">
-                                <div>
-                                    <h3 class="font-weight-bold mb-1">{{ $user->name }}</h3>
-                                    <p class="text-muted mb-0"><i class="fa fa-envelope-o mr-1"></i> {{ $user->email }}</p>
-                                </div>
-                                <div class="mt-3 mt-md-0 role-badges">
+                        <div class="col-12 col-md profile-name-section mt-3 mt-md-0 pb-1 d-flex flex-column justify-content-between desktop-profile-text">
+                            <div class="name-email-container">
+                                <h3 class="font-weight-bold mb-1">{{ $user->name }}</h3>
+                                <p class="text-muted mb-0"><i class="fa fa-envelope-o mr-1"></i> {{ $user->email }}</p>
+                            </div>
+                            <div class="mt-3 mt-md-2 role-badges text-center text-md-right mt-md-auto">
+                                <span
+                                    class="badge badge-pill badge-primary px-3 py-2 text-uppercase font-12">{{ $user->role }}</span>
+                                @if($user->role === 'siswa' && $rombel)
                                     <span
-                                        class="badge badge-pill badge-primary px-3 py-2 text-uppercase font-12">{{ $user->role }}</span>
-                                    @if($user->role === 'siswa' && $rombel)
-                                        <span
-                                            class="badge badge-pill badge-info px-3 py-2 font-12 ml-1 ml-md-1">{{ $rombel->rombonganBelajar->nama_rombel }}</span>
-                                    @elseif($user->role === 'guru' && $rombel)
-                                        <span class="badge badge-pill badge-success px-3 py-2 font-12 ml-1 ml-md-1">Wali Kelas
-                                            {{ $rombel->nama_rombel }}</span>
-                                    @endif
-                                </div>
+                                        class="badge badge-pill badge-info px-3 py-2 font-12 ml-1 ml-md-1">{{ $rombel->rombonganBelajar->nama_rombel }}</span>
+                                @elseif($user->role === 'guru' && $rombel)
+                                    <span class="badge badge-pill badge-success px-3 py-2 font-12 ml-1 ml-md-1">Wali Kelas
+                                        {{ $rombel->nama_rombel }}</span>
+                                @endif
                             </div>
                         </div>
                     </div>

@@ -86,6 +86,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin,guru')->group(function () {
         // Akademik - Rombel Index
         Route::get('/rombongan-belajar', [RombonganBelajarController::class, 'index'])->name('rombongan-belajar.index');
+        Route::get('/my-schedules', [ScheduleController::class, 'mySchedules'])->name('schedules.my_schedules');
 
         // Peserta Didik Detail & Photo (Accessible by Admin & Walas)
         Route::get('peserta-didik/{peserta_didik}', [PesertaDidikController::class, 'show'])->name('peserta-didik.show');

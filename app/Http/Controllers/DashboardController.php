@@ -107,21 +107,22 @@ class DashboardController extends Controller
             $teacher = $user->teacher;
             if ($teacher && $isSchoolDay) {
                 // Personal Schedule with Attendance Counts
-                $data['schedules'] = Schedule::with(['subject', 'rombonganBelajar'])
-                    ->withCount([
-                        'rombonganBelajar as total_siswa' => function ($q) {
-                            $q->select(\DB::raw('count(*)'));
+                $data['schedules'] = Schedule::with([
+                        'subject', 
+                        'rombonganBelajar' => function($q) {
+                            $q->withCount('anggotaRombel');
                         }
-                    ]) // This is tricky because it's a relationship of a relationship.
+                    ])
+                    ->withCount(['attendances as hadir_count' => function($q) use ($today) {
+                        $q->where('tanggal', $today);
+                    }])
                     ->where('teacher_id', $teacher->id)
                     ->where('hari', $hariIndo)
                     ->orderBy('jam_mulai', 'asc')
                     ->get()
-                    ->map(function ($schedule) use ($today) {
-                        $totalSiswa = AnggotaRombel::where('rombongan_belajar_id', $schedule->rombongan_belajar_id)->count();
-                        $hadirCount = Attendance::where('schedule_id', $schedule->id)
-                            ->where('tanggal', $today)
-                            ->count();
+                    ->map(function ($schedule) {
+                        $totalSiswa = $schedule->rombonganBelajar->anggota_rombel_count ?? 0;
+                        $hadirCount = $schedule->hadir_count ?? 0;
 
                         $schedule->attendance_stats = [
                             'hadir' => $hadirCount,
@@ -306,7 +307,34 @@ class DashboardController extends Controller
         $count = ($period === 'week') ? 7 : (($period === 'month') ? 30 : 12);
         $startDate = ($period === 'year') ? Carbon::today()->subMonths(11)->startOfMonth() : Carbon::today()->subDays($count - 1);
 
-        if ($period === 'week' || $period === 'month') {
+        if ($period === 'custom' && $request->start_date && $request->end_date) {
+            $startDate = Carbon::parse($request->start_date);
+            $endDate = Carbon::parse($request->end_date);
+            $diffDays = $startDate->diffInDays($endDate);
+
+            $rawStats = $query->clone()
+                ->whereBetween('tanggal', [$startDate->toDateString(), $endDate->toDateString()])
+                ->select('tanggal', 'status', DB::raw('count(*) as total'))
+                ->groupBy('tanggal', 'status')
+                ->get()
+                ->groupBy(function($item) {
+                    return \Carbon\Carbon::parse($item->tanggal)->toDateString();
+                });
+
+            for ($i = 0; $i <= $diffDays; $i++) {
+                $date = $startDate->clone()->addDays($i);
+                $dateStr = $date->toDateString();
+                $labels[] = $date->translatedFormat('d M');
+
+                $dayData = $rawStats[$dateStr] ?? collect();
+                $dayPluck = $dayData->pluck('total', 'status');
+
+                $datasets['hadir'][] = $dayPluck['hadir'] ?? 0;
+                $datasets['terlambat'][] = $dayPluck['terlambat'] ?? 0;
+                $datasets['izin_sakit'][] = ($dayPluck['izin'] ?? 0) + ($dayPluck['sakit'] ?? 0);
+                $datasets['alpha'][] = $dayPluck['alpha'] ?? 0;
+            }
+        } elseif ($period === 'week' || $period === 'month') {
             $rawStats = $query->clone()
                 ->whereBetween('tanggal', [$startDate->toDateString(), Carbon::today()->toDateString()])
                 ->select('tanggal', 'status', DB::raw('count(*) as total'))

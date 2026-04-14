@@ -136,8 +136,12 @@
                                     @if(auth()->user()->role === 'admin')
                                         <li class="{{ request()->routeIs('subjects.*') ? 'active' : '' }}"><a
                                                 href="{{ route('subjects.index') }}">Mata Pelajaran</a></li>
-                                        <li class="{{ request()->routeIs('schedules.*') ? 'active' : '' }}"><a
-                                                href="{{ route('schedules.index') }}">Jadwal</a></li>
+                                        <li class="{{ request()->routeIs('schedules.index') ? 'active' : '' }}"><a
+                                                href="{{ route('schedules.index') }}">Master Jadwal</a></li>
+                                    @endif
+                                    @if(auth()->user()->role === 'guru')
+                                        <li class="{{ request()->routeIs('schedules.my_schedules') ? 'active' : '' }}"><a
+                                                href="{{ route('schedules.my_schedules') }}">Jadwal Mengajar Saya</a></li>
                                     @endif
                                 </ul>
                             </li>
@@ -199,7 +203,7 @@
                         @if(auth()->user()->role === 'siswa')
                             <li class="header">SISWA</li>
                             @php
-                                $myRombel = auth()->user()->pesertaDidik->anggotaRombel()->latest()->first();
+                                $myRombel = auth()->user()->active_rombel;
                             @endphp
 
                             <li class="{{ request()->routeIs('rombongan-belajar.show') ? 'active' : '' }}">
@@ -207,7 +211,7 @@
                                     <a href="{{ route('rombongan-belajar.show', $myRombel->rombongan_belajar_id) }}">
                                         <i class="fa fa-university text-primary"></i>
                                         <span>Kelas Saya</span>
-                                    </a>
+                                    </a> 
                                 @else
                                     <a href="javascript:void(0);" class="text-muted">
                                         <i class="fa fa-university text-muted"></i>
@@ -247,16 +251,6 @@
                         @endif
                     </ul>
                 </nav>
-            </div>
-            <div class="tab-pane" id="Chat">
-                <form>
-                    <div class="input-group m-b-20">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="icon-magnifier"></i></span>
-                        </div>
-                        <input type="text" class="form-control" placeholder="Search...">
-                    </div>
-                </form>
             </div>
             <div class="tab-pane" id="setting">
                 <h6>Choose Skin</h6>
@@ -357,20 +351,6 @@
                         </label>
                     </li>
                 </ul>
-
-                <a href="#" target="_blank" class="btn btn-block btn-primary">Buy this item</a>
-                <a href="#" target="_blank" class="btn btn-block btn-secondary">View portfolio</a>
-            </div>
-
-            <div class="tab-pane" id="question">
-                <form>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="icon-magnifier"></i></span>
-                        </div>
-                        <input type="text" class="form-control" placeholder="Search...">
-                    </div>
-                </form>
             </div>
         </div>
     </div>

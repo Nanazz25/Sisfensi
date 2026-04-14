@@ -85,4 +85,23 @@ class User extends Authenticatable
     {
         return $this->hasMany(Assessment::class, 'evaluator_id');
     }
+
+    public function getActiveRombelAttribute()
+    {
+        $activeTahunAjarId = \App\Models\TahunAjar::where('is_active', true)->value('id');
+
+        if ($this->role === 'siswa' && $this->pesertaDidik) {
+            return \App\Models\AnggotaRombel::with('rombonganBelajar')
+                ->whereHas('rombonganBelajar', function ($query) use ($activeTahunAjarId) {
+                    $query->where('tahun_ajar_id', $activeTahunAjarId);
+                })
+                ->where('peserta_didik_id', $this->pesertaDidik->id)
+                ->first();
+        } elseif ($this->role === 'guru' && $this->teacher) {
+            return \App\Models\RombonganBelajar::where('tahun_ajar_id', $activeTahunAjarId)
+                ->where('wali_kelas_id', $this->teacher->id)
+                ->first();
+        }
+        return null;
+    }
 }
