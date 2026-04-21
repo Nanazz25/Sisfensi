@@ -102,10 +102,12 @@
                         </div>
 
                         <div class="form-group" id="attachment_wrapper">
-                            <label class="small font-weight-bold text-muted text-uppercase" style="letter-spacing: 0.5px;">Lampiran Bukti (Foto/PDF)</label>
+                            <label class="small font-weight-bold text-muted text-uppercase" style="letter-spacing: 0.5px;">
+                                Lampiran Bukti (Foto/PDF) <span id="lampiran_required_marker" class="text-danger d-none">*Wajib</span>
+                            </label>
                             <div class="custom-file">
                                 <input type="file" name="lampiran" class="custom-file-input" id="lampiranInput" accept="image/*,.pdf">
-                                <label class="custom-file-label rounded-lg" for="lampiranInput">Pilih file bukti...</label>
+                                <label class="custom-file-label rounded-lg" for="lampiranInput" id="lampiranLabel">Pilih file bukti...</label>
                             </div>
                         </div>
 
@@ -207,9 +209,14 @@
 
             // Handle manual logic
             jenisSelect.addEventListener('change', function () {
+                const reqMarker = document.getElementById('lampiran_required_marker');
+                const lampiranInput = document.getElementById('lampiranInput');
+
                 if (this.value === 'manual') {
                     manualTypeWrapper.classList.remove('d-none');
                     gpsCard.classList.remove('d-none');
+                    reqMarker.classList.remove('d-none');
+                    lampiranInput.required = true;
                     
                     // Lock to today
                     tglMulai.value = today;
@@ -239,6 +246,8 @@
                     gpsCard.classList.add('d-none');
                     manualLimitAlert.classList.add('d-none');
                     manualLimitAlert.classList.remove('d-flex');
+                    reqMarker.classList.add('d-none');
+                    lampiranInput.required = false;
                     
                     // Unlock date
                     tglMulai.readOnly = false;

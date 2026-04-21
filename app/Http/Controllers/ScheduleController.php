@@ -14,6 +14,13 @@ class ScheduleController extends Controller
     {
         $query = RombonganBelajar::with(['tahunAjar', 'waliKelas.user', 'jurusan']);
 
+        // Default: Only active year if no specific year is filtered
+        if (!$request->filled('tahun_ajar_id')) {
+            $query->whereHas('tahunAjar', function($q) {
+                $q->where('is_active', true);
+            });
+        }
+
         // Filter Search
         if ($request->filled('search')) {
             $query->where('nama_rombel', 'like', '%' . $request->search . '%');
@@ -89,7 +96,9 @@ class ScheduleController extends Controller
     public function create()
     {
         return view('schedules.form', [
-            'rombels' => RombonganBelajar::all(),
+            'rombels' => RombonganBelajar::whereHas('tahunAjar', function($q) {
+                $q->where('is_active', true);
+            })->orderBy('nama_rombel')->get(),
             'subjects' => Subject::all(),
             'teachers' => Teacher::with('user')->get(),
         ]);
@@ -97,11 +106,13 @@ class ScheduleController extends Controller
 
     public function store(Request $request)
     {
+        $schoolDaysStr = \App\Models\SchoolSetting::where('key', 'hari_sekolah')->first()->value ?? 'senin,selasa,rabu,kamis,jumat';
+
         $request->validate([
             'rombongan_belajar_id' => 'required|exists:rombongan_belajar,id',
             'subject_id' => 'required|exists:subjects,id',
             'teacher_id' => 'required|exists:teachers,id',
-            'hari' => 'required|in:senin,selasa,rabu,kamis,jumat,sabtu',
+            'hari' => 'required|in:' . $schoolDaysStr,
             'jam_mulai' => 'required',
             'jam_selesai' => 'required|after:jam_mulai',
         ]);
@@ -133,7 +144,9 @@ class ScheduleController extends Controller
     {
         return view('schedules.form', [
             'schedule' => $schedule,
-            'rombels' => RombonganBelajar::all(),
+            'rombels' => RombonganBelajar::whereHas('tahunAjar', function($q) {
+                $q->where('is_active', true);
+            })->orderBy('nama_rombel')->get(),
             'subjects' => Subject::all(),
             'teachers' => Teacher::with('user')->get(),
         ]);
@@ -141,11 +154,13 @@ class ScheduleController extends Controller
 
     public function update(Request $request, Schedule $schedule)
     {
+        $schoolDaysStr = \App\Models\SchoolSetting::where('key', 'hari_sekolah')->first()->value ?? 'senin,selasa,rabu,kamis,jumat';
+
         $request->validate([
             'rombongan_belajar_id' => 'required|exists:rombongan_belajar,id',
             'subject_id' => 'required|exists:subjects,id',
             'teacher_id' => 'required|exists:teachers,id',
-            'hari' => 'required|in:senin,selasa,rabu,kamis,jumat,sabtu',
+            'hari' => 'required|in:' . $schoolDaysStr,
             'jam_mulai' => 'required',
             'jam_selesai' => 'required|after:jam_mulai',
         ]);

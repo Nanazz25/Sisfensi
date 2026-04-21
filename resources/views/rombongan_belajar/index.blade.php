@@ -14,9 +14,9 @@
         <div class="body">
             <form method="GET" action="{{ route('rombongan-belajar.index') }}" id="filterForm"
                 class="ajax-form compact-form row mb-3 align-items-end">
-                <div class="col-md-3">
+                <div class="col-12 col-md-3 mb-3 mb-md-0">
                     <label class="font-weight-600 small mb-1">Cari Nama</label>
-                    <div class="input-group">
+                    <div class="input-group shadow-xs">
                         <div class="input-group-prepend">
                             <span class="input-group-text bg-white border-right-0"><i
                                     class="fa fa-search text-muted"></i></span>
@@ -26,7 +26,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-2">
+                <div class="col-6 col-md-2 mb-3 mb-md-0">
                     <label class="font-weight-600 small mb-1">Tahun Ajar</label>
                     <select name="tahun_ajar_id" class="form-control">
                         <option value="">-- Semua --</option>
@@ -38,7 +38,7 @@
                     </select>
                 </div>
 
-                <div class="col-md-2">
+                <div class="col-6 col-md-2 mb-3 mb-md-0">
                     <label class="font-weight-600 small mb-1">Jurusan</label>
                     <select name="jurusan_id" class="form-control">
                         <option value="">-- Semua --</option>
@@ -50,7 +50,7 @@
                     </select>
                 </div>
 
-                <div class="col-md-2">
+                <div class="col-12 col-md-2 mb-3 mb-md-0">
                     <label class="font-weight-600 small mb-1">Angkatan</label>
                     <select name="angkatan" class="form-control">
                         <option value="">-- Semua --</option>
@@ -126,7 +126,7 @@
                 </table>
             </div>
 
-            <div class="mt-3">{{ $rombels->links() }}</div>
+            <div class="pagination-responsive mt-3">{{ $rombels->links() }}</div>
         </div>
     </div>
 

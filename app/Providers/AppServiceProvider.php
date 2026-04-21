@@ -27,5 +27,7 @@ class AppServiceProvider extends ServiceProvider
         if (str_contains(config('app.url'), 'ngrok-free.dev')) {
             URL::forceScheme('https');
         }
+
+        \App\Models\Attendance::observe(\App\Observers\AttendanceObserver::class);
     }
 }

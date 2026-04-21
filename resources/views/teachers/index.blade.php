@@ -17,9 +17,9 @@
             {{-- FILTER --}}
             <form method="GET" id="filterForm" class="row mb-3 align-items-center g-2">
 
-                <div class="col-md-5">
-                    <div class="input-group">
-                        <input type="text" name="q" value="{{ request('q') }}" class="form-control"
+                <div class="col-12 col-md-5 mb-3 mb-md-0">
+                    <div class="input-group shadow-xs">
+                        <input type="text" name="q" id="searchInput" value="{{ request('q') }}" class="form-control"
                             placeholder="Cari nama / NIP">
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary" type="submit">
@@ -29,29 +29,32 @@
                     </div>
                 </div>
 
-                <div class="dropdown">
-                    <a href="javascript:void(0);" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
-                        <i class="fa fa-filter"></i> Urutkan
-                    </a>
+                <div class="col-6 col-md-auto">
 
-                    <ul class="dropdown-menu">
-                        <li>
-                            <a class="dropdown-item sort-option" data-value="desc" href="javascript:void(0);">
-                                <i class="fa fa-clock-o"></i> Terbaru
-                            </a>
-                        </li>
-                        <li class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item sort-option" data-value="asc" href="javascript:void(0);">
-                                <i class="fa fa-history"></i> Terlama
-                            </a>
-                        </li>
-                    </ul>
+                    <div class="dropdown">
+                        <a href="javascript:void(0);" class="btn btn-outline-secondary dropdown-toggle btn-block" data-toggle="dropdown">
+                            <i class="fa fa-filter"></i> Urutkan
+                        </a>
+
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item sort-option" data-value="desc" href="javascript:void(0);">
+                                    <i class="fa fa-clock-o"></i> Terbaru
+                                </a>
+                            </li>
+                            <li class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item sort-option" data-value="asc" href="javascript:void(0);">
+                                    <i class="fa fa-history"></i> Terlama
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
-                <div class="col-auto">
-                    <a href="{{ route('teachers.index') }}" class="btn btn-outline-danger">
-                        <i class="fa fa-refresh"></i>
+                <div class="col-6 col-md-auto">
+                    <a href="{{ route('teachers.index') }}" class="btn btn-sm btn-outline-danger btn-block rounded-pill shadow-xs d-flex align-items-center justify-content-center" style="height: 38px;">
+                        <i class="fa fa-undo mr-1"></i> Reset
                     </a>
                 </div>
 
@@ -107,7 +110,7 @@
                 </table>
             </div>
 
-            <div class="mt-3">
+            <div class="pagination-responsive mt-3">
                 {{ $teachers->links() }}
             </div>
 
@@ -126,5 +129,20 @@
                 document.getElementById('filterForm').submit();
             });
         });
+
+        // --- Auto Search ---
+        const searchInput = document.getElementById('searchInput');
+        const filterForm = document.getElementById('filterForm');
+        if (searchInput && filterForm) {
+            let timeout = null;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => filterForm.submit(), 500);
+            });
+            if (searchInput.value) {
+                searchInput.focus();
+                searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+            }
+        }
     </script>
 @endsection

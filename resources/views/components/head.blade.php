@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{{ asset('assets/vendor/font-awesome/css/font-awesome.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendor/toastr/toastr.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendor/charts-c3/plugin.css') }}" />
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 
     <!-- MAIN Project CSS file -->
     <link rel="stylesheet" href="{{ asset('assets/css/main.css') }}">

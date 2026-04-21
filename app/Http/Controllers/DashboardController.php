@@ -24,26 +24,28 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         $today = Carbon::today()->toDateString();
+        $holiday = \App\Models\Holiday::where('date', $today)->first();
         $hariIndo = $this->translateHari(strtolower(Carbon::now()->englishDayOfWeek));
         $period = $request->period ?? 'week';
 
         $schoolDaysStr = \App\Models\SchoolSetting::where('key', 'hari_sekolah')->first()->value ?? 'senin,selasa,rabu,kamis,jumat';
         $schoolDays = explode(',', $schoolDaysStr);
-        $isSchoolDay = in_array($hariIndo, $schoolDays);
+        $isSchoolDay = in_array($hariIndo, $schoolDays) && !$holiday;
         $data = [
             'schedules' => [],
             'stats' => [],
             'recent' => [],
             'walas_data' => null,
             'period' => $period,
-            'is_school_day' => $isSchoolDay
+            'is_school_day' => $isSchoolDay,
+            'holiday' => $holiday
         ];
 
         if ($user->role === 'admin') {
             $data['stats'] = [
                 'total_siswa' => PesertaDidik::count(),
                 'total_guru' => Teacher::count(),
-                'total_rombel' => RombonganBelajar::count(),
+                'total_rombel' => RombonganBelajar::whereHas('tahunAjar', fn($q) => $q->where('is_active', true))->count(),
                 'pending_permissions' => AttendancePermission::where('status', 'pending')->count(),
                 'absensi_hari_ini' => (function () use ($today) {
                     $stats = Attendance::where('tanggal', $today)
@@ -73,7 +75,9 @@ class DashboardController extends Controller
             ];
 
             // Filter data for charts
-            $data['rombels'] = RombonganBelajar::orderBy('nama_rombel')->get();
+            // Filter data for charts - Only Active Year
+            $data['rombels'] = RombonganBelajar::whereHas('tahunAjar', fn($q) => $q->where('is_active', true))
+                ->orderBy('nama_rombel')->get();
             $data['jurusans'] = \App\Models\Jurusan::orderBy('nama_jurusan')->get();
             $data['tahunAjars'] = \App\Models\TahunAjar::orderBy('created_at', 'desc')->get();
 
@@ -89,7 +93,8 @@ class DashboardController extends Controller
                 ->groupBy('anggota_rombel.rombongan_belajar_id')
                 ->pluck('total', 'rombongan_belajar_id');
 
-            $data['top_classes'] = RombonganBelajar::withCount(['anggotaRombel as total_anggota'])
+            $data['top_classes'] = RombonganBelajar::whereHas('tahunAjar', fn($q) => $q->where('is_active', true))
+                ->withCount(['anggotaRombel as total_anggota'])
                 ->get()
                 ->map(function ($rombel) use ($attendanceCounts, $diffDays) {
                     $hadir = $attendanceCounts[$rombel->id] ?? 0;
@@ -135,12 +140,16 @@ class DashboardController extends Controller
 
             if ($teacher) {
                 // Walas Data
-                $rombel = RombonganBelajar::where('wali_kelas_id', $teacher->id)->first();
+                // Walas Data - Only Active Year
+                $rombel = RombonganBelajar::where('wali_kelas_id', $teacher->id)
+                    ->whereHas('tahunAjar', fn($q) => $q->where('is_active', true))
+                    ->first();
                 if ($rombel) {
                     $anggotaIds = AnggotaRombel::where('rombongan_belajar_id', $rombel->id)->pluck('id');
                     $hadirCount = Attendance::whereIn('anggota_rombel_id', $anggotaIds)
                         ->where('tanggal', $today)
                         ->where('jenis_absensi', 'masuk')
+                        ->whereIn('status', ['hadir', 'terlambat'])
                         ->count();
 
                     $data['walas_data'] = [
@@ -168,9 +177,26 @@ class DashboardController extends Controller
             }
         } elseif ($user->role === 'siswa') {
             $peserta = $user->pesertaDidik;
+            
+            // Initialize default values to prevent view errors if profile is missing
+            $data['attendance_summary'] = [
+                'masuk' => null,
+                'pulang' => null,
+                'permissions' => 0,
+                'mapel_attended' => [],
+            ];
+            $data['assessment_score'] = [];
 
             if ($peserta) {
-                $anggotaRombel = $peserta->anggotaRombel()->latest('id')->first();
+                // Get Active Membership (Current Year)
+                $anggotaRombel = $peserta->anggotaRombel()
+                    ->whereHas('rombonganBelajar.tahunAjar', fn($q) => $q->where('is_active', true))
+                    ->first();
+                
+                // Fallback to latest if no active year membership found (avoid crash)
+                if (!$anggotaRombel) {
+                    $anggotaRombel = $peserta->anggotaRombel()->latest('id')->first();
+                }
 
                 if ($anggotaRombel && $isSchoolDay) {
                     $data['schedules'] = Schedule::with(['subject', 'teacher.user'])
@@ -186,6 +212,7 @@ class DashboardController extends Controller
                         'masuk' => Attendance::where('anggota_rombel_id', $anggotaRombel->id)->where('tanggal', $today)->where('jenis_absensi', 'masuk')->first(),
                         'pulang' => Attendance::where('anggota_rombel_id', $anggotaRombel->id)->where('tanggal', $today)->where('jenis_absensi', 'pulang')->first(),
                         'permissions' => AttendancePermission::where('anggota_rombel_id', $anggotaRombel->id)->where('status', 'pending')->count(),
+                        'mapel_attended' => Attendance::where('anggota_rombel_id', $anggotaRombel->id)->where('tanggal', $today)->where('jenis_absensi', 'pelajaran')->pluck('schedule_id')->toArray(),
                     ];
 
                     $latestScores = AssessmentDetail::whereHas('assessment', function($q) use ($user) {
@@ -208,8 +235,6 @@ class DashboardController extends Controller
                                 'score' => isset($latestScores[$category->id]) ? $latestScores[$category->id]->score : 0
                             ];
                         });
-                    } else {
-                        $data['assessment_score'] = [];
                     }
                 }
             }

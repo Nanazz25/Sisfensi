@@ -22,14 +22,25 @@ class AttendanceService
 
         // Cek jenis absensi
         if ($type === 'masuk') {
-            // Cek apakah siswa sudah absen masuk
-            if (
-                Attendance::where('anggota_rombel_id', $anggotaRombel->id)
+            // Ambil semua ID anggota_rombel milik siswa ini
+            $allSiswaMemberships = \App\Models\AnggotaRombel::where('peserta_didik_id', $siswa->id)->pluck('id');
+
+            // Cek apakah siswa sudah absen masuk (di kelas manapun)
+            $existing = Attendance::whereIn('anggota_rombel_id', $allSiswaMemberships)
+                ->where('tanggal', $today)
+                ->where('jenis_absensi', 'masuk')
+                ->first();
+
+            if ($existing && !in_array($existing->status, ['alpha', 'pending'])) {
+                throw new \Exception("Anda sudah terdaftar sebagai " . ucfirst($existing->status) . ".");
+            }
+
+            // Jika ada status alpha/pending yang tersisa, hapus bersih
+            if ($existing) {
+                Attendance::whereIn('anggota_rombel_id', $allSiswaMemberships)
                     ->where('tanggal', $today)
                     ->where('jenis_absensi', 'masuk')
-                    ->exists()
-            ) {
-                throw new \Exception('Anda sudah absen masuk.');
+                    ->delete();
             }
             // Ambil jam masuk dan toleransi dari database
             $jamMasuk = SchoolSetting::where('key', 'jam_masuk')->value('value') ?? '07:00';
@@ -43,6 +54,17 @@ class AttendanceService
                 throw new \Exception('Batas waktu scan habis.');
             }
         } elseif ($type === 'mapel') {
+            // VALIDASI: Wajib absen masuk dulu sebelum absen mapel
+            $hasMasuk = Attendance::where('anggota_rombel_id', $anggotaRombel->id)
+                ->where('tanggal', $today)
+                ->where('jenis_absensi', 'masuk')
+                ->whereIn('status', ['hadir', 'terlambat'])
+                ->exists();
+
+            if (!$hasMasuk) {
+                throw new \Exception('Harap melakukan Presensi Masuk terlebih dahulu sebelum Presensi Mapel!');
+            }
+
             // Ambil hari ini dalam bahasa Indonesia
             $hariIndo = strtolower($now->locale('id')->dayName);
             // Cari jadwal yang sesuai
@@ -60,13 +82,25 @@ class AttendanceService
                 Attendance::where('anggota_rombel_id', $anggotaRombel->id)
                     ->where('schedule_id', $schedule->id)
                     ->where('tanggal', $today)
+                    ->where('jenis_absensi', 'pelajaran')
                     ->exists()
-            ) {
+                ) {
                 throw new \Exception('Anda sudah presensi mapel ini.');
             }
             // Set schedule id
             $scheduleId = $schedule->id;
         } elseif ($type === 'pulang') {
+            // VALIDASI: Wajib absen masuk dulu sebelum absen pulang
+            $hasMasuk = Attendance::where('anggota_rombel_id', $anggotaRombel->id)
+                ->where('tanggal', $today)
+                ->where('jenis_absensi', 'masuk')
+                ->whereIn('status', ['hadir', 'terlambat'])
+                ->exists();
+
+            if (!$hasMasuk) {
+                throw new \Exception('Harap melakukan Presensi Masuk terlebih dahulu sebelum Presensi Pulang!');
+            }
+
             // Ambil jam pulang dari database
             $jamPulang = SchoolSetting::where('key', 'jam_pulang')->value('value') ?? '15:00';
             $pulangDateTime = Carbon::createFromFormat('Y-m-d H:i', $today . ' ' . substr($jamPulang, 0, 5));
@@ -126,11 +160,17 @@ class AttendanceService
                 'radius' => round($locationData['distance']),
                 'lokasi_valid' => true,
             ]);
+
+            // Refresh model agar mendapatkan data terbaru dari observer (misal status berubah karena token)
+            $attendance->refresh();
+
             // Return hasil
             return [
                 'attendance' => $attendance,
-                'is_late' => $status === 'terlambat',
-                'late_info' => $lateInfo
+                'is_late' => $attendance->status === 'terlambat',
+                'is_exempted' => str_contains($attendance->remarks ?? '', 'Token'), // Deteksi apakah token digunakan
+                'late_info' => $lateInfo,
+                'status' => $attendance->status
             ];
         });
     }

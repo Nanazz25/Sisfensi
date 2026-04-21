@@ -16,18 +16,18 @@
 
             <form method="GET" action="{{ route('users.siswa') }}" id="filterForm"
                 class="ajax-form compact-form row mb-3 align-items-center">
-                <div class="col-md-5">
-                    <div class="input-group">
+                <div class="col-12 col-md-5 mb-3 mb-md-0">
+                    <div class="input-group shadow-xs">
                         <div class="input-group-prepend">
                             <span class="input-group-text bg-white border-right-0"><i
                                     class="fa fa-search text-muted"></i></span>
                         </div>
-                        <input type="text" name="q" value="{{ request('q') }}" class="form-control border-left-0"
+                        <input type="text" name="q" id="searchInput" value="{{ request('q') }}" class="form-control border-left-0"
                             placeholder="Cari nama / email...">
                     </div>
                 </div>
 
-                <div class="col-auto">
+                <div class="col-6 col-md-auto">
                     <div class="dropdown">
                         <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
                             <i class="fa fa-sort-amount-desc mr-1"></i> Urutkan
@@ -41,9 +41,9 @@
                     </div>
                 </div>
 
-                <div class="col-auto">
-                    <a href="{{ route('users.siswa') }}" class="btn btn-link text-danger p-0">
-                        <i class="fa fa-refresh"></i> Reset
+                <div class="col-6 col-md-auto">
+                    <a href="{{ route('users.siswa') }}" class="btn btn-sm btn-outline-danger btn-block rounded-pill shadow-xs d-flex align-items-center justify-content-center" style="height: 38px;">
+                        <i class="fa fa-undo mr-1"></i> Reset
                     </a>
                 </div>
 
@@ -107,7 +107,7 @@
                 </table>
             </div>
 
-            <div class="mt-3">
+            <div class="pagination-responsive mt-3">
                 {{ $users->links() }}
             </div>
 
@@ -124,10 +124,23 @@
             item.addEventListener('click', function () {
                 const form = document.getElementById('filterForm');
                 document.getElementById('sortInput').value = this.dataset.value;
-                form.dispatchEvent(new Event('submit', {
-                    cancelable: true
-                }));
+                form.submit();
             });
         });
+
+        // --- Auto Search ---
+        const searchInput = document.getElementById('searchInput');
+        const filterForm = document.getElementById('filterForm');
+        if (searchInput && filterForm) {
+            let timeout = null;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => filterForm.submit(), 500);
+            });
+            if (searchInput.value) {
+                searchInput.focus();
+                searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+            }
+        }
     </script>
 @endsection

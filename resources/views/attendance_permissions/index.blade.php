@@ -26,7 +26,7 @@
                                         <span class="input-group-text bg-light border-right-0"><i
                                                 class="fa fa-search text-muted"></i></span>
                                     </div>
-                                    <input type="text" name="search" class="form-control border-left-0"
+                                    <input type="text" name="search" id="searchInput" class="form-control border-left-0"
                                         placeholder="Ketik nama..." value="{{ request('search') }}">
                                 </div>
                             </div>
@@ -68,8 +68,8 @@
                             </div>
 
                             <div class="col-lg-1 col-md-4 col-sm-6">
-                                <a href="{{ route('attendance-permissions.index') }}" class="btn btn-outline-danger btn-block" title="Reset Filter">
-                                    <i class="fa fa-refresh"></i>
+                                <a href="{{ route('attendance-permissions.index') }}" class="btn btn-sm btn-outline-danger btn-block rounded-pill shadow-xs d-flex align-items-center justify-content-center" style="height: 38px;" title="Reset Filter">
+                                    <i class="fa fa-undo"></i>
                                 </a>
                             </div>
                         </div>
@@ -220,4 +220,24 @@
     </div>
 
     <x-modal-confirm />
+@endsection
+
+@section('afterAppScripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const filterForm = document.querySelector('.ajax-form');
+        if (searchInput && filterForm) {
+            let timeout = null;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => filterForm.submit(), 500);
+            });
+            if (searchInput.value) {
+                searchInput.focus();
+                searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+            }
+        }
+    });
+</script>
 @endsection

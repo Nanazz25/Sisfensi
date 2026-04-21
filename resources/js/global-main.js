@@ -208,27 +208,48 @@ document.addEventListener("DOMContentLoaded", function () {
                 const message = this.dataset.message || "Apakah Anda yakin?";
                 const name = this.dataset.name || "";
                 const action = this.dataset.action;
+                const formId = this.dataset.formId; // Tambahan untuk mensubmit form spesifik
                 const btnClass = this.dataset.btnClass || "btn-primary";
                 const btnText = this.dataset.btnText || "Yakin";
                 const iconClass = this.dataset.confirmIcon || "fa-check";
 
                 document.getElementById("confirmModalTitle").innerText = title;
-                document.getElementById("confirmModalMessage").innerText =
-                    message;
-                document.getElementById("confirmModalItemName").innerText =
-                    name;
-                document.getElementById("confirmForm").action = action;
+                document.getElementById("confirmModalMessage").innerText = message;
+                document.getElementById("confirmModalItemName").innerText = name;
+                
+                const confirmForm = document.getElementById("confirmForm");
+                const submitBtn = document.getElementById("confirmModalSubmitBtn");
 
-                const submitBtn = document.getElementById(
-                    "confirmModalSubmitBtn",
-                );
+                if (formId) {
+                    // Jika ada formId, kita hapus action dan simpan ID form target
+                    confirmForm.action = "javascript:void(0);";
+                    submitBtn.setAttribute("data-submit-form", formId);
+                } else {
+                    // Jika tidak ada, gunakan action POST biasa
+                    confirmForm.action = action;
+                    submitBtn.removeAttribute("data-submit-form");
+                }
+
                 if (submitBtn) {
                     submitBtn.className = "btn " + btnClass;
-                    document.getElementById(
-                        "confirmModalSubmitText",
-                    ).innerText = btnText;
-                    document.getElementById("confirmModalIcon").className =
-                        "fa mr-1 " + iconClass;
+                    const textSpan = document.getElementById("confirmModalSubmitText");
+                    if (textSpan) textSpan.innerText = btnText;
+                    
+                    const iconI = document.getElementById("confirmModalIcon");
+                    if (iconI) iconI.className = "fa mr-1 " + iconClass;
+                }
+
+                // Handler klik untuk submit form eksternal
+                if (!submitBtn.dataset.listenerBound) {
+                    submitBtn.dataset.listenerBound = "true";
+                    submitBtn.addEventListener("click", function(e) {
+                        const targetId = this.getAttribute("data-submit-form");
+                        if (targetId) {
+                            e.preventDefault();
+                            const targetForm = document.getElementById(targetId);
+                            if (targetForm) targetForm.submit();
+                        }
+                    });
                 }
             });
         });

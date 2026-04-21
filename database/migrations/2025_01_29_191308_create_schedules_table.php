@@ -25,7 +25,7 @@ return new class extends Migration {
                 ->constrained('teachers')
                 ->cascadeOnDelete();
 
-            $table->enum('hari', ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu']);
+            $table->enum('hari', ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu']);
             $table->time('jam_mulai');
             $table->time('jam_selesai');
             $table->timestamps();

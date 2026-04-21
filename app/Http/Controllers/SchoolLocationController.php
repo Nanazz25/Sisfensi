@@ -7,6 +7,16 @@ use Illuminate\Http\Request;
 
 class SchoolLocationController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (auth()->id() !== 1) {
+                abort(403, 'Akses ditolak. Hanya Super Admin yang dapat mengelola lokasi sekolah.');
+            }
+            return $next($request);
+        });
+    }
+
     public function index()
     {
         $locations = SchoolLocation::orderBy('created_at', 'desc')->get();

@@ -45,7 +45,7 @@ class PesertaDidikController extends Controller
             }
         }
 
-        $pesertaDidik->load('user');
+        $pesertaDidik->load(['user', 'anggotaRombel.rombonganBelajar.tahunAjar']);
 
         $latestScores = \App\Models\AssessmentDetail::whereHas('assessment', function($q) use ($pesertaDidik) {
                 $q->where('evaluatee_id', $pesertaDidik->user_id);
@@ -71,7 +71,11 @@ class PesertaDidikController extends Controller
             $assessment_score = collect();
         }
 
-        return view('peserta-didik.show', compact('pesertaDidik', 'assessment_score'));
+        $pointHistory = \App\Models\PointLedger::where('user_id', $pesertaDidik->user_id)
+            ->latest()
+            ->paginate(10);
+
+        return view('peserta-didik.show', compact('pesertaDidik', 'assessment_score', 'pointHistory'));
     }
 
     public function showPhoto(PesertaDidik $pesertaDidik)
@@ -135,7 +139,7 @@ class PesertaDidikController extends Controller
         return view('peserta-didik.form', [
             'siswa' => $pesertaDidik,
             'users' => collect(),
-            'nis' => $pesertaDidik->nis
+            'nis' => $pesertaDidik->no_induk
         ]);
     }
 
@@ -175,7 +179,7 @@ class PesertaDidikController extends Controller
         $last = PesertaDidik::orderBy('id', 'desc')->first();
 
         $number = $last
-            ? intval(substr($last->nis, -5)) + 1
+            ? intval(substr($last->no_induk, -5)) + 1
             : 1;
 
         return now()->year . str_pad($number, 5, '0', STR_PAD_LEFT);

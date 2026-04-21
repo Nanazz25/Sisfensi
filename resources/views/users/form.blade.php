@@ -50,19 +50,20 @@
                     </select>
                 </div>
 
-                @if(!isset($user))
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" name="password" class="form-control" required>
+                <div class="form-group">
+                    <label>Password {{ isset($user) ? '(opsional)' : '' }}</label>
+                    <div class="input-group shadow-xs">
+                        <input type="password" name="password" id="passwordInput" class="form-control" 
+                            {{ !isset($user) ? 'required' : '' }}
+                            placeholder="{{ isset($user) ? 'Kosongkan jika tidak diubah' : 'Masukkan password baru' }}">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary toggle-password" type="button" 
+                                style="border-color: #ced4da; border-left: none;">
+                                <i class="fa fa-eye-slash text-muted"></i>
+                            </button>
+                        </div>
                     </div>
-                @endif
-
-                @if(isset($user))
-                    <div class="form-group">
-                        <label>Password (opsional)</label>
-                        <input type="password" name="password" class="form-control" placeholder="Kosongkan jika tidak diubah">
-                    </div>
-                @endif
+                </div>
 
                 <button class="btn btn-primary">
                     {{ isset($user) ? 'Update' : 'Simpan' }}
@@ -74,4 +75,23 @@
             </form>
         </div>
     </div>
+@endsection
+
+@section('afterAppScripts')
+    <script>
+        document.querySelector('.toggle-password').addEventListener('click', function () {
+            const input = document.getElementById('passwordInput');
+            const icon = this.querySelector('i');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        });
+    </script>
 @endsection

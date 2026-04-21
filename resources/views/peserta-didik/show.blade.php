@@ -25,6 +25,22 @@
                         {{ $pesertaDidik->user->name }}
                     </span>
 
+                    <div class="mt-3 d-flex flex-wrap justify-content-center">
+                        @foreach($pesertaDidik->anggotaRombel as $anggota)
+                            @php
+                                $ta = $anggota->rombonganBelajar->tahunAjar;
+                                $status = $ta->is_active ? 'AKTIF' : 'TIDAK AKTIF';
+                            @endphp
+                            <span class="badge mb-1 mx-1" 
+                                  style="cursor: help; padding: 5px 10px; font-size: 11px; {{ $ta->is_active ? 'background-color: #00bcd4; color: #fff !important;' : 'background-color: #74788d; color: #fff !important;' }}"
+                                  data-toggle="tooltip" 
+                                  data-placement="top"
+                                  title="Tahun Ajar: {{ $ta->nama }} ({{ $status }})">
+                                {{ $anggota->rombonganBelajar->nama_rombel }}
+                            </span>
+                        @endforeach
+                    </div>
+
                 </div>
             </div>
 
@@ -44,9 +60,10 @@
                         </a>
                     </div>
                 @else
-                    <div class="py-4 text-center">
-                        <i class="fa fa-star-o fa-3x text-muted mb-2 opacity-50"></i>
-                        <p class="text-muted mb-0">Belum ada data penilaian.</p>
+                    <div class="py-5 text-center">
+                        <iconify-icon icon="mingcute:star-line" style="font-size: 48px; color: #adb5bd; opacity: 0.5;"></iconify-icon>
+                        <p class="text-muted mt-2 mb-0" style="font-size: 13px; font-weight: 500;">Belum ada data penilaian karakter</p>
+                        <small class="text-muted">Lakukan penilaian untuk melihat grafik radar.</small>
                     </div>
                 @endif
             </div>
@@ -69,11 +86,32 @@
                         </tr>
                         <tr>
                             <th>No Induk</th>
-                            <td style="white-space: normal; word-wrap: break-word; word-break: break-all;">{{ $pesertaDidik->no_induk }}</td>
+                            <td style="white-space: normal; word-wrap: break-word; word-break: break-all;">
+                                {{ $pesertaDidik->no_induk }}
+                                <a href="javascript:void(0);" class="ml-2 copy-text" data-text="{{ $pesertaDidik->no_induk }}" title="Salin No Induk" style="color: #adb5bd; vertical-align: middle; font-size: 16px;">
+                                    <iconify-icon icon="mingcute:copy-fill"></iconify-icon>
+                                </a>
+                            </td>
                         </tr>
                         <tr>
                             <th>NISN</th>
-                            <td style="white-space: normal; word-wrap: break-word; word-break: break-all;">{{ $pesertaDidik->nisn }}</td>
+                            <td style="white-space: normal; word-wrap: break-word; word-break: break-all;">
+                                {{ $pesertaDidik->nisn }}
+                                <a href="javascript:void(0);" class="ml-2 copy-text" data-text="{{ $pesertaDidik->nisn }}" title="Salin NISN" style="color: #adb5bd; vertical-align: middle; font-size: 16px;">
+                                    <iconify-icon icon="mingcute:copy-fill"></iconify-icon>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>NIK</th>
+                            <td style="white-space: normal; word-wrap: break-word; word-break: break-all;">
+                                {{ $pesertaDidik->nik ?? '-' }}
+                                @if($pesertaDidik->nik)
+                                <a href="javascript:void(0);" class="ml-2 copy-text" data-text="{{ $pesertaDidik->nik }}" title="Salin NIK" style="color: #adb5bd; vertical-align: middle; font-size: 16px;">
+                                    <iconify-icon icon="mingcute:copy-fill"></iconify-icon>
+                                </a>
+                                @endif
+                            </td>
                         </tr>
                         <tr>
                             <th>Email</th>
@@ -149,6 +187,72 @@
         </div>
     </div>
 
+    <!-- BUKU RIWAYAT POIN -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="header d-flex justify-content-between align-items-center">
+                    <h2>Buku Riwayat Poin Integritas</h2>
+                    <div class="text-right">
+                        <small class="text-muted d-block uppercase" style="font-size: 10px;">Saldo Saat Ini</small>
+                        <h5 class="mb-0 text-primary font-weight-bold">{{ number_format($pesertaDidik->user->current_points) }} P</h5>
+                    </div>
+                </div>
+                <div class="body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-custom spacing5">
+                            <thead>
+                                <tr class="text-muted small">
+                                    <th style="width: 50px;">Tipe</th>
+                                    <th>Deskripsi Mutasi</th>
+                                    <th>Poin</th>
+                                    <th>Saldo Akhir</th>
+                                    <th>Tanggal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($pointHistory as $m)
+                                    <tr>
+                                        <td>
+                                            <div class="tx-icon-circle-sm {{ $m->amount > 0 ? 'bg-success-soft text-success' : 'bg-danger-soft text-danger' }}">
+                                                <i class="fa {{ $m->amount > 0 ? 'fa-plus' : 'fa-minus' }}"></i>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="font-weight-bold d-block">{{ $m->description }}</span>
+                                            @if($m->flexibility_item_id)
+                                                <small class="badge badge-info py-0">Pembelian Item</small>
+                                            @endif
+                                        </td>
+                                        <td class="font-weight-bold {{ $m->amount > 0 ? 'text-success' : 'text-danger' }}">
+                                            {{ $m->amount > 0 ? '+' : '' }}{{ $m->amount }}
+                                        </td>
+                                        <td>{{ number_format($m->current_balance) }} P</td>
+                                        <td class="text-muted small">{{ $m->created_at->format('d/m/Y H:i') }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5">
+                                            <div class="opacity-50">
+                                                <iconify-icon icon="mingcute:safe-flash-line" style="font-size: 40px; color: #adb5bd;"></iconify-icon>
+                                                <p class="text-muted mt-2 mb-0" style="font-size: 13px; font-weight: 500;">Buku riwayat poin masih bersih.</p>
+                                                <small class="text-muted">Belum ada mutasi poin untuk siswa ini.</small>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Link Pagination -->
+                    <div class="mt-3 d-flex justify-content-center">
+                        {{ $pointHistory->links() }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @section('afterAppStyles')
@@ -184,6 +288,21 @@
         .fc .fc-toolbar.fc-header-toolbar { margin-bottom: 0.5em !important; }
         .fc-daygrid-event-harness { margin: 0 1px !important; }
     }
+
+    /* Point Ledger Styles */
+    .tx-icon-circle-sm {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+    }
+    .bg-success-soft { background-color: rgba(34, 197, 94, 0.1); }
+    .bg-danger-soft { background-color: rgba(239, 68, 68, 0.1); }
+    .table-custom.spacing5 { border-collapse: separate; border-spacing: 0 5px; }
+    .table-custom.spacing5 tbody tr { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
 </style>
 @endsection
 
@@ -202,6 +321,25 @@
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/id.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        if (typeof $ !== 'undefined') {
+            $('[data-toggle="tooltip"]').tooltip();
+        }
+
+        // Copy to clipboard functionality
+        document.querySelectorAll('.copy-text').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const text = this.getAttribute('data-text');
+                navigator.clipboard.writeText(text).then(() => {
+                    if (typeof toastr !== 'undefined') {
+                        toastr.success('Berhasil disalin ke clipboard');
+                    } else {
+                        alert('Berhasil disalin: ' + text);
+                    }
+                });
+            });
+        });
+
         var calendarEl = document.getElementById('attendance-calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
@@ -215,8 +353,13 @@
             handleWindowResize: true,
             events: '{{ route('attendance.calendar', $pesertaDidik->id) }}',
             eventClick: function(info) {
-                // simple tooltip or toast when clicking event
-                toastr.info("Status: " + info.event.title);
+                const title = info.event.title || '';
+                const id = info.event.id || '';
+                if (id.includes('holiday') || title.toLowerCase() === 'libur') {
+                    toastr.info("Keterangan: " + title);
+                } else {
+                    toastr.info("Status Kehadiran: " + title);
+                }
             }
         });
         calendar.render();

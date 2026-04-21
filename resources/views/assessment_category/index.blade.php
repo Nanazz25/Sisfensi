@@ -22,7 +22,7 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text bg-white border-right-0"><i class="fa fa-search text-muted"></i></span>
                                 </div>
-                                <input type="text" name="q" value="{{ request('q') }}" class="form-control border-left-0" placeholder="Cari kategori...">
+                                <input type="text" name="q" id="searchInput" value="{{ request('q') }}" class="form-control border-left-0" placeholder="Cari kategori...">
                             </div>
                         </div>
 
@@ -44,8 +44,8 @@
                         </div>
 
                         <div class="col-md-2 text-md-right">
-                            <a href="{{ route('assessment_category.index') }}" class="btn btn-outline-secondary">
-                                <i class="fa fa-refresh"></i> Reset
+                            <a href="{{ route('assessment_category.index') }}" class="btn btn-sm btn-outline-danger btn-block rounded-pill shadow-xs d-flex align-items-center justify-content-center" style="height: 38px;">
+                                <i class="fa fa-undo mr-1"></i> Reset
                             </a>
                         </div>
                     </form>
@@ -119,4 +119,23 @@
             </div>
         </div>
     </div>
+@endsection
+@section('afterAppScripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const filterForm = document.querySelector('form');
+        if (searchInput && filterForm) {
+            let timeout = null;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => filterForm.submit(), 500);
+            });
+            if (searchInput.value) {
+                searchInput.focus();
+                searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+            }
+        }
+    });
+</script>
 @endsection

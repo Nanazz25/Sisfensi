@@ -475,9 +475,293 @@
         text-align: center;
     }
 
-    /* HIDE OLD KEBAB MENU (TOP) */
-    .kebab-menu-button,
-    .kebab-dropdown {
-        display: none !important;
+    /* Success Overlay Responsive Fix */
+    .success-overlay {
+        padding: 25px 15px !important;
+    }
+    .success-overlay i {
+        font-size: 60px !important;
+        margin-bottom: 15px !important;
+    }
+    .success-overlay h1#successName {
+        font-size: 1.5rem !important;
+        line-height: 1.3 !important;
+        margin-bottom: 10px !important;
+        word-wrap: break-word;
+    }
+    .success-overlay h1#successName .text-warning {
+        display: block;
+        font-size: 1.1rem;
+        margin-top: 5px;
+        font-weight: 800;
+    }
+    .success-overlay h4#successTime {
+        font-size: 1rem !important;
+        margin-bottom: 15px !important;
+    }
+    .success-overlay h4#successTime br + small {
+        font-size: 0.85rem !important;
+        display: block;
+        margin-top: 5px;
+    }
+    .success-overlay .btn-lg {
+        padding: 12px 20px !important;
+        font-size: 0.9rem !important;
+        flex: 1;
+        margin: 0 5px !important;
+    }
+    .success-overlay .d-flex {
+        width: 100%;
+        padding: 0 10px;
     }
 }
+
+/* ===== VOUCHER USED PREMIUM DESIGN ===== */
+.voucher-used-card {
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(15px);
+    border: 3px solid #00f2fe;
+    border-radius: 25px;
+    padding: 20px 35px;
+    margin: 20px auto;
+    box-shadow: 0 0 40px rgba(0, 242, 254, 0.5);
+    animation: voucher-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: inline-block;
+    max-width: 90%;
+}
+
+.voucher-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #00f2fe;
+    margin-bottom: 10px;
+}
+
+.voucher-header i {
+    font-size: 1.2rem !important;
+    margin: 0 !important;
+    animation: none !important;
+}
+
+.voucher-title {
+    font-size: 1.6rem;
+    font-weight: 900;
+    margin: 8px 0;
+    color: white;
+    text-shadow: 0 2px 15px rgba(0,0,0,0.5);
+    line-height: 1.2;
+}
+
+.voucher-subtitle {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 1);
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+@keyframes voucher-pop {
+    0% { transform: scale(0.5) translateY(30px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* ===== POINT NOTIFICATION CARD (PREMIUM) ===== */
+.point-notif-card {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 15px 20px;
+    margin: 15px auto;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    animation: voucher-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-align: left;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.point-notif-card.penalty {
+    background: rgba(220, 53, 69, 0.85); /* Red for penalty */
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.point-notif-card.reward {
+    background: rgba(16, 185, 129, 0.85); /* Green for reward */
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.point-notif-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.point-notif-icon i {
+    font-size: 24px !important;
+    margin: 0 !important;
+    animation: none !important;
+}
+
+.point-notif-body {
+    flex-grow: 1;
+}
+
+.point-notif-value {
+    font-size: 1.2rem;
+    font-weight: 800;
+    display: block;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.point-notif-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .point-notif-card {
+        max-width: 90%;
+        padding: 12px 15px;
+    }
+    
+    .point-notif-value {
+        font-size: 1rem;
+    }
+    
+    .point-notif-label {
+        font-size: 0.7rem;
+    }
+
+    .point-notif-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .point-notif-icon i {
+        font-size: 18px !important;
+    }
+}
+/* ===== FLOATING SCHEDULE BUTTON (MOBILE) ===== */
+.floating-schedule-btn {
+    position: fixed;
+    top: 125px;
+    right: 20px;
+    z-index: 500; /* Higher than badges and panels */
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: white;
+    padding: 12px 22px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.floating-schedule-btn:active {
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ===== SCHEDULE MODAL (GLASSMORPISM) ===== */
+.schedule-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    animation: fade-in 0.3s ease;
+}
+
+.schedule-modal-overlay.show {
+    display: flex;
+}
+
+.schedule-modal-card {
+    background: rgba(255, 255, 255, 0.9);
+    width: 100%;
+    max-width: 450px;
+    max-height: 80vh;
+    border-radius: 30px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+    animation: slide-up 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.schedule-modal-header {
+    background: white;
+    padding: 20px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.schedule-modal-header h5 {
+    color: #4f46e5;
+    letter-spacing: -0.5px;
+}
+
+.close-modal-btn {
+    background: #f3f4f6;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #6b7280;
+    line-height: 1;
+}
+
+.schedule-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    background: #f9fafb;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+/* Existing point notification styles etc. */

@@ -77,8 +77,10 @@
                                     <span>Manajemen User</span>
                                 </a>
                                 <ul class="collapse {{ request()->is('users*') ? 'in' : '' }}">
-                                    <li class="{{ request()->routeIs('users.admin') ? 'active' : '' }}"><a
-                                            href="{{ route('users.admin') }}">Admin</a></li>
+                                    @if(auth()->id() === 1)
+                                        <li class="{{ request()->routeIs('users.admin') ? 'active' : '' }}"><a
+                                                href="{{ route('users.admin') }}">Admin</a></li>
+                                    @endif
                                     <li class="{{ request()->routeIs('users.guru') ? 'active' : '' }}"><a
                                             href="{{ route('users.guru') }}">Guru</a></li>
                                     <li class="{{ request()->routeIs('users.siswa') ? 'active' : '' }}"><a
@@ -99,19 +101,37 @@
                                             href="{{ route('peserta-didik.index') }}">Data Siswa</a></li>
                                 </ul>
                             </li>
-                            <li
-                                class="{{ request()->routeIs('school-locations.*') || request()->routeIs('school-settings.*') ? 'active' : '' }}">
-                                <a href="#Sekolah" class="has-arrow">
-                                    <i class="fa fa-building text-primary"></i>
-                                    <span>Sekolah</span>
+                            @if(auth()->id() === 1)
+                                <li
+                                    class="{{ request()->routeIs('school-locations.*') || request()->routeIs('school-settings.*') || request()->routeIs('holidays.*') ? 'active' : '' }}">
+                                    <a href="#Sekolah" class="has-arrow">
+                                        <i class="fa fa-building text-primary"></i>
+                                        <span>Sekolah</span>
+                                    </a>
+                                    <ul
+                                        class="collapse {{ request()->routeIs('school-locations.*') || request()->routeIs('school-settings.*') || request()->routeIs('holidays.*') ? 'in' : '' }}">
+                                        <li class="{{ request()->routeIs('school-locations.*') ? 'active' : '' }}"><a
+                                                href="{{ route('school-locations.index') }}">Lokasi Sekolah</a></li>
+                                        <li class="{{ request()->routeIs('school-settings.*') ? 'active' : '' }}"><a
+                                                href="{{ route('school-settings.index') }}">Sistem Sekolah</a></li>
+                                        <li class="{{ request()->routeIs('holidays.*') ? 'active' : '' }}">
+                                            <a href="{{ route('holidays.index') }}">Hari Libur</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            @endif
+                            <li class="header">MODUL INTEGRITAS</li>
+                            <li class="{{ request()->routeIs('integrity.admin.index') ? 'active' : '' }}">
+                                <a href="{{ route('integrity.admin.index') }}">
+                                    <i class="fa fa-sliders text-warning"></i>
+                                    <span>Aturan & Item</span>
                                 </a>
-                                <ul
-                                    class="collapse {{ request()->routeIs('school-locations.*') || request()->routeIs('school-settings.*') ? 'in' : '' }}">
-                                    <li class="{{ request()->routeIs('school-locations.*') ? 'active' : '' }}"><a
-                                            href="{{ route('school-locations.index') }}">Lokasi Sekolah</a></li>
-                                    <li class="{{ request()->routeIs('school-settings.*') ? 'active' : '' }}"><a
-                                            href="{{ route('school-settings.index') }}">Sistem Sekolah</a></li>
-                                </ul>
+                            </li>
+                            <li class="{{ request()->routeIs('integrity.user.index') ? 'active' : '' }}">
+                                <a href="{{ route('integrity.user.index') }}">
+                                    <i class="fa fa-diamond text-info"></i>
+                                    <span>Monitoring Poin</span>
+                                </a>
                             </li>
                         @endif
 
@@ -171,7 +191,7 @@
                             <li class="{{ request()->is('assessment*') ? 'active' : '' }}">
                                 <a href="#Penilaian" class="has-arrow">
                                     <i class="fa fa-star text-warning"></i>
-                                    <span>Penilaian</span>
+                                    <span>Penilaian Karakter</span>
                                 </a>
                                 <ul class="collapse {{ request()->is('assessment*') ? 'in' : '' }}">
                                     @if(auth()->user()->role === 'admin')
@@ -198,6 +218,15 @@
                                             href="{{ route('laporan.absensi.mapel') }}">Mata Pelajaran</a></li>
                                 </ul>
                             </li>
+
+                            @if(auth()->user()->role === 'guru')
+                            <li class="{{ request()->routeIs('integrity.user.index') ? 'active' : '' }}">
+                                <a href="{{ route('integrity.user.index') }}">
+                                    <i class="fa fa-diamond text-info"></i>
+                                    <span>Monitoring Integritas</span>
+                                </a>
+                            </li>
+                            @endif
                         @endif
 
                         @if(auth()->user()->role === 'siswa')
@@ -245,7 +274,14 @@
                             <li class="{{ request()->routeIs('assessment.show') ? 'active' : '' }}">
                                 <a href="{{ route('assessment.show', auth()->id()) }}">
                                     <i class="fa fa-star text-warning"></i>
-                                    <span>Nilai Saya</span>
+                                    <span>Nilai Sikap Saya</span>
+                                </a>
+                            </li>
+
+                            <li class="{{ request()->routeIs('integrity.user.index') ? 'active' : '' }}">
+                                <a href="{{ route('integrity.user.index') }}">
+                                    <i class="fa fa-diamond text-primary"></i>
+                                    <span>Dompet Integritas</span>
                                 </a>
                             </li>
                         @endif

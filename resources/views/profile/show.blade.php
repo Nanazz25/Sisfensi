@@ -28,14 +28,18 @@
                                 <p class="text-muted mb-0"><i class="fa fa-envelope-o mr-1"></i> {{ $user->email }}</p>
                             </div>
                             <div class="mt-3 mt-md-2 role-badges text-center text-md-right mt-md-auto">
-                                <span
-                                    class="badge badge-pill badge-primary px-3 py-2 text-uppercase font-12">{{ $user->role }}</span>
+                                @if($user->id === 1)
+                                    <span class="badge badge-pill badge-dark px-3 py-2 font-12 shadow-sm" style="background: #1a1b1e;">
+                                        <i class="fa fa-shield mr-1 text-warning"></i> SUPER ADMIN
+                                    </span>
+                                @else
+                                    <span class="badge badge-pill badge-primary px-3 py-2 text-uppercase font-12">{{ $user->role }}</span>
+                                @endif
+
                                 @if($user->role === 'siswa' && $rombel)
-                                    <span
-                                        class="badge badge-pill badge-info px-3 py-2 font-12 ml-1 ml-md-1">{{ $rombel->rombonganBelajar->nama_rombel }}</span>
+                                    <span class="badge badge-pill badge-info px-3 py-2 font-12 ml-1 ml-md-1">{{ $rombel->rombonganBelajar->nama_rombel }}</span>
                                 @elseif($user->role === 'guru' && $rombel)
-                                    <span class="badge badge-pill badge-success px-3 py-2 font-12 ml-1 ml-md-1">Wali Kelas
-                                        {{ $rombel->nama_rombel }}</span>
+                                    <span class="badge badge-pill badge-success px-3 py-2 font-12 ml-1 ml-md-1">Wali Kelas {{ $rombel->nama_rombel }}</span>
                                 @endif
                             </div>
                         </div>

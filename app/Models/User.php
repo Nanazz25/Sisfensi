@@ -104,4 +104,35 @@ class User extends Authenticatable
         }
         return null;
     }
+
+    public function pointLedgers(): HasMany
+    {
+        return $this->hasMany(PointLedger::class);
+    }
+
+    public function userTokens(): HasMany
+    {
+        return $this->hasMany(UserToken::class);
+    }
+
+    public function getCurrentPointsAttribute(): int
+    {
+        return $this->pointLedgers()->latest()->value('current_balance') ?? 0;
+    }
+
+    public function getLevelAttribute(): string
+    {
+        $points = $this->current_points;
+
+        if ($points >= 10000) return 'Legenda Sisfensi';
+        if ($points >= 5000)  return 'Maestro Integritas';
+        if ($points >= 1000)  return 'Ksatria Adab';
+        if ($points >= 500)   return 'Duta Kedisiplinan';
+        if ($points >= 250)   return 'Aset Sekolah';
+        if ($points >= 100)   return 'Integritas Elite';
+        if ($points >= 50)    return 'Siswa Teladan';
+        if ($points >= 0)     return 'Siswa Reguler';
+        
+        return 'Butuh Pembinaan';
+    }
 }

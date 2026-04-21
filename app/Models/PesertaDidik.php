@@ -12,6 +12,10 @@ class PesertaDidik extends Model
     protected $table = 'peserta_didik';
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'tanggal_lahir' => 'date',
+    ];
+
     protected $fillable = [
         'user_id',
         'nama_lengkap',

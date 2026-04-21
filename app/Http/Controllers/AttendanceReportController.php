@@ -46,6 +46,11 @@ class AttendanceReportController extends Controller
 
         $teacher = $user->role === 'guru' ? $user->teacher : null;
         $rombelsQuery = RombonganBelajar::with(['tahunAjar', 'waliKelas']);
+        
+        // Default only active year if not specifically filtered
+        if (!$request->filled('tahun_ajar_id')) {
+            $rombelsQuery->whereHas('tahunAjar', fn($q) => $q->where('is_active', true));
+        }
         $teachers = $user->role === 'admin' ? Teacher::all() : [];
         $tahunAjars = \App\Models\TahunAjar::orderBy('created_at', 'desc')->get();
 
@@ -111,6 +116,11 @@ class AttendanceReportController extends Controller
 
         $teacher = $user->role === 'guru' ? $user->teacher : null;
         $rombelsQuery = RombonganBelajar::with('tahunAjar');
+        
+        // Default only active year if not specifically filtered
+        if (!$request->filled('tahun_ajar_id')) {
+            $rombelsQuery->whereHas('tahunAjar', fn($q) => $q->where('is_active', true));
+        }
         $subjectsQuery = Subject::query();
         $teachers = $user->role === 'admin' ? Teacher::all() : [];
         $tahunAjars = \App\Models\TahunAjar::orderBy('created_at', 'desc')->get();

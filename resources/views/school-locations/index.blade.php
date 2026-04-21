@@ -59,6 +59,24 @@
     <x-modal-delete title="Hapus Lokasi Sekolah" message="Yakin hapus lokasi sekolah berikut?" />
 @endsection
 
+@section('afterAppStyles')
+    <style>
+        /* Fix Leaflet z-index overlapping sidebar and other elements */
+        .leaflet-top,
+        .leaflet-bottom {
+            z-index: 900 !important;
+        }
+
+        .leaflet-pane {
+            z-index: 0 !important;
+        }
+
+        .leaflet-control-container .leaflet-top.leaflet-left {
+            z-index: 900 !important;
+        }
+    </style>
+@endsection
+
 @section('afterAppScripts')
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>

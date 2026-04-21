@@ -1,18 +1,37 @@
 document.addEventListener('DOMContentLoaded', function() {
     // --- Logika Pengurutan (Sorting) Riwayat ---
     const sortOptions = document.querySelectorAll('.sort-option');
+    const searchInput = document.getElementById('searchInput');
+    const filterForm = document.getElementById('filterForm');
+
     if (sortOptions.length > 0) {
         sortOptions.forEach(item => {
             item.addEventListener('click', function () {
-                const form = document.getElementById('filterForm');
                 const sortInput = document.getElementById('sortInput');
-                if (form && sortInput) {
-                    // Masukkan nilai sort dan kirim form secara otomatis
+                if (filterForm && sortInput) {
                     sortInput.value = this.dataset.value;
-                    form.submit();
+                    filterForm.submit();
                 }
             });
         });
+    }
+
+    // --- Logika Auto-Search (Pencarian Otomatis) ---
+    if (searchInput && filterForm) {
+        let timeout = null;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                filterForm.submit();
+            }, 500);
+        });
+
+        // Restore focus and cursor position after refresh
+        const val = searchInput.value;
+        if (val) {
+            searchInput.focus();
+            searchInput.setSelectionRange(val.length, val.length);
+        }
     }
 
     // --- Inisialisasi Grafik Radar (Radar Chart) ---

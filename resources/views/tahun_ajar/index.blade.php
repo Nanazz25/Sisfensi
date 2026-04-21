@@ -18,7 +18,7 @@
 
                 <div class="col-md-5">
                     <div class="input-group">
-                        <input type="text" name="q" value="{{ request('q') }}" class="form-control"
+                        <input type="text" name="q" id="searchInput" value="{{ request('q') }}" class="form-control"
                             placeholder="Cari tahun ajar">
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary" type="submit">
@@ -49,8 +49,8 @@
                 </div>
 
                 <div class="col-auto">
-                    <a href="{{ route('tahun-ajar.index') }}" class="btn btn-outline-danger">
-                        <i class="fa fa-refresh"></i>
+                    <a href="{{ route('tahun-ajar.index') }}" class="btn btn-sm btn-outline-danger btn-block rounded-pill shadow-xs d-flex align-items-center justify-content-center" style="height: 38px; width: 45px;">
+                        <i class="fa fa-undo"></i>
                     </a>
                 </div>
 
@@ -128,5 +128,20 @@
                 document.getElementById('filterForm').submit();
             });
         });
+
+        // --- Auto Search ---
+        const searchInput = document.getElementById('searchInput');
+        const filterForm = document.getElementById('filterForm');
+        if (searchInput && filterForm) {
+            let timeout = null;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => filterForm.submit(), 500);
+            });
+            if (searchInput.value) {
+                searchInput.focus();
+                searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+            }
+        }
     </script>
 @endsection

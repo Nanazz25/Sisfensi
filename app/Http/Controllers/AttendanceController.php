@@ -34,12 +34,56 @@ class AttendanceController extends Controller
 
     public function scanner($type = null)
     {
-        // Prioritas: Route param -> Query param -> Default 'masuk'
         $type = $type ?? request('type', 'masuk');
+        $user = auth()->user();
+        $schedules = collect();
+        $mapelAttended = [];
+
+        // Mode Mapel: Ambil jadwal hari ini
+        if ($type === 'mapel' && $user) {
+            $now = Carbon::now();
+            $today = $now->toDateString();
+
+            $dayMap = [
+                'monday' => 'senin', 'tuesday' => 'selasa', 'wednesday' => 'rabu',
+                'thursday' => 'kamis', 'friday' => 'jumat', 'saturday' => 'sabtu', 'sunday' => 'minggu'
+            ];
+            $hariIndo = $dayMap[strtolower($now->englishDayOfWeek)] ?? strtolower($now->englishDayOfWeek);
+            
+            // Cari rombel (prioritas siswa, fallback ke rombel pertama buat admin testing)
+            $anggotaRombel = null;
+            if ($user->role === 'siswa' && $user->pesertaDidik) {
+                $anggotaRombel = AnggotaRombel::where('peserta_didik_id', $user->pesertaDidik->id)
+                    ->whereHas('rombonganBelajar.tahunAjar', function($q) {
+                        $q->where('is_active', true);
+                    })->first();
+            } else if ($user->role === 'admin') {
+                $anggotaRombel = AnggotaRombel::whereHas('rombonganBelajar.tahunAjar', function($q) {
+                        $q->where('is_active', true);
+                    })->first();
+            }
+
+            if ($anggotaRombel) {
+                $schedules = \App\Models\Schedule::with('subject', 'teacher.user')
+                    ->where('rombongan_belajar_id', $anggotaRombel->rombongan_belajar_id)
+                    ->where('hari', $hariIndo)
+                    ->orderBy('jam_mulai', 'asc')
+                    ->get();
+                
+                $mapelAttended = Attendance::where('anggota_rombel_id', $anggotaRombel->id)
+                    ->where('tanggal', $today)
+                    ->where('jenis_absensi', 'pelajaran')
+                    ->pluck('schedule_id')
+                    ->toArray();
+            }
+        }
 
         return view('attendance.scanner', [
             'type' => $type,
-            'title' => 'Sistem Presensi Biometrik'
+            'title' => 'Sistem Presensi Biometrik',
+            'schedules' => $schedules,
+            'mapelAttended' => $mapelAttended,
+            'hasMasukToday' => $user->role === 'siswa' && $user->active_rombel ? Attendance::where('anggota_rombel_id', $user->active_rombel->id)->where('tanggal', Carbon::now()->toDateString())->where('jenis_absensi', 'masuk')->whereIn('status', ['hadir', 'terlambat'])->exists() : true
         ]);
     }
 
@@ -75,7 +119,16 @@ class AttendanceController extends Controller
         if (!in_array($hariIndo, $schoolDays)) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Hari ini adalah hari libur sekolah. Tidak dapat melakukan presensi.'
+                'message' => 'Hari ini adalah hari libur sekolah (akhir pekan).'
+            ], 403);
+        }
+
+        // --- PROTEKSI TABEL HARI LIBUR ---
+        $holiday = \App\Models\Holiday::where('date', $today)->first();
+        if ($holiday) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hari ini adalah hari libur: ' . $holiday->description
             ], 403);
         }
 
@@ -112,9 +165,19 @@ class AttendanceController extends Controller
         }
 
         // Pastikan siswa tersebut terdaftar di sebuah kelas (Rombongan Belajar)
+        // Ambil anggota rombel yang aktif di tahun ajar berjalan
         $anggotaRombel = AnggotaRombel::where('peserta_didik_id', $siswa->id)
-            ->latest()
+            ->whereHas('rombonganBelajar.tahunAjar', function($q) {
+                $q->where('is_active', true);
+            })
             ->first();
+
+        // Fallback jika belum diatur tahun ajarnya tapi siswa sudah ada (backward compatibility)
+        if (!$anggotaRombel) {
+            $anggotaRombel = AnggotaRombel::where('peserta_didik_id', $siswa->id)
+                ->latest('id')
+                ->first();
+        }
 
         if (!$anggotaRombel) {
             return response()->json([
@@ -124,6 +187,8 @@ class AttendanceController extends Controller
         }
 
         try {
+            $latestLedgerId = \App\Models\PointLedger::where('user_id', $siswa->user_id ?? ($siswa->user->id ?? 0))->max('id') ?? 0;
+
             // Eksekusi logika inti absensi (simpan ke DB, cek jam masuk, hitung keterlambatan)
             $result = $this->attendanceService->process(
                 siswa: $siswa,
@@ -138,13 +203,44 @@ class AttendanceController extends Controller
                 ]
             );
 
+            // Fetch new point ledgers created in process through observer
+            $newLedgers = \App\Models\PointLedger::where('user_id', $siswa->user_id ?? ($siswa->user->id ?? 0))
+                ->where('id', '>', $latestLedgerId)
+                ->get();
+            
+            $pointDelta = $newLedgers->sum('amount');
+            $pointInfo = null;
+
+            if ($pointDelta !== 0) {
+                $rules = [];
+                foreach ($newLedgers as $l) {
+                    $desc = $l->description;
+                    if (($pos = strpos($desc, ' pada ')) !== false) {
+                        $desc = substr($desc, 0, $pos);
+                    }
+                    $rules[] = str_replace('[Koreksi] ', '', $desc);
+                }
+                $ruleString = implode(', ', $rules);
+                if ($result['is_exempted'] ?? false) {
+                    $ruleString = "💎 Voucher Digunakan, " . $ruleString;
+                }
+                $operator = $pointDelta > 0 ? '+' : '';
+                $pointInfo = [
+                    'amount' => $pointDelta,
+                    'text' => "{$operator}{$pointDelta} Poin ({$ruleString})"
+                ];
+            }
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Absensi berhasil!',
                 'nama' => $siswa->nama_lengkap,
                 'waktu' => $now->format('H:i:s'),
                 'is_late' => $result['is_late'],
-                'late_info' => $result['late_info']
+                'is_exempted' => $result['is_exempted'] ?? false,
+                'attendance_status' => $result['status'],
+                'late_info' => $result['late_info'],
+                'point_info' => $pointInfo
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -156,55 +252,169 @@ class AttendanceController extends Controller
 
     public function manualView(Request $request)
     {
-        $rombels = RombonganBelajar::all();
-        $date = $request->date ?? date('Y-m-d');
-        $students = [];
+        $rombels = RombonganBelajar::whereHas('tahunAjar', function($q) {
+            $q->where('is_active', true);
+        })->orderBy('nama_rombel')->get();
 
-        // Ambil data siswa berdasarkan rombel_id
+        $date = $request->date ?? date('Y-m-d');
+        $type = $request->type ?? 'masuk';
+        $scheduleId = $request->schedule_id;
+        $students = [];
+        $schedules = [];
+
         if ($request->filled('rombel_id')) {
-            $students = AnggotaRombel::with([
-                'pesertaDidik.user',
-                'attendances' => function ($q) use ($date) {
-                    $q->where('tanggal', $date)->where('jenis_absensi', 'masuk');
+            // Jika mode Mapel, ambil jadwal untuk kelas tersebut di hari itu
+            if ($type === 'pelajaran') {
+                $dayMap = [
+                    'monday' => 'senin', 'tuesday' => 'selasa', 'wednesday' => 'rabu',
+                    'thursday' => 'kamis', 'friday' => 'jumat', 'saturday' => 'sabtu', 'sunday' => 'minggu'
+                ];
+                $dayName = $dayMap[strtolower(Carbon::parse($date)->englishDayOfWeek)] ?? 'senin';
+                
+                $schedules = \App\Models\Schedule::with('subject')
+                    ->where('rombongan_belajar_id', $request->rombel_id)
+                    ->where('hari', $dayName)
+                    ->get();
+            }
+
+            $studentQuery = AnggotaRombel::with(['pesertaDidik.user'])
+                ->where('rombongan_belajar_id', $request->rombel_id);
+
+            // Filter Search (Nama/NIS)
+            if ($request->filled('q')) {
+                $q = $request->q;
+                $studentQuery->whereHas('pesertaDidik', function($query) use ($q) {
+                    $query->where('no_induk', 'LIKE', "%{$q}%")
+                          ->orWhere('nama_lengkap', 'LIKE', "%{$q}%")
+                          ->orWhereHas('user', function($uq) use ($q) {
+                              $uq->where('name', 'LIKE', "%{$q}%");
+                          });
+                });
+            }
+
+            $students = $studentQuery->get();
+            
+            // Pasangkan status absen untuk masing-masing siswa
+            foreach ($students as $key => $student) {
+                $query = Attendance::whereHas('anggotaRombel', function($q) use ($student) {
+                        $q->where('peserta_didik_id', $student->peserta_didik_id);
+                    })
+                    ->where('tanggal', $date)
+                    ->where('jenis_absensi', $type);
+                
+                if ($type === 'pelajaran' && $scheduleId) {
+                    $query->where('schedule_id', $scheduleId);
                 }
-            ])->where('rombongan_belajar_id', $request->rombel_id)->get();
+
+                $student->current_attendance = $query->first();
+
+                // Filter berdasarkan Status Kehadiran (Post-processing)
+                if ($request->filled('status')) {
+                    $status = $request->status;
+                    $currentStatus = $student->current_attendance ? $student->current_attendance->status : 'belum_absen';
+                    
+                    if ($status !== $currentStatus) {
+                        unset($students[$key]);
+                    }
+                }
+            }
         }
 
-        return view('attendance.manual_adjust', compact('rombels', 'students', 'date'));
+        return view('attendance.manual_adjust', compact('rombels', 'students', 'date', 'schedules'));
     }
 
     public function manualAdjust(Request $request)
     {
         $request->validate([
-            'anggota_rombel_id' => 'required|exists:anggota_rombel,id',
-            'tanggal' => 'required|date',
+            'anggota_rombel_ids' => 'required|array',
+            'anggota_rombel_ids.*' => 'exists:anggota_rombel,id',
+            'peserta_didik_ids' => 'required|array',
+            'peserta_didik_ids.*' => 'exists:peserta_didik,id',
+            'rombel_id' => 'required|exists:rombongan_belajar,id',
             'status' => 'required|in:hadir,terlambat,izin,sakit,alpha,pending',
+            'tanggal' => 'required|date'
         ]);
 
-        if ($request->status === 'pending') {
+        // --- CEK HARI SEKOLAH (Proteksi Libur) ---
+        $schoolDaysStr = \App\Models\SchoolSetting::where('key', 'hari_sekolah')->first()->value ?? 'senin,selasa,rabu,kamis,jumat';
+        $schoolDays = explode(',', strtolower($schoolDaysStr));
+        $targetDate = Carbon::parse($request->tanggal);
+        $dayName = strtolower($targetDate->englishDayOfWeek);
+        $map = [
+            'monday' => 'senin', 'tuesday' => 'selasa', 'wednesday' => 'rabu',
+            'thursday' => 'kamis', 'friday' => 'jumat', 'saturday' => 'sabtu', 'sunday' => 'minggu'
+        ];
+        $hariIndo = $map[$dayName] ?? $dayName;
 
-            Attendance::where('anggota_rombel_id', $request->anggota_rombel_id)
-                ->where('tanggal', $request->tanggal)
-                ->where('jenis_absensi', 'masuk')
-                ->delete();
-
-            return back()->with('success', 'Status dikembalikan menjadi Belum Absen.');
+        if (!in_array($hariIndo, $schoolDays)) {
+            return back()->with('error', "Gagal! Data absensi tidak dapat diubah karena tanggal " . $targetDate->translatedFormat('l, d F Y') . " adalah hari libur sekolah (Akhir Pekan).");
         }
 
-        Attendance::updateOrCreate(
-            [
-                'anggota_rombel_id' => $request->anggota_rombel_id,
-                'tanggal' => $request->tanggal,
-            ],
-            [
-                'status' => $request->status,
-                'jenis_absensi' => 'masuk',
-                'metode' => 'manual',
-                'waktu_absen' => now(),
-            ]
-        );
+        // --- PROTEKSI TABEL HARI LIBUR ---
+        $holiday = \App\Models\Holiday::where('date', $targetDate->toDateString())->first();
+        if ($holiday) {
+            return back()->with('error', "Gagal! Tanggal " . $targetDate->translatedFormat('d F Y') . " adalah hari libur: " . $holiday->description);
+        }
 
-        return back()->with('success', 'Status kehadiran berhasil diperbarui secara manual.');
+        // PROTEKSI KEAMANAN: Pastikan rombel yang akan diubah adalah rombel aktif!
+        $rombelTarget = RombonganBelajar::with('tahunAjar')->findOrFail($request->rombel_id);
+        if (!$rombelTarget->tahunAjar || !$rombelTarget->tahunAjar->is_active) {
+            return back()->with('error', 'Gagal! Kelas ini berada di tahun ajaran non-aktif (Arsip). Data sejarah tidak boleh diubah secara manual.');
+        }
+        
+        $successCount = 0;
+        
+        \DB::transaction(function () use ($request, &$successCount) {
+            $type = $request->type ?? 'masuk';
+            $scheduleId = $request->schedule_id;
+
+            foreach ($request->anggota_rombel_ids as $index => $anggotaRombelId) {
+                $targetSiswaId = $request->peserta_didik_ids[$index];
+                
+                // 1. PEMBERSIHAN KHUSUS: Hapus rekaman tipe tertentu pada hari tersebut
+                $allMemberships = AnggotaRombel::where('peserta_didik_id', $targetSiswaId)->pluck('id');
+
+                $query = Attendance::whereIn('anggota_rombel_id', $allMemberships)
+                    ->where('tanggal', $request->tanggal)
+                    ->where('jenis_absensi', $type);
+                
+                if ($type === 'pelajaran' && $scheduleId) {
+                    $query->where('schedule_id', $scheduleId);
+                }
+
+                $existingEntries = $query->get();
+
+                foreach ($existingEntries as $entry) {
+                    $entry->delete(); // Picu Observer 'deleted' untuk reversal poin
+                }
+
+                // 2. Jika status baru BUKAN pending, buat rekaman baru
+                if ($request->status !== 'pending') {
+                    $waktuAbsen = '00:00:00';
+                    if ($type === 'masuk') {
+                        $waktuAbsen = $request->status === 'hadir' ? '07:00:00' : ($request->status === 'terlambat' ? '07:45:00' : '00:00:00');
+                    } else if ($type === 'pelajaran' && $scheduleId) {
+                        // Ambil jam mulai mapel untuk waktu absen manual mapel
+                        $sch = \App\Models\Schedule::find($scheduleId);
+                        $waktuAbsen = $sch ? $sch->jam_mulai : '00:00:00';
+                    }
+
+                    Attendance::create([
+                        'anggota_rombel_id' => $anggotaRombelId,
+                        'tanggal' => $request->tanggal,
+                        'waktu_absen' => $waktuAbsen,
+                        'status' => $request->status,
+                        'jenis_absensi' => $type,
+                        'schedule_id' => ($type === 'pelajaran') ? $scheduleId : null,
+                        'metode' => 'manual'
+                    ]);
+                }
+                
+                $successCount++;
+            }
+        });
+
+        return back()->with('success', "Berhasil memperbarui status untuk {$successCount} siswa. Sinkronisasi poin telah dilakukan.");
     }
 
     public function getCalendarData(Request $request, $peserta_didik_id = null)
@@ -306,6 +516,20 @@ class AttendanceController extends Controller
                 ];
             }
             $currentDate->addDay();
+        }
+
+        // --- Tambahkan Hari Libur dari Tabel ---
+        $allHolidays = \App\Models\Holiday::whereBetween('date', [$start->toDateString(), $end->toDateString()])->get();
+        foreach ($allHolidays as $h) {
+            $events[] = [
+                'id' => 'holiday_db_' . $h->id,
+                'title' => $h->description,
+                'start' => $h->date->toDateString(),
+                'backgroundColor' => '#ffe5e5',
+                'borderColor' => '#ffe5e5',
+                'textColor' => '#dc3545',
+                'allDay' => true
+            ];
         }
 
         return response()->json($events);

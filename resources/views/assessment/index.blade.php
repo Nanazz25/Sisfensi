@@ -69,31 +69,31 @@
             </div>
             <div class="body pt-3">
                 {{-- Filter Section --}}
-                <div class="mb-3">
-                    <form method="GET" action="{{ route('assessment.index') }}" id="filterForm" class="row align-items-center">
-                        <div class="col-lg-4 col-md-5 mb-2">
+                <div class="mb-4">
+                    <form method="GET" action="{{ route('assessment.index') }}" id="filterForm" class="row no-gutters">
+                        <div class="col-12 col-lg-4 mb-2 pr-lg-2">
                             <div class="input-group shadow-xs rounded-pill overflow-hidden border">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text bg-white border-0"><i class="fa fa-search text-muted"></i></span>
                                 </div>
-                                <input type="text" name="q" value="{{ request('q') }}" class="form-control border-0" placeholder="Cari nama atau email...">
+                                <input type="text" name="q" id="searchInput" value="{{ request('q') }}" class="form-control border-0" placeholder="Cari nama atau email...">
                             </div>
                         </div>
 
-                        <div class="col-lg-3 col-md-4 mb-2">
+                        <div class="col-6 col-lg-3 mb-2 px-1 px-lg-0 pr-lg-2">
                             <select name="period" class="form-control rounded-pill border shadow-xs" onchange="document.getElementById('filterForm').submit()">
-                                <option value="">-- Progres Bulan Ini --</option>
+                                <option value="">-- Periode --</option>
                                 @foreach($availablePeriods as $ap)
                                     <option value="{{ $ap }}" {{ $periodFilter == $ap ? 'selected' : '' }}>{{ $ap }}</option>
                                 @endforeach
                             </select>
                         </div>
 
-                        <div class="col-auto mb-2">
-                            <div class="btn-group shadow-xs rounded-pill overflow-hidden border">
-                                <button type="button" class="btn btn-white btn-sm px-3 dropdown-toggle border-0" data-toggle="dropdown" style="height: 38px;">
+                        <div class="col-6 col-md-auto mb-2 px-1 px-lg-0 pr-lg-2">
+                            <div class="btn-group shadow-xs rounded-pill border w-100">
+                                <button type="button" class="btn btn-white btn-sm px-3 dropdown-toggle border-0 w-100" data-toggle="dropdown" style="height: 38px;">
                                     <i class="fa {{ request('sort') == 'asc' ? 'fa-sort-amount-asc' : 'fa-sort-amount-desc' }} mr-1 text-muted"></i> 
-                                    {{ request('sort') == 'asc' ? 'Terlama' : 'Terbaru' }}
+                                    {{ request('sort') == 'asc' ? 'Lama' : 'Baru' }}
                                 </button>
                                 <div class="dropdown-menu dropdown-menu-right shadow border-0">
                                     <a class="dropdown-item sort-option" data-value="desc" href="javascript:void(0);"><i class="fa fa-clock-o mr-2"></i>Terbaru</a>
@@ -102,9 +102,9 @@
                             </div>
                         </div>
 
-                        <div class="col mb-2 text-right">
-                            <a href="{{ route('assessment.index') }}" class="btn btn-sm btn-link text-danger font-weight-bold">
-                                <i class="fa fa-refresh mr-1"></i> Reset
+                        <div class="col-12 col-md-auto mb-2 ml-md-auto px-1">
+                            <a href="{{ route('assessment.index') }}" class="btn btn-sm btn-outline-danger btn-block rounded-pill shadow-xs px-3 d-flex align-items-center justify-content-center" style="height: 38px;">
+                                <i class="fa fa-undo mr-1"></i> RESET
                             </a>
                         </div>
                         <input type="hidden" name="sort" id="sortInput" value="{{ request('sort', 'desc') }}">
@@ -168,7 +168,7 @@
                 </div>
 
                 {{-- Pagination --}}
-                <div class="mt-4 d-flex justify-content-center">
+                <div class="mt-4 pagination-responsive">
                     {{ $evaluatees->links() }}
                 </div>
             </div>

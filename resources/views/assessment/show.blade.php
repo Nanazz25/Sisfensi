@@ -73,7 +73,7 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text bg-white border-0"><i class="fa fa-search text-muted"></i></span>
                                 </div>
-                                <input type="text" name="q" value="{{ request('q') }}" class="form-control border-0" placeholder="Cari periode atau catatan...">
+                                <input type="text" name="q" id="searchInput" value="{{ request('q') }}" class="form-control border-0" placeholder="Cari periode atau catatan...">
                             </div>
                         </div>
 
@@ -87,7 +87,7 @@
                         </div>
 
                         <div class="col-auto mb-2">
-                            <div class="btn-group shadow-xs rounded-pill overflow-hidden border">
+                            <div class="btn-group shadow-xs rounded-pill border">
                                 <button type="button" class="btn btn-white btn-sm px-3 dropdown-toggle border-0" data-toggle="dropdown" style="height: 38px;">
                                     <i class="fa {{ request('sort') == 'asc' ? 'fa-sort-amount-asc' : 'fa-sort-amount-desc' }} mr-1 text-muted"></i> 
                                     {{ request('sort') == 'asc' ? 'Terlama' : 'Terbaru' }}
@@ -100,8 +100,8 @@
                         </div>
 
                         <div class="col mb-2 text-right">
-                            <a href="{{ route('assessment.show', $evaluatee->id) }}" class="btn btn-sm btn-link text-danger font-weight-bold">
-                                <i class="fa fa-refresh mr-1"></i> Reset
+                            <a href="{{ route('assessment.show', $evaluatee->id) }}" class="btn btn-sm btn-outline-danger rounded-pill shadow-xs px-3">
+                                <i class="fa fa-undo mr-1"></i> RESET
                             </a>
                         </div>
                         <input type="hidden" name="sort" id="sortInput" value="{{ request('sort', 'desc') }}">
@@ -202,7 +202,8 @@
                 </div>
                 <hr>
                 <h6 class="text-primary"><i class="fa fa-comment"></i> Catatan/Feedback:</h6>
-                <div c bgvv $assessment->general_notes ?? 'Tidak ada catatan.' }}
+                <div class="p-3 bg-light rounded border italic text-muted" style="font-size: 13px; line-height: 1.6;">
+                    {{ $assessment->general_notes ?? 'Tidak ada catatan.' }}
                 </div>
             </div>
             <div class="modal-footer">

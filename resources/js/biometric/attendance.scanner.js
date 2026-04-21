@@ -351,22 +351,66 @@ btnAbsen.onclick = async () => {
         const data = await res.json();
         if (data.status === "success") {
             // Tampilkan overlay sukses jika presensi berhasil dicatat
-            document.getElementById("successName").innerText = data.nama;
-            document.getElementById("successTime").innerText =
-                "Diterima Pukul " + data.waktu;
+            const nameEl = document.getElementById("successName");
+            const timeEl = document.getElementById("successTime");
+            const extraEl = document.getElementById("successExtra");
 
-            // Beri penanda jika siswa terlambat
-            if (data.is_late) {
-                document.getElementById("successName").innerHTML +=
-                    " <span class='text-warning'>(TERLAMBAT)</span>";
-                document.getElementById("successTime").innerHTML +=
-                    "<br><small class='text-danger'>" +
-                    data.late_info +
-                    "</small>";
+            nameEl.innerText = data.nama;
+            timeEl.innerText = "Diterima Pukul " + data.waktu;
+            extraEl.innerHTML = "";
+                
+            let pointHtml = "";
+            if (data.point_info) {
+                 const typeClass = data.point_info.amount > 0 ? "reward" : "penalty";
+                 const iconClass = data.point_info.amount > 0 ? "fa-arrow-up" : "fa-arrow-down";
+                 const amountPrefix = data.point_info.amount > 0 ? "+" : "";
+                 
+                 pointHtml = `
+                    <div class="point-notif-card ${typeClass}">
+                        <div class="point-notif-icon">
+                            <i class="fa ${iconClass}"></i>
+                        </div>
+                        <div class="point-notif-body">
+                            <span class="point-notif-value">${amountPrefix}${data.point_info.amount} POIN</span>
+                            <span class="point-notif-label">${data.point_info.text}</span>
+                        </div>
+                    </div>
+                 `;
+            }
+
+            // Beri penanda jika siswa terlambat atau menggunakan token
+            if (data.is_exempted) {
+                extraEl.innerHTML = `
+                    <div class="voucher-used-card">
+                        <div class="voucher-header">
+                            <i class="fa fa-ticket-alt"></i>
+                            VOUCHER DIGUNAKAN
+                        </div>
+                        <div class="voucher-title">Keterlambatan Dimaafkan</div>
+                        <div class="voucher-subtitle">
+                             <div class="mb-2">Status: <span class="badge badge-light px-3 rounded-pill text-dark">HADIR</span></div>
+                             <div>Poin Anda tetap terjaga! ✨</div>
+                        </div>
+                    </div>
+                ` + extraEl.innerHTML;
+            } else if (data.is_late) {
+                nameEl.innerHTML += " <span class='text-warning'>(TERLAMBAT)</span>";
+                timeEl.innerHTML += "<br><small class='text-danger'>" + data.late_info + "</small>";
+            }
+            
+            if (pointHtml) {
+                 extraEl.innerHTML += pointHtml;
             }
 
             successOverlay.style.display = "flex";
-            if (data.is_late) {
+            
+            // Sembunyikan tombol Jadwal di mobile agar tidak overlap dengan overlay sukses
+            const floatingBtn = document.getElementById('floatingScheduleBtn');
+            if (floatingBtn) floatingBtn.style.display = 'none';
+
+            if (data.is_exempted) {
+                toastr.info("Voucher digunakan! Status menjadi HADIR.");
+            } else if (data.is_late) {
                 toastr.warning("Presensi TERLAMBAT dicatat!");
             } else {
                 toastr.success("Presensi berhasil dicatat!");
@@ -413,6 +457,12 @@ function getButtonLabel(type) {
 // Reset scanner agar bisa digunakan oleh orang berikutnya
 window.resetScanner = function () {
     successOverlay.style.display = "none";
+    
+    // Tampilkan kembali tombol Jadwal
+    const floatingBtn = document.getElementById('floatingScheduleBtn');
+    if (floatingBtn) floatingBtn.style.display = 'block';
+
+    document.getElementById("successExtra").innerHTML = ""; // Clear points info
     isProcessing = false;
     btnAbsen.innerHTML =
         '<i class="fa fa-camera mr-2"></i> ' + getButtonLabel(currentType);

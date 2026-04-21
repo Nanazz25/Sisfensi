@@ -31,6 +31,9 @@ class UserController extends Controller
 
     public function admin(Request $request)
     {
+        if (auth()->id() !== 1) {
+            abort(403, 'Hanya Super Admin yang dapat mengakses halaman daftar admin.');
+        }
         $users = $this->getUsersByRole($request, 'admin');
         return view('users.admin', compact('users'));
     }

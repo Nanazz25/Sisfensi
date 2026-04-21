@@ -47,14 +47,40 @@
             <div class="card welcome-card bg-gradient-primary text-white border-0 shadow-sm mb-4">
                 <div class="body d-flex align-items-center py-4 justify-content-between">
                     <div class="d-flex align-items-center">
+                        @php
+                            $hour = now()->format('H');
+                            if (isset($holiday) && $holiday) {
+                                $greeting = 'Selamat Berlibur';
+                                $icon = 'mingcute:celebrate-line';
+                                $sub = 'Hari ini adalah ' . $holiday->description . '. Nikmati waktu istirahatmu!';
+                            } elseif ($hour >= 5 && $hour < 11) {
+                                $greeting = 'Selamat Pagi';
+                                $icon = 'mingcute:sun-fog-line';
+                                $sub = 'Semangat pagi untuk memulai hari yang produktif!';
+                            } elseif ($hour >= 11 && $hour < 15) {
+                                $greeting = 'Selamat Siang';
+                                $icon = 'mingcute:sun-line';
+                                $sub = 'Tetap semangat pantau perkembangan siswa!';
+                            } elseif ($hour >= 15 && $hour < 18) {
+                                $greeting = 'Selamat Sore';
+                                $icon = 'mingcute:sunset-line';
+                                $sub = 'Tuntaskan tugas hari ini sebelum beristirahat!';
+                            } else {
+                                $greeting = 'Selamat Malam';
+                                $icon = 'mingcute:moon-stars-line';
+                                $sub = 'Terima kasih atas dedikasi luar biasamu hari ini!';
+                            }
+                        @endphp
                         <div class="icon-box bg-white-20 rounded-circle text-center mr-3"
-                            style="width: 60px; height: 60px; line-height: 60px;">
-                            <i class="fa fa-smile-o font-30"></i>
+                            style="width: 60px; height: 60px; line-height: 60px; display: flex; align-items: center; justify-content: center;">
+                            <iconify-icon icon="{{ $icon }}" style="font-size: 32px;"></iconify-icon>
                         </div>
                         <div>
-                            <h4 class="mb-1 font-weight-bold">Selamat Datang, {{ Auth::user()->name }}!</h4>
-                            <p class="mb-0 opacity-75"><i class="fa fa-calendar-o mr-1"></i>
-                                {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}</p>
+                            <h4 class="mb-1 font-weight-bold">{{ $greeting }}, {{ Auth::user()->name }}!</h4>
+                            <p class="mb-0 opacity-75" style="font-size: 13px;">{{ $sub }}</p>
+                            <p class="mb-0 opacity-50 small mt-1">
+                                <i class="fa fa-calendar-o mr-1"></i> {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}
+                            </p>
                         </div>
                     </div>
                     @php 
@@ -147,7 +173,7 @@
                                                         </tr>`;
                         });
                     } else {
-                        html = '<tr><td colspan="2" class="text-center">Tidak ada data siswa.</td></tr>';
+                        html = '<tr><td colspan="2" class="text-center py-4 text-muted"><iconify-icon icon="mingcute:user-remove-line" class="d-block mb-2 mx-auto" style="font-size: 28px; opacity: 0.5;"></iconify-icon> Tidak ada data siswa.</td></tr>';
                     }
                     $('#attendanceList').html(html);
                 });
@@ -199,7 +225,14 @@
                     handleWindowResize: true,
                     events: '{{ route('attendance.calendar') }}',
                     eventClick: function(info) {
-                        toastr.info("Status: " + info.event.title);
+                        const title = info.event.title || '';
+                        const id = info.event.id || '';
+                        
+                        if (id.includes('holiday') || title.toLowerCase() === 'libur') {
+                            toastr.info("Keterangan: " + title);
+                        } else {
+                            toastr.info("Status Kehadiran: " + title);
+                        }
                     }
                 });
                 calendar.render();

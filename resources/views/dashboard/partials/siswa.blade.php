@@ -130,8 +130,10 @@
                                     <td><strong>{{ $schedule->subject->nama_mapel }}</strong></td>
                                     <td>{{ $schedule->teacher->user->name }}</td>
                                     <td>
-                                        @if($isCurrent)
-                                            <span class="badge badge-soft-success">Berlangsung</span>
+                                        @if(in_array($schedule->id, $attendance_summary['mapel_attended']))
+                                            <span class="badge badge-success"><i class="fa fa-check mr-1"></i> Sudah Absen</span>
+                                        @elseif($isCurrent)
+                                            <span class="badge badge-soft-success pulse-cyan" style="border-radius: 12px; padding: 5px 12px;"><i class="fa fa-clock-o mr-1"></i> Sedang Berlangsung</span>
                                         @elseif($now < $schedule->jam_mulai)
                                             <span class="badge badge-soft-warning">Akan Datang</span>
                                         @else

@@ -19,6 +19,7 @@ use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\SchoolSettingController;
 use App\Http\Controllers\AttendancePermissionController;
 use App\Http\Controllers\AssessmentCategoryController;
+use App\Http\Controllers\HolidayController;
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -49,6 +50,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/school-settings', [SchoolSettingController::class, 'update'])->name('school-settings.update');
         Route::post('/school-settings/reset-face-logs', [SchoolSettingController::class, 'resetFaceLogs'])->name('school-settings.reset-face-logs');
         Route::post('/school-settings/sync-yesterday-alpha', [SchoolSettingController::class, 'syncYesterdayAlpha'])->name('school-settings.sync-yesterday-alpha');
+        Route::post('/school-settings/purge-attachments', [SchoolSettingController::class, 'purgeOldPermissions'])->name('school-settings.purge-attachments');
 
         // User Management
         Route::prefix('users')->group(function () {
@@ -80,6 +82,9 @@ Route::middleware('auth')->group(function () {
 
         // Kategori Penilaian
         Route::resource('assessment-category', AssessmentCategoryController::class)->names('assessment_category');
+
+        // Hari Libur
+        Route::resource('holidays', HolidayController::class)->except(['show', 'create', 'edit']);
     });
 
     // --- ADMIN & GURU ---
@@ -134,4 +139,27 @@ Route::middleware('auth')->group(function () {
         Route::get('/rombongan-belajar/{rombongan_belajar}', [RombonganBelajarController::class, 'show'])
             ->name('rombongan-belajar.show');
     });
+
+    // Integrity & Flexibility Module
+    Route::prefix('integrity')->group(function () {
+        // Admin Routes
+        Route::middleware('role:admin')->group(function () {
+            Route::get('/admin', [\App\Http\Controllers\IntegrityController::class, 'adminIndex'])->name('integrity.admin.index');
+            Route::post('/rules', [\App\Http\Controllers\IntegrityController::class, 'storeRule'])->name('integrity.rules.store');
+            Route::put('/rules/{rule}', [\App\Http\Controllers\IntegrityController::class, 'updateRule'])->name('integrity.rules.update');
+            Route::delete('/rules/{rule}', [\App\Http\Controllers\IntegrityController::class, 'destroyRule'])->name('integrity.rules.destroy');
+            Route::post('/items', [\App\Http\Controllers\IntegrityController::class, 'storeItem'])->name('integrity.items.store');
+            Route::put('/items/{item}', [\App\Http\Controllers\IntegrityController::class, 'updateItem'])->name('integrity.items.update');
+            Route::delete('/items/{item}', [\App\Http\Controllers\IntegrityController::class, 'destroyItem'])->name('integrity.items.destroy');
+        });
+
+        // User Routes
+        Route::middleware('role:siswa,guru,admin')->group(function () {
+            Route::get('/wallet', [\App\Http\Controllers\IntegrityController::class, 'userIndex'])->name('integrity.user.index');
+            Route::post('/market/buy/{item}', [\App\Http\Controllers\IntegrityController::class, 'buyItem'])->name('integrity.market.buy');
+            Route::post('/manual/give', [\App\Http\Controllers\IntegrityController::class, 'givePointManually'])->name('integrity.manual.give');
+            Route::post('/manual/reset-today', [\App\Http\Controllers\IntegrityController::class, 'resetPointsToday'])->name('integrity.manual.reset_today');
+        });
+    });
 });
+

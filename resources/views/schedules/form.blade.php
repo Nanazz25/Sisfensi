@@ -56,7 +56,11 @@
                 <div class="form-group">
                     <label>Hari</label>
                     <select name="hari" class="form-control" required>
-                        @foreach(['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'] as $hari)
+                        @php
+                            $schoolDaysStr = \App\Models\SchoolSetting::where('key', 'hari_sekolah')->first()->value ?? 'senin,selasa,rabu,kamis,jumat';
+                            $activeDays = explode(',', strtolower($schoolDaysStr));
+                        @endphp
+                        @foreach($activeDays as $hari)
                             <option value="{{ $hari }}" {{ old('hari', $schedule->hari ?? '') == $hari ? 'selected' : '' }}>
                                 {{ ucfirst($hari) }}
                             </option>

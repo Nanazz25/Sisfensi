@@ -131,7 +131,7 @@ class AttendancePermissionController extends Controller
             'tanggal_selesai' => 'required|date|same:tanggal_mulai',
             'jenis' => 'required|in:izin,sakit,manual',
             'keterangan' => 'required|string',
-            'lampiran' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'lampiran' => $request->jenis === 'manual' ? 'required|file|mimes:jpg,jpeg,png,pdf|max:2048' : 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'jenis_absensi_manual' => 'nullable|in:masuk,pulang,mapel',
@@ -213,8 +213,24 @@ class AttendancePermissionController extends Controller
 
             while ($start <= $end) {
                 $statusAttendance = $permission->jenis; // 'izin' or 'sakit'
+                
                 if ($permission->jenis === 'manual') {
-                    $statusAttendance = 'hadir';
+                    // Ambil aturan jam sekolah
+                    $settingsArr = \App\Models\SchoolSetting::whereIn('key', ['jam_masuk', 'jam_masuk_toleransi'])
+                        ->pluck('value', 'key');
+                    $jamMasuk = $settingsArr['jam_masuk'] ?? '07:00';
+                    $jamToleransi = $settingsArr['jam_masuk_toleransi'] ?? '07:30';
+                    
+                    // Gunakan waktu pembuatan pengajuan sebagai patokan jam tiba
+                    $waktuPengajuan = $permission->created_at->format('H:i');
+                    
+                    if ($waktuPengajuan <= $jamMasuk) {
+                        $statusAttendance = 'hadir';
+                    } else {
+                        // Jika lewat jam masuk, otomatis dianggap terlambat (agar poin minus)
+                        // Meskipun lewat toleransi, di absen manual kita izinkan masuk tapi tetap status terlambat
+                        $statusAttendance = 'terlambat';
+                    }
                 }
 
                 Attendance::updateOrCreate(

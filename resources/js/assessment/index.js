@@ -1,18 +1,38 @@
 document.addEventListener('DOMContentLoaded', function() {
     // --- Logika Pengurutan (Sorting) Tabel ---
     const sortOptions = document.querySelectorAll('.sort-option');
+    const searchInput = document.getElementById('searchInput');
+    const filterForm = document.getElementById('filterForm');
+
     if (sortOptions.length > 0) {
         sortOptions.forEach(item => {
             item.addEventListener('click', function () {
-                const form = document.getElementById('filterForm');
                 const sortInput = document.getElementById('sortInput');
-                if (form && sortInput) {
-                    // Masukkan nilai sort (asc/desc) ke input tersembunyi dan kirim form
+                if (filterForm && sortInput) {
                     sortInput.value = this.dataset.value;
-                    form.submit();
+                    filterForm.submit();
                 }
             });
         });
+    }
+
+    // --- Logika Auto-Search (Pencarian Otomatis) ---
+    if (searchInput && filterForm) {
+        let timeout = null;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(timeout);
+            // Submit form setelah 500ms berhenti mengetik (debounce)
+            timeout = setTimeout(() => {
+                filterForm.submit();
+            }, 500);
+        });
+
+        // Pastikan kursor tetap di akhir input setelah reload jika sedang mengetik
+        const val = searchInput.value;
+        if (val) {
+            searchInput.focus();
+            searchInput.setSelectionRange(val.length, val.length);
+        }
     }
 
     // --- Inisialisasi Grafik Batang Vertikal untuk Rata-rata Skor ---

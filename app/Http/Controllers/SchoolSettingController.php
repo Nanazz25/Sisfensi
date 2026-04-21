@@ -9,14 +9,43 @@ use App\Models\AttendancePermission;
 use App\Models\AnggotaRombel;
 use App\Services\FaceLogService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 class SchoolSettingController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (auth()->id() !== 1) {
+                abort(403, 'Akses ditolak. Hanya Super Admin yang dapat mengelola pengaturan sistem.');
+            }
+            return $next($request);
+        });
+    }
+
     public function index()
     {
         $settings = SchoolSetting::all();
-        return view('school-settings.index', compact('settings'));
+        
+        // Hitung lampiran yang sudah > 30 hari
+        $oldFilesCount = AttendancePermission::whereNotNull('lampiran')
+            ->where('created_at', '<', Carbon::now()->subDays(30))
+            ->count();
+
+        // Cek apakah kemarin hari sekolah untuk UI Sinkronisasi Alpha
+        $yesterday = Carbon::yesterday();
+        $schoolDaysStr = SchoolSetting::where('key', 'hari_sekolah')->value('value') ?? 'senin,selasa,rabu,kamis,jumat';
+        $schoolDays = explode(',', strtolower($schoolDaysStr));
+        $dayName = strtolower($yesterday->englishDayOfWeek);
+        $map = [
+            'monday' => 'senin', 'tuesday' => 'selasa', 'wednesday' => 'rabu',
+            'thursday' => 'kamis', 'friday' => 'jumat', 'saturday' => 'sabtu', 'sunday' => 'minggu'
+        ];
+        $isYesterdaySchoolDay = in_array($map[$dayName] ?? $dayName, $schoolDays);
+        $yesterdayFormatted = $yesterday->translatedFormat('l, d F Y');
+
+        return view('school-settings.index', compact('settings', 'oldFilesCount', 'isYesterdaySchoolDay', 'yesterdayFormatted'));
     }
 
     public function update(Request $request)
@@ -51,7 +80,32 @@ class SchoolSettingController extends Controller
     public function syncYesterdayAlpha()
     {
         $yesterday = Carbon::yesterday();
-        $students = AnggotaRombel::with(['pesertaDidik.user', 'rombonganBelajar.waliKelas.user'])->get();
+
+        // --- PROTEKSI HARI LIBUR ---
+        $schoolDaysStr = SchoolSetting::where('key', 'hari_sekolah')->value('value') ?? 'senin,selasa,rabu,kamis,jumat';
+        $schoolDays = explode(',', strtolower($schoolDaysStr));
+        $dayName = strtolower($yesterday->englishDayOfWeek);
+        $map = [
+            'monday' => 'senin', 'tuesday' => 'selasa', 'wednesday' => 'rabu',
+            'thursday' => 'kamis', 'friday' => 'jumat', 'saturday' => 'sabtu', 'sunday' => 'minggu'
+        ];
+        $hariIndo = $map[$dayName] ?? $dayName;
+
+        if (!in_array($hariIndo, $schoolDays)) {
+            return back()->with('error', "Gagal! Sinkronisasi alfa tidak dapat dilakukan karena hari kemarin (" . $yesterday->translatedFormat('l, d F Y') . ") adalah hari libur sekolah (Akhir Pekan).");
+        }
+
+        // --- PROTEKSI TABEL HARI LIBUR ---
+        $holiday = \App\Models\Holiday::where('date', $yesterday->toDateString())->first();
+        if ($holiday) {
+            return back()->with('error', "Gagal! Sinkronisasi alfa tidak dapat dilakukan karena hari kemarin (" . $yesterday->translatedFormat('d F Y') . ") adalah hari libur: " . $holiday->description);
+        }
+        $students = AnggotaRombel::whereHas('rombonganBelajar.tahunAjar', function($q) {
+            $q->where('is_active', true);
+        })->with(['pesertaDidik.user', 'rombonganBelajar.waliKelas.user'])
+        ->get()
+        ->unique('peserta_didik_id'); // Pastikan satu siswa hanya diproses 1x meskipun ada di daftar rombel ganda
+        
         $alphaData = [];
 
         foreach ($students as $student) {
@@ -103,5 +157,28 @@ class SchoolSettingController extends Controller
         }
 
         return back()->with('success', "Sinkronisasi selesai. Tidak ada siswa tambahan yang diset ALPHA.");
+    }
+
+    public function purgeOldPermissions()
+    {
+        $limitDate = Carbon::now()->subDays(30);
+        
+        // Ambil data izin yang memiliki lampiran dan sudah lewat 30 hari
+        $oldPermissions = AttendancePermission::whereNotNull('lampiran')
+            ->where('created_at', '<', $limitDate)
+            ->get();
+
+        $count = 0;
+        foreach ($oldPermissions as $permit) {
+            if (Storage::disk('public')->exists($permit->lampiran)) {
+                Storage::disk('public')->delete($permit->lampiran);
+                
+                // Set kolom lampiran di DB jadi null agar tidak broken link
+                $permit->update(['lampiran' => null]);
+                $count++;
+            }
+        }
+
+        return back()->with('success', "Berhasil membersihkan {$count} file lampiran lama (di atas 30 hari).");
     }
 }

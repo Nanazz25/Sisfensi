@@ -18,8 +18,23 @@ class AttendanceAutomation extends Command
     public function handle()
     {
         $today = Carbon::today();
-
         $this->info("🚀 Memulai Otomatisasi Absensi - " . $today->toDateString());
+
+        // --- 0. CEK HARI SEKOLAH ---
+        $schoolDaysStr = SchoolSetting::where('key', 'hari_sekolah')->value('value') ?? 'senin,selasa,rabu,kamis,jumat';
+        $schoolDays = explode(',', strtolower($schoolDaysStr));
+        
+        $dayName = strtolower($today->englishDayOfWeek);
+        $map = [
+            'monday' => 'senin', 'tuesday' => 'selasa', 'wednesday' => 'rabu',
+            'thursday' => 'kamis', 'friday' => 'jumat', 'saturday' => 'sabtu', 'sunday' => 'minggu'
+        ];
+        $hariIndo = $map[$dayName] ?? $dayName;
+
+        if (!in_array($hariIndo, $schoolDays)) {
+            $this->info("ℹ️ Hari ini ({$hariIndo}) adalah hari libur sekolah. Skip otomatisasi.");
+            return;
+        }
 
         // --- 1. EXPIRE PENDING PERMISSIONS (> 24 Jam) ---
         $expiredCount = AttendancePermission::where('status', 'pending')
