@@ -4,17 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\SchoolLocation;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class SchoolLocationController extends Controller
+class SchoolLocationController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(function ($request, $next) {
-            if (auth()->id() !== 1) {
-                abort(403, 'Akses ditolak. Hanya Super Admin yang dapat mengelola lokasi sekolah.');
+        return [
+            function ($request, $next) {
+                if (auth()->id() !== 1) {
+                    abort(403, 'Akses ditolak. Hanya Super Admin yang dapat mengelola lokasi sekolah.');
+                }
+                return $next($request);
             }
-            return $next($request);
-        });
+        ];
     }
 
     public function index()

@@ -11,17 +11,21 @@ use App\Services\FaceLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class SchoolSettingController extends Controller
+class SchoolSettingController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(function ($request, $next) {
-            if (auth()->id() !== 1) {
-                abort(403, 'Akses ditolak. Hanya Super Admin yang dapat mengelola pengaturan sistem.');
+        return [
+            function ($request, $next) {
+                if (auth()->id() !== 1) {
+                    abort(403, 'Akses ditolak. Hanya Super Admin yang dapat mengelola pengaturan sistem.');
+                }
+                return $next($request);
             }
-            return $next($request);
-        });
+        ];
     }
 
     public function index()
