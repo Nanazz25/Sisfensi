@@ -107,9 +107,9 @@
         <x-slot:afterAppScripts>
             @vite('resources/js/global-main.js')
             @yield('afterAppScripts')
-            @stack('scripts')
         </x-slot:afterAppScripts>
     </x-script>
+    @stack('scripts')
 </body>
 
 </html>

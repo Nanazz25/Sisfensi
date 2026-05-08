@@ -108,6 +108,8 @@
             @include('dashboard.partials.guru')
         @elseif(auth()->user()->role === 'siswa')
             @include('dashboard.partials.siswa')
+        @elseif(auth()->user()->role === 'helpdesk')
+            @include('dashboard.partials.helpdesk')
         @endif
     </div>
 

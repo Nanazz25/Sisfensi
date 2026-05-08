@@ -18,7 +18,7 @@ return new class extends Migration {
             $table->string('password');
             $table->string('initial_password')->nullable();
             $table->boolean('password_changed')->default(false);
-            $table->enum('role', ['admin', 'guru', 'siswa']);
+            $table->enum('role', ['admin', 'helpdesk', 'guru', 'siswa']);
             $table->rememberToken();
             $table->timestamps();
         });

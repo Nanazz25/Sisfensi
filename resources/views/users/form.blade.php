@@ -8,6 +8,7 @@
             'admin' => route('users.admin'),
             'guru' => route('users.guru'),
             'siswa' => route('users.siswa'),
+            'helpdesk' => route('users.helpdesk'),
             default => url()->previous(),
         }
         : url()->previous();
@@ -47,6 +48,7 @@
                         <option value="admin" {{ old('role', $user->role ?? '') == 'admin' ? 'selected' : '' }}>Admin</option>
                         <option value="guru" {{ old('role', $user->role ?? '') == 'guru' ? 'selected' : '' }}>Guru</option>
                         <option value="siswa" {{ old('role', $user->role ?? '') == 'siswa' ? 'selected' : '' }}>Siswa</option>
+                        <option value="helpdesk" {{ old('role', $user->role ?? '') == 'helpdesk' ? 'selected' : '' }}>Helpdesk</option>
                     </select>
                 </div>
 

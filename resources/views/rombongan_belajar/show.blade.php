@@ -290,50 +290,57 @@
 
                         {{-- Tab Jadwal --}}
                         <div class="tab-pane fade" id="schedule">
-                            <div class="row">
+                            <div class="row d-flex align-items-stretch">
                                 @php 
                                     $hasSchedule = false; 
                                     $schoolDaysStr = \App\Models\SchoolSetting::where('key', 'hari_sekolah')->first()->value ?? 'senin,selasa,rabu,kamis,jumat';
                                     $activeDays = explode(',', strtolower($schoolDaysStr));
+                                    $dayColors = [
+                                        'senin' => 'primary', 'selasa' => 'success', 'rabu' => 'info', 
+                                        'kamis' => 'warning', 'jumat' => 'danger', 'sabtu' => 'purple', 'minggu' => 'secondary'
+                                    ];
                                 @endphp
                                 @foreach($activeDays as $hari)
                                     @if(isset($schedules[$hari]))
                                         @php $hasSchedule = true; @endphp
-                                        <div class="col-md-6 mb-3">
-                                            <div class="card shadow-none border">
-                                                <div class="header bg-light py-2 px-3 border-bottom">
-                                                    <h5 class="mb-0 font-weight-bold text-dark text-capitalize">{{ $hari }}</h5>
+                                        <div class="col-md-6 col-lg-4 mb-4 d-flex">
+                                            <div class="card shadow-sm border-0 w-100 mb-0" style="border-radius: 15px; overflow: hidden;">
+                                                <div class="header bg-{{ $dayColors[$hari] ?? 'dark' }} py-3 px-3 text-white">
+                                                    <h6 class="mb-0 font-weight-bold text-uppercase" style="letter-spacing: 1px;">{{ $hari }}</h6>
                                                 </div>
-                                                <div class="list-group list-group-flush small">
-                                                    @foreach($schedules[$hari] as $sch)
-                                                        <div class="list-group-item py-2 px-3">
-                                                            <div class="d-flex justify-content-between align-items-center">
-                                                                <div>
-                                                                    <div class="font-weight-bold text-dark">
-                                                                        {{ $sch->subject->nama_mapel }}</div>
-                                                                    <div class="text-muted" style="font-size: 11px;">
-                                                                        {{ $sch->teacher->user->name ?? '-' }}</div>
-                                                                </div>
-                                                                <div class="text-right">
-                                                                    <span
-                                                                        class="badge badge-light border text-dark font-weight-normal px-2 py-1">
-                                                                        {{ substr($sch->jam_mulai, 0, 5) }} -
-                                                                        {{ substr($sch->jam_selesai, 0, 5) }}
-                                                                    </span>
+                                                <div class="body p-0">
+                                                    <div class="list-group list-group-flush">
+                                                        @foreach($schedules[$hari] as $sch)
+                                                            <div class="list-group-item border-0 py-3 px-3" style="background: transparent;">
+                                                                <div class="d-flex align-items-start">
+                                                                    <div class="mr-3 text-center" style="width: 50px; flex-shrink: 0;">
+                                                                        <small class="text-muted d-block" style="font-size: 10px; font-weight: bold;">{{ substr($sch->jam_mulai, 0, 5) }}</small>
+                                                                        <div style="width: 2px; height: 15px; background: #eee; margin: 2px auto;"></div>
+                                                                        <small class="text-muted d-block" style="font-size: 10px; font-weight: bold;">{{ substr($sch->jam_selesai, 0, 5) }}</small>
+                                                                    </div>
+                                                                    <div class="flex-grow-1 border-left pl-3" style="border-width: 3px !important; border-color: var(--{{ $dayColors[$hari] ?? 'gray' }}) !important;">
+                                                                        <div class="font-weight-bold text-dark mb-1" style="font-size: 0.9rem; line-height: 1.2;">{{ $sch->subject->nama_mapel }}</div>
+                                                                        <div class="text-muted" style="font-size: 11px;">
+                                                                            <i class="fa fa-user-circle-o mr-1"></i> {{ $sch->teacher->user->name ?? '-' }}
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    @endforeach
+                                                        @endforeach
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     @endif
                                 @endforeach
-
+                                
                                 @if(!$hasSchedule)
                                     <div class="col-12 text-center py-5">
-                                        <i class="fa fa-calendar-times-o fa-3x text-muted mb-3"></i>
-                                        <p class="mb-0">Jadwal belum tersedia untuk kelas ini.</p>
+                                        <div class="mb-3">
+                                            <i class="fa fa-calendar-o fa-4x text-light"></i>
+                                        </div>
+                                        <h5 class="text-muted">Jadwal Belum Diatur</h5>
+                                        <p class="text-muted small">Hubungi admin kurikulum untuk menginput jadwal pelajaran di kelas ini.</p>
                                     </div>
                                 @endif
                             </div>

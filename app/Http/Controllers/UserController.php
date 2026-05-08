@@ -44,6 +44,12 @@ class UserController extends Controller
         return view('users.guru', compact('users'));
     }
 
+    public function helpdesk(Request $request)
+    {
+        $users = $this->getUsersByRole($request, 'helpdesk');
+        return view('users.helpdesk', compact('users'));
+    }
+
     public function siswa(Request $request)
     {
         $users = $this->getUsersByRole($request, 'siswa');
@@ -56,6 +62,7 @@ class UserController extends Controller
             'admin' => redirect()->route('users.admin'),
             'guru' => redirect()->route('users.guru'),
             'siswa' => redirect()->route('users.siswa'),
+            'helpdesk' => redirect()->route('users.helpdesk'),
             default => redirect()->route('users.index'),
         };
     }
@@ -72,7 +79,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users',
-            'role' => 'required|in:admin,guru,siswa'
+            'role' => 'required|in:admin,guru,siswa,helpdesk'
         ]);
 
         $plainPassword = $request->role === 'admin' ? 'password' : \Illuminate\Support\Str::random(8);
@@ -100,7 +107,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'role' => 'required|in:admin,guru,siswa'
+            'role' => 'required|in:admin,guru,siswa,helpdesk'
         ]);
 
         $data = [

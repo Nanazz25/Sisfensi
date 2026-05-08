@@ -83,6 +83,8 @@
                                     @endif
                                     <li class="{{ request()->routeIs('users.guru') ? 'active' : '' }}"><a
                                             href="{{ route('users.guru') }}">Guru</a></li>
+                                    <li class="{{ request()->routeIs('users.helpdesk') ? 'active' : '' }}"><a
+                                            href="{{ route('users.helpdesk') }}">Operator</a></li>
                                     <li class="{{ request()->routeIs('users.siswa') ? 'active' : '' }}"><a
                                             href="{{ route('users.siswa') }}">Siswa</a></li>
                                 </ul>
@@ -131,6 +133,42 @@
                                 <a href="{{ route('integrity.user.index') }}">
                                     <i class="fa fa-diamond text-info"></i>
                                     <span>Monitoring Poin</span>
+                                </a>
+                            </li>
+
+                            <li class="header">HELPDESK</li>
+                            <li class="{{ request()->routeIs('tickets.categories.*') ? 'active' : '' }}">
+                                <a href="{{ route('tickets.categories.index') }}">
+                                    <i class="fa fa-tags text-info"></i>
+                                    <span>Kategori Tiket</span>
+                                </a>
+                            </li>
+                            <li class="{{ request()->routeIs('tickets.admin-dashboard') ? 'active' : '' }}">
+                                <a href="{{ route('tickets.admin-dashboard') }}">
+                                    <i class="fa fa-bar-chart text-success"></i>
+                                    <span>Analitik Tiket</span>
+                                </a>
+                            </li>
+                            <li class="{{ request()->routeIs('tickets.index') ? 'active' : '' }}">
+                                <a href="{{ route('tickets.index') }}">
+                                    <i class="fa fa-ticket text-primary"></i>
+                                    <span>Daftar Aduan</span>
+                                </a>
+                            </li>
+                        @endif
+
+                        @if(auth()->user()->role === 'helpdesk')
+                            <li class="header">HELPDESK</li>
+                            <li class="{{ request()->routeIs('tickets.admin-dashboard') ? 'active' : '' }}">
+                                <a href="{{ route('tickets.admin-dashboard') }}">
+                                    <i class="fa fa-bar-chart text-success"></i>
+                                    <span>Analitik Tiket</span>
+                                </a>
+                            </li>
+                            <li class="{{ request()->routeIs('tickets.index') ? 'active' : '' }}">
+                                <a href="{{ route('tickets.index') }}">
+                                    <i class="fa fa-ticket text-primary"></i>
+                                    <span>Daftar Aduan</span>
                                 </a>
                             </li>
                         @endif
@@ -282,6 +320,14 @@
                                 <a href="{{ route('integrity.user.index') }}">
                                     <i class="fa fa-diamond text-primary"></i>
                                     <span>Dompet Integritas</span>
+                                </a>
+                            </li>
+
+                            <li class="header">BANTUAN</li>
+                            <li class="{{ request()->routeIs('tickets.index') ? 'active' : '' }}">
+                                <a href="{{ route('tickets.index') }}">
+                                    <i class="fa fa-support text-danger"></i>
+                                    <span>Pusat Bantuan</span>
                                 </a>
                             </li>
                         @endif

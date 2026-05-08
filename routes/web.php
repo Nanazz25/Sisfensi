@@ -20,6 +20,8 @@ use App\Http\Controllers\SchoolSettingController;
 use App\Http\Controllers\AttendancePermissionController;
 use App\Http\Controllers\AssessmentCategoryController;
 use App\Http\Controllers\HolidayController;
+use App\Http\Controllers\TicketCategoryController;
+use App\Http\Controllers\TicketController;
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -29,6 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     // Dashboard & Profile
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/password', [\App\Http\Controllers\ProfileController::class, 'editPassword'])->name('profile.password.edit');
     Route::post('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password.update');
@@ -56,6 +59,7 @@ Route::middleware('auth')->group(function () {
         Route::prefix('users')->group(function () {
             Route::get('/admin', [UserController::class, 'admin'])->name('users.admin');
             Route::get('/guru', [UserController::class, 'guru'])->name('users.guru');
+            Route::get('/helpdesk', [UserController::class, 'helpdesk'])->name('users.helpdesk');
             Route::get('/siswa', [UserController::class, 'siswa'])->name('users.siswa');
             Route::get('/create', [UserController::class, 'create'])->name('users.create');
             Route::get('/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
@@ -85,6 +89,9 @@ Route::middleware('auth')->group(function () {
 
         // Hari Libur
         Route::resource('holidays', HolidayController::class)->except(['show', 'create', 'edit']);
+
+        // Kategori Tiket
+        Route::resource('tickets/categories', TicketCategoryController::class)->names('tickets.categories');
     });
 
     // --- ADMIN & GURU ---
@@ -159,6 +166,27 @@ Route::middleware('auth')->group(function () {
             Route::post('/market/buy/{item}', [\App\Http\Controllers\IntegrityController::class, 'buyItem'])->name('integrity.market.buy');
             Route::post('/manual/give', [\App\Http\Controllers\IntegrityController::class, 'givePointManually'])->name('integrity.manual.give');
             Route::post('/manual/reset-today', [\App\Http\Controllers\IntegrityController::class, 'resetPointsToday'])->name('integrity.manual.reset_today');
+        });
+    });
+
+    // Helpdesk / Ticketing System
+    Route::prefix('tickets')->group(function () {
+        Route::get('/search-similar', [TicketController::class, 'searchSimilar'])->name('tickets.search-similar');
+        Route::get('/', [TicketController::class, 'index'])->name('tickets.index');
+        Route::get('/create', [TicketController::class, 'create'])->name('tickets.create');
+        Route::get('/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
+        Route::post('/{ticket}/respond', [TicketController::class, 'respond'])->name('tickets.respond');
+        Route::get('/{ticket}/responses/fetch', [TicketController::class, 'fetchResponses'])->name('tickets.responses.fetch');
+        Route::post('/{ticket}/respond-async', [TicketController::class, 'respondAsync'])->name('tickets.respond-async');
+
+        Route::middleware('role:admin,helpdesk')->group(function () {
+            Route::get('/admin/analytics', [TicketController::class, 'adminDashboard'])->name('tickets.admin-dashboard');
+            Route::post('/{ticket}/status', [TicketController::class, 'updateStatus'])->name('tickets.update-status');
+        });
+
+        Route::middleware('role:siswa')->group(function () {
+            Route::post('/', [TicketController::class, 'store'])->name('tickets.store');
+            Route::post('/{ticket}/rate', [TicketController::class, 'rate'])->name('tickets.rate');
         });
     });
 });

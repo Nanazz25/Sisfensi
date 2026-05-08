@@ -238,6 +238,33 @@ class DashboardController extends Controller
                     }
                 }
             }
+        } elseif ($user->role === 'helpdesk') {
+            // Helpdesk Dashboard Data
+            $data['stats'] = [
+                'open' => \App\Models\Ticket::where('status', 'Open')->count(),
+                'in_progress' => \App\Models\Ticket::where('status', 'In-Progress')->count(),
+                'resolved' => \App\Models\Ticket::where('status', 'Resolved')->count(),
+                'total' => \App\Models\Ticket::count(),
+            ];
+
+            $data['recent_tickets'] = \App\Models\Ticket::with(['reporter', 'category'])
+                ->orderBy('created_at', 'desc')
+                ->take(5)
+                ->get();
+            
+            // Personal performance
+            $avgResp = \App\Models\Ticket::where('operator_id', $user->id)
+                ->whereNotNull('responded_at')
+                ->select(DB::raw('AVG(TIMESTAMPDIFF(MINUTE, created_at, responded_at)) as avg_min'))
+                ->first()->avg_min ?? 0;
+            
+            $data['performance'] = [
+                'avg_response' => round($avgResp),
+                'score' => round((\DB::table('satisfaction_ratings')
+                    ->join('tickets', 'satisfaction_ratings.ticket_id', '=', 'tickets.id')
+                    ->where('tickets.operator_id', $user->id)
+                    ->avg('rating') ?: 0) / 5 * 100)
+            ];
         }
 
         return view('dashboard.index', $data);
